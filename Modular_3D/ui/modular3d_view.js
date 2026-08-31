@@ -5,6 +5,7 @@
   var meshes = [], spaceMeshes = [], selectedSpaceId = null, currentData = {}, needsRender = true, orthographic = false;
   var selectionMode = 'space', isolated = false;
   var exploded = 0, transparent = false, shadows = true, edgesVisible = true;
+  var technical = false, dimensionsVisible = false, gridWanted = true, sky, dimensionGroup;
   var raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   var pointerStart = null;
   var originalCenter = new THREE.Vector3(), originalSize = new THREE.Vector3();
@@ -51,8 +52,9 @@
   function requestRender() { needsRender = true; }
   function disposeMaterial(material) {
     if (!material) return;
-    if (Array.isArray(material)) material.forEach(disposeMaterial);
-    else material.dispose();
+    if (Array.isArray(material)) { material.forEach(disposeMaterial); return; }
+    if (material.map) material.map.dispose();
+    material.dispose();
   }
   function disposeObject(object){if(!object)return;scene.remove(object);object.traverse(function(item){if(item.geometry)item.geometry.dispose();if(item.material)disposeMaterial(item.material);});}
   function clearModel() {
@@ -183,7 +185,8 @@
       role: metadata.role || category,
       ownerSpaceId: metadata.ownerSpaceId || null,
       parentSpaceId: metadata.parentSpaceId || null,
-      sourceField: metadata.sourceField || null
+      sourceField: metadata.sourceField || null,
+      realMaterial: pieceMaterial, technicalMaterial: null
     };
     var edge = new THREE.LineSegments(
       new THREE.EdgesGeometry(geometry),
@@ -451,7 +454,9 @@
     originalCenter = box.getCenter(new THREE.Vector3());
     originalSize = box.getSize(new THREE.Vector3());
     meshes.forEach(function(mesh){ mesh.userData.original.copy(mesh.position); });
+    buildDimensionLabels();
     applyVisualState();
+    applyBackdropState();
     if(hadModel&&priorPosition&&priorTarget){camera.position.copy(priorPosition);controls.target.copy(priorTarget);camera.lookAt(priorTarget);controls.update();}else frameModel();
     buildTree();
     updateModuleInfo(width, height, depth);
@@ -463,17 +468,87 @@
 
   function applyVisualState() {
     meshes.forEach(function(mesh) {
-      var base = mesh.material.userData.baseOpacity || 1;
-      mesh.material.opacity = mesh.userData.glass ? base : (transparent ? 0.38 : 1);
-      mesh.material.transparent = mesh.userData.glass || transparent;
-      mesh.material.depthWrite = !(mesh.userData.glass || transparent);
-      mesh.castShadow = shadows;
-      mesh.receiveShadow = shadows;
+      var real = mesh.userData.realMaterial;
+      var base = real.userData.baseOpacity || 1;
+      real.opacity = mesh.userData.glass ? base : (transparent ? 0.38 : 1);
+      real.transparent = mesh.userData.glass || transparent;
+      real.depthWrite = !(mesh.userData.glass || transparent);
+      if (technical) {
+        if (!mesh.userData.technicalMaterial) mesh.userData.technicalMaterial = new THREE.MeshBasicMaterial({ color: 0xf2f0ea, side: THREE.DoubleSide });
+        mesh.material = mesh.userData.technicalMaterial;
+      } else {
+        mesh.material = real;
+      }
+      mesh.castShadow = shadows && !technical;
+      mesh.receiveShadow = shadows && !technical;
       var direction = mesh.userData.original.clone().sub(originalCenter).normalize();
       mesh.position.copy(mesh.userData.original).add(direction.multiplyScalar(exploded));
-      var edge = mesh.getObjectByName('__edges'); if (edge) edge.visible = edgesVisible;
+      var edge = mesh.getObjectByName('__edges');
+      if (edge) {
+        edge.visible = edgesVisible || technical;
+        edge.material.color.set(technical ? 0x1a1a1a : 0x58483d);
+        edge.material.opacity = technical ? 0.9 : 0.48;
+      }
     });
+    updateDimensionLabels();
     requestRender();
+  }
+
+  /* Aparte de applyVisualState a propósito: cleanSnapshot() manipula grid/
+     floor/scene.background directamente para una captura limpia y luego
+     llama a applyVisualState() para el resto del estado (explosión,
+     transparencia). Si esta función también tocara esos tres campos, cada
+     llamada de cleanSnapshot los pisaría de vuelta. */
+  function applyBackdropState() {
+    if (grid) grid.visible = gridWanted && !technical;
+    if (floor) floor.visible = !technical;
+    if (sky) sky.visible = !technical;
+    if (scene) scene.background = technical ? new THREE.Color(0xe9e7e1) : (sky ? null : new THREE.Color(0x11161b));
+    requestRender();
+  }
+
+  function makeTextSprite(text, color) {
+    var canvas = document.createElement('canvas'), size = 256;
+    canvas.width = size; canvas.height = size / 4;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(17,22,27,0.82)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = 'bold 42px Segoe UI, Arial, sans-serif';
+    ctx.fillStyle = color || '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    var spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true });
+    var sprite = new THREE.Sprite(spriteMaterial);
+    sprite.renderOrder = 999;
+    return sprite;
+  }
+
+  function buildDimensionLabels() {
+    if (dimensionGroup) { disposeObject(dimensionGroup); dimensionGroup = null; }
+    if (!originalSize.x && !originalSize.y && !originalSize.z) return;
+    dimensionGroup = new THREE.Group();
+    var pad = Math.max(originalSize.x, originalSize.y, originalSize.z) * 0.08 + 30;
+    var min = originalCenter.clone().sub(originalSize.clone().multiplyScalar(0.5));
+    var max = originalCenter.clone().add(originalSize.clone().multiplyScalar(0.5));
+    function addLabel(text, position, scaleRef) {
+      var sprite = makeTextSprite(text);
+      sprite.position.copy(position);
+      var scale = Math.max(40, scaleRef * 0.09);
+      sprite.scale.set(scale * 2, scale * 0.5, 1);
+      dimensionGroup.add(sprite);
+    }
+    addLabel('Ancho ' + Math.round(originalSize.x) + ' mm', new THREE.Vector3(originalCenter.x, min.y - pad * 0.4, max.z + pad * 0.1), originalSize.x);
+    addLabel('Alto ' + Math.round(originalSize.y) + ' mm', new THREE.Vector3(min.x - pad * 0.5, originalCenter.y, max.z + pad * 0.1), originalSize.y);
+    addLabel('Fondo ' + Math.round(originalSize.z) + ' mm', new THREE.Vector3(max.x + pad * 0.5, min.y - pad * 0.3, originalCenter.z), originalSize.z);
+    dimensionGroup.visible = dimensionsVisible;
+    scene.add(dimensionGroup);
+  }
+
+  function updateDimensionLabels() {
+    if (dimensionGroup) dimensionGroup.visible = dimensionsVisible;
   }
 
   function updateModuleInfo(width, height, depth) {
@@ -624,6 +699,26 @@
   }
 
   function bind(id, action) { var element = byId(id); if (element) element.addEventListener('click', action); }
+  /* Fondo tipo estudio fotográfico: una esfera invertida con degradado
+     vertical por color de vértice (sin shader propio ni HDRI externo, solo
+     THREE.js base) en vez del color plano anterior. Se desactiva en modo
+     técnico, donde el fondo pasa a un gris liso de plano de línea oculta. */
+  function buildStudioSky() {
+    var geometry = new THREE.SphereGeometry(9000, 24, 16);
+    var top = new THREE.Color(0x2a333c), horizon = new THREE.Color(0x181d24), bottom = new THREE.Color(0x0c0f13);
+    var colors = [], position = geometry.attributes.position;
+    for (var i = 0; i < position.count; i += 1) {
+      var t = Math.max(-1, Math.min(1, position.getY(i) / 9000));
+      var color = t >= 0 ? horizon.clone().lerp(top, t) : horizon.clone().lerp(bottom, -t);
+      colors.push(color.r, color.g, color.b);
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    var material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false });
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.renderOrder = -1000;
+    return mesh;
+  }
+
   function initialize() {
     var stage = byId('view_stage'); if (!stage || typeof THREE === 'undefined') return;
     if (renderer) return;
@@ -653,6 +748,7 @@
     grid = new THREE.GridHelper(4000, 40, 0x53616d, 0x2b343c); grid.position.y = -1; scene.add(grid);
     floor = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.22 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = -2; floor.receiveShadow = true; scene.add(floor);
+    sky = buildStudioSky(); scene.add(sky);
     clearModel();
     renderer.domElement.addEventListener('pointerdown',function(event){pointerStart={x:event.clientX,y:event.clientY};});
     renderer.domElement.addEventListener('pointerup', hitPiece);
@@ -673,7 +769,9 @@
     bind('view_transparency', function(){ transparent = !transparent; byId('view_transparency').classList.toggle('active', transparent); applyVisualState(); });
     bind('view_edges', function(){ edgesVisible = !edgesVisible; byId('view_edges').classList.toggle('active', edgesVisible); applyVisualState(); });
     bind('view_shadows', function(){ shadows = !shadows; renderer.shadowMap.enabled = shadows; byId('view_shadows').classList.toggle('active', shadows); applyVisualState(); });
-    bind('view_grid', function(){ grid.visible = !grid.visible; byId('view_grid').classList.toggle('active', grid.visible); requestRender(); });
+    bind('view_grid', function(){ gridWanted = !gridWanted; byId('view_grid').classList.toggle('active', gridWanted); applyBackdropState(); });
+    bind('view_technical', function(){ technical = !technical; byId('view_technical').classList.toggle('active', technical); applyVisualState(); applyBackdropState(); });
+    bind('view_dimensions', function(){ dimensionsVisible = !dimensionsVisible; byId('view_dimensions').classList.toggle('active', dimensionsVisible); if (dimensionsVisible && !dimensionGroup) buildDimensionLabels(); updateDimensionLabels(); requestRender(); });
     var explosion = byId('view_explosion'); if (explosion) explosion.addEventListener('input', function(){ exploded = Number(explosion.value) || 0; applyVisualState(); });
     var search = byId('view_search'); if (search) search.addEventListener('input', function(){ buildTree(search.value); });
     document.querySelectorAll('[data-m3dv-view]').forEach(function(button){ button.addEventListener('click', function(){ setView(button.dataset.m3dvView); }); });
@@ -693,18 +791,18 @@
   function cleanSnapshot(){
     if(!renderer||!camera||!controls)return '';
     try{
-      var background=scene.background,gridVisible=grid&&grid.visible,floorVisible=floor&&floor.visible;
+      var background=scene.background,gridVisible=grid&&grid.visible,floorVisible=floor&&floor.visible,skyVisible=sky&&sky.visible,dimensionsWereVisible=dimensionsVisible;
       var selectionVisible=selectionBox&&selectionBox.visible,spaceVisible=spaceSelection&&spaceSelection.visible;
       var hitVisibility=spaceMeshes.map(function(hit){return hit.visible;});
       var oldExploded=exploded,oldTransparent=transparent,oldPosition=camera.position.clone(),oldTarget=controls.target.clone();
-      scene.background=new THREE.Color(0xffffff);if(grid)grid.visible=false;if(floor)floor.visible=false;
+      scene.background=new THREE.Color(0xffffff);if(grid)grid.visible=false;if(floor)floor.visible=false;if(sky)sky.visible=false;dimensionsVisible=false;
       if(selectionBox)selectionBox.visible=false;if(spaceSelection)spaceSelection.visible=false;spaceMeshes.forEach(function(hit){hit.visible=false;});
       exploded=0;transparent=false;applyVisualState();
       var direction=oldPosition.clone().sub(oldTarget),distance=direction.length();
       if(distance>0)camera.position.copy(oldTarget).add(direction.normalize().multiplyScalar(distance*.78));
       camera.lookAt(oldTarget);controls.update();renderer.render(scene,camera);
       var result=renderer.domElement.toDataURL('image/png');
-      scene.background=background;if(grid)grid.visible=gridVisible;if(floor)floor.visible=floorVisible;
+      scene.background=background;if(grid)grid.visible=gridVisible;if(floor)floor.visible=floorVisible;if(sky)sky.visible=skyVisible;dimensionsVisible=dimensionsWereVisible;
       if(selectionBox)selectionBox.visible=selectionVisible;if(spaceSelection)spaceSelection.visible=spaceVisible;spaceMeshes.forEach(function(hit,index){hit.visible=hitVisibility[index];});
       exploded=oldExploded;transparent=oldTransparent;camera.position.copy(oldPosition);controls.target.copy(oldTarget);camera.lookAt(oldTarget);controls.update();applyVisualState();renderer.render(scene,camera);
       return result;
