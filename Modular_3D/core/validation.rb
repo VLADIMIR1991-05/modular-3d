@@ -204,6 +204,25 @@ module Modular3D
       casco_activo = %w[lleva_lateral_izq lleva_lateral_der lleva_base lleva_techo].map { |campo| datos[campo].to_s }
       avisos << "El casco no lleva ningun panel exterior activo; revisa que sea intencional." if casco_activo.all? { |valor| valor == 'NO' }
 
+      esquinas_validas = %w[front_left front_right back_left back_right]
+      begin
+        miter_raw = datos['miter_overrides_json']
+        miter_overrides = miter_raw.is_a?(Hash) ? miter_raw : JSON.parse(miter_raw.to_s)
+        if miter_overrides.is_a?(Hash)
+          miter_overrides.each do |nombre_pieza, config|
+            next unless config.is_a?(Hash)
+            esquina = config['corner'].to_s
+            tamano = config['size'].to_f
+            next if esquina.empty? && tamano.zero?
+            errores << "Inglete de '#{nombre_pieza}': esquina no reconocida (#{esquina})." unless esquinas_validas.include?(esquina)
+            errores << "Inglete de '#{nombre_pieza}': la medida debe ser mayor que 0 mm." unless tamano.positive?
+            avisos << "Inglete de '#{nombre_pieza}' mayor a 200 mm: revisa que la pieza sea lo bastante grande." if tamano > 200
+          end
+        end
+      rescue JSON::ParserError
+        errores << 'La configuracion de ingletes esta danada.'
+      end
+
       { errores: errores, avisos: avisos }
     end
   end

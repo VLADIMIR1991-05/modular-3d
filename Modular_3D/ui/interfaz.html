@@ -375,6 +375,9 @@
               <div class="row"><label for="material_piece_oversize_prof">Sobremedida profundidad (mm)</label><input type="number" id="material_piece_oversize_prof" value="0" step=".5"></div>
               <div class="row"><label for="material_piece_oversize_alto">Sobremedida alto (mm)</label><input type="number" id="material_piece_oversize_alto" value="0" step=".5"></div>
               <small>Ajusta esta pieza puntual por encima o por debajo de la medida calculada (positivo = más grande, negativo = más chica). El resto del módulo no cambia.</small>
+              <div class="row"><label for="material_piece_miter_corner">Inglete (corte 45°)</label><select id="material_piece_miter_corner"><option value="">Sin inglete</option><option value="front_left">Esquina delantera izquierda</option><option value="front_right">Esquina delantera derecha</option><option value="back_left">Esquina trasera izquierda</option><option value="back_right">Esquina trasera derecha</option></select></div>
+              <div class="row"><label for="material_piece_miter_size">Medida del inglete (mm)</label><input type="number" id="material_piece_miter_size" value="20" min="1" step=".5"></div>
+              <small>Corta esa esquina vertical de la pieza a 45°, constante en toda su altura. Pensado para uniones visibles entre dos piezas que se encuentran en una arista (por ejemplo, las dos alas de un módulo esquinero). Se ve en tiempo real en el visualizador.</small>
               <button type="button" id="material_piece_apply">Aplicar a esta pieza</button>
               <button type="button" class="secondary" id="material_piece_clear">Volver a heredar del grupo</button>
             </div>

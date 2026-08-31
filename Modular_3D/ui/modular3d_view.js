@@ -119,11 +119,57 @@
     var loader=new THREE.TextureLoader();loader.setCrossOrigin('anonymous');loader.load(source,function(texture){textureCache[source]=texture;configure(texture);},undefined,function(){/* URL sin CORS: conserva el color configurado. */});
   }
 
+  var MITER_CORNERS = ['front_left', 'front_right', 'back_right', 'back_left'];
+  function resolvedMiter(pieceId, materialKey) {
+    var overrides = {};
+    try { overrides = JSON.parse(currentData.miter_overrides_json || '{}') || {}; } catch (_e) { overrides = {}; }
+    var entry = overrides[materialKey] || overrides[pieceId] || null;
+    if (!entry || MITER_CORNERS.indexOf(entry.corner) < 0) return null;
+    var size = Number(entry.size) || 0;
+    return size > 0 ? { corner: entry.corner, size: size } : null;
+  }
+  /* Prisma con una esquina vertical del footprint (X/Z locales, constante en
+     toda la altura Y) cortada a 45°. Replica exactamente puntos_footprint_
+     biselado + pushpull de plugin.rb para que la previsualización coincida
+     con la pieza real. Centrado en el origen como BoxGeometry, para que el
+     posicionamiento de addPiece no necesite cambios. */
+  function chamferedBoxGeometry(width, height, depth, corner, size) {
+    var hw = width / 2, hh = height / 2, hd = depth / 2;
+    var s = Math.min(size, width * 0.48, depth * 0.48);
+    if (!(s > 0)) return new THREE.BoxGeometry(width, height, depth);
+    var base = { front_left: [-hw, hd], front_right: [hw, hd], back_right: [hw, -hd], back_left: [-hw, -hd] };
+    var order = ['front_left', 'front_right', 'back_right', 'back_left'];
+    var poly = [];
+    order.forEach(function (name) {
+      var p = base[name];
+      if (name !== corner) { poly.push(p); return; }
+      if (name === 'front_left') { poly.push([p[0], p[1] - s], [p[0] + s, p[1]]); }
+      else if (name === 'front_right') { poly.push([p[0] - s, p[1]], [p[0], p[1] - s]); }
+      else if (name === 'back_right') { poly.push([p[0], p[1] + s], [p[0] - s, p[1]]); }
+      else { poly.push([p[0] + s, p[1]], [p[0], p[1] + s]); }
+    });
+    var positions = [];
+    function pushTri(a, b, c) { positions.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); }
+    var top = poly.map(function (p) { return [p[0], hh, p[1]]; });
+    var bottom = poly.map(function (p) { return [p[0], -hh, p[1]]; });
+    for (var i = 1; i < top.length - 1; i += 1) pushTri(top[0], top[i], top[i + 1]);
+    for (var j = 1; j < bottom.length - 1; j += 1) pushTri(bottom[0], bottom[j + 1], bottom[j]);
+    for (var k = 0; k < poly.length; k += 1) {
+      var next = (k + 1) % poly.length;
+      pushTri(bottom[k], bottom[next], top[next]);
+      pushTri(bottom[k], top[next], top[k]);
+    }
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
   function addPiece(name, width, height, depth, x, y, z, color, category, glass, metadata) {
     if (width <= 0 || height <= 0 || depth <= 0) return null;
     metadata=metadata||{};
     var generatedId=metadata.pieceId||('piece_' + (meshes.length + 1)),materialKey=metadata.materialKey||generatedId,style=resolvedPieceStyle(category,metadata.role||category,generatedId,materialKey,color);
-    var geometry = new THREE.BoxGeometry(width, height, depth);
+    var miter = resolvedMiter(generatedId, materialKey);
+    var geometry = miter ? chamferedBoxGeometry(width, height, depth, miter.corner, miter.size) : new THREE.BoxGeometry(width, height, depth);
     var pieceMaterial=material(style.color, glass);applyTexture(pieceMaterial,style.texture,style.scale,style.rotation);var piece = new THREE.Mesh(geometry, pieceMaterial);
     // Modelo: X=derecha, Y=fondo, Z=arriba. Three.js usa Z=-fondo.
     piece.position.set(x + width / 2, y + height / 2, -(z + depth / 2));

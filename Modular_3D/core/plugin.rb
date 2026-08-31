@@ -48,6 +48,8 @@ module LPenafiel_GeneradorMueblesExacto
     data['material_textures_json'] ||= '{}'
     data['material_texture_meta_json'] ||= '{}'
     data['dimension_overrides_json'] ||= '{}'
+    data['miter_overrides_json'] ||= '{}'
+    data['montaje_puerta'] ||= 'SOLAPADA'
     data['external_front_scope'] ||= 'BY_SPACE'
     data['global_front_count_mode'] ||= 'AUTO'
     data['global_front_count'] ||= 2
@@ -460,6 +462,68 @@ module LPenafiel_GeneradorMueblesExacto
     [tipo, color]
   end
 
+  # Inglete a 45°: corta una de las 4 esquinas verticales del footprint de la
+  # pieza (constante en toda su altura/extrusión), pensado para el caso más
+  # común de una unión visible entre dos piezas que se encuentran en una
+  # arista vertical (por ejemplo, las dos alas de un módulo esquinero en L,
+  # o un poste/columna decorativo). Usa el mismo patrón de excepciones por
+  # nombre que dimension_overrides_json/material_overrides_json.
+  ESQUINAS_INGLETE = %i[front_left front_right back_right back_left].freeze
+
+  def self.inglete_pieza(nombre)
+    datos = @datos_modulo_actual || {}
+    overrides = begin
+      raw = datos['miter_overrides_json']
+      raw.is_a?(Hash) ? raw : JSON.parse(raw.to_s)
+    rescue JSON::ParserError
+      {}
+    end
+    individual = overrides[nombre.to_s] || overrides[nombre.to_s.upcase] || {}
+    esquina = individual['corner'].to_s.to_sym
+    return [nil, nil] unless ESQUINAS_INGLETE.include?(esquina)
+    medida = individual['size'].to_f
+    [medida.positive? ? esquina : nil, medida.positive? ? medida.mm : nil]
+  end
+
+  # Devuelve los puntos del footprint (ancho x prof, en el plano Z=0) listos
+  # para add_face + pushpull. Si hay esquina+medida, sustituye esa esquina por
+  # dos puntos sobre las aristas adyacentes, dejando un corte a 45° constante
+  # en toda la altura de la pieza. El orden y sentido de recorrido se
+  # preserva exactamente (front_left -> front_right -> back_right ->
+  # back_left) para no alterar la normal de la cara ni el pushpull existente.
+  def self.puntos_footprint_biselado(ancho, prof, esquina, medida)
+    base = {
+      :front_left => Geom::Point3d.new(0, 0, 0),
+      :front_right => Geom::Point3d.new(ancho, 0, 0),
+      :back_right => Geom::Point3d.new(ancho, prof, 0),
+      :back_left => Geom::Point3d.new(0, prof, 0)
+    }
+    orden = %i[front_left front_right back_right back_left]
+    return orden.map { |clave| base[clave] } unless esquina && medida && medida.to_f.positive?
+
+    s = [medida.to_f, ancho * 0.48, prof * 0.48].min
+    return orden.map { |clave| base[clave] } unless s.positive?
+
+    puntos = []
+    orden.each do |clave|
+      if clave == esquina
+        case clave
+        when :front_left
+          puntos << Geom::Point3d.new(0, s, 0) << Geom::Point3d.new(s, 0, 0)
+        when :front_right
+          puntos << Geom::Point3d.new(ancho - s, 0, 0) << Geom::Point3d.new(ancho, s, 0)
+        when :back_right
+          puntos << Geom::Point3d.new(ancho, prof - s, 0) << Geom::Point3d.new(ancho - s, prof, 0)
+        when :back_left
+          puntos << Geom::Point3d.new(s, prof, 0) << Geom::Point3d.new(0, prof - s, 0)
+        end
+      else
+        puntos << base[clave]
+      end
+    end
+    puntos
+  end
+
   # Sobremedida por pieza: un delta en mm (positivo o negativo) que ajusta el
   # tamaño calculado automáticamente para una pieza puntual sin tocar el resto
   # del cálculo paramétrico. Usa el mismo patrón de excepciones por nombre que
@@ -481,17 +545,19 @@ module LPenafiel_GeneradorMueblesExacto
     ancho = [ancho + delta_ancho, 1.mm].max
     prof = [prof + delta_prof, 1.mm].max
     alto = [alto + delta_alto, 1.mm].max
+    esquina_inglete, medida_inglete = inglete_pieza(nombre)
     grupo = entities.add_group
-    face = grupo.entities.add_face([0, 0, 0], [ancho, 0, 0], [ancho, prof, 0], [0, prof, 0])
+    puntos = puntos_footprint_biselado(ancho, prof, esquina_inglete, medida_inglete)
+    face = grupo.entities.add_face(puntos)
     face.pushpull(-alto)
-    
+
     instancia = grupo.to_component rescue grupo
     codigo = codigo_pieza(nombre)
     dimensiones = dimensiones_tablero(ancho, prof, alto)
     placa = placa_mm(ancho, prof, alto)
     cantos = "#{cantos_l}L-#{cantos_c}C"
     nombre_definicion = nombre_pieza(codigo, dimensiones, cantos_l, cantos_c)
-    
+
     if instancia.respond_to?(:definition)
       instancia.name = nombre_definicion if instancia.respond_to?(:name=)
       instancia.definition.name = nombre_definicion
@@ -505,6 +571,8 @@ module LPenafiel_GeneradorMueblesExacto
       instancia.definition.set_attribute("LPenafiel", "placa_mm", placa)
       instancia.definition.set_attribute("LPenafiel", "cantos_largos", cantos_l)
       instancia.definition.set_attribute("LPenafiel", "cantos_cortos", cantos_c)
+      instancia.definition.set_attribute("LPenafiel", "inglete_esquina", esquina_inglete.to_s)
+      instancia.definition.set_attribute("LPenafiel", "inglete_medida_mm", medida_inglete ? dimension_mm(medida_inglete) : 0)
       instancia.definition.set_attribute("LPenafiel", "datos_modulo", JSON.generate(@datos_modulo_actual)) if @datos_modulo_actual
       instancia.set_attribute("LPenafiel", "nombre", nombre_definicion) if instancia.respond_to?(:set_attribute)
     end
@@ -1682,8 +1750,19 @@ module LPenafiel_GeneradorMueblesExacto
       :datos_modulo => definicion.get_attribute("LPenafiel", "datos_modulo"),
       :material => material_pieza(entity),
       :tipo_canto => definicion.get_attribute("LPenafiel", "tipo_canto") || "PVC",
-      :color_canto => definicion.get_attribute("LPenafiel", "color_canto") || definicion.get_attribute("LPenafiel", "color_configurado")
+      :color_canto => definicion.get_attribute("LPenafiel", "color_canto") || definicion.get_attribute("LPenafiel", "color_configurado"),
+      :inglete => etiqueta_inglete(definicion.get_attribute("LPenafiel", "inglete_esquina"), definicion.get_attribute("LPenafiel", "inglete_medida_mm"))
     }
+  end
+
+  ETIQUETAS_ESQUINA_INGLETE = {
+    'front_left' => 'Del.Izq 45°', 'front_right' => 'Del.Der 45°',
+    'back_left' => 'Post.Izq 45°', 'back_right' => 'Post.Der 45°'
+  }.freeze
+
+  def self.etiqueta_inglete(esquina, medida_mm)
+    return '' if esquina.to_s.empty? || medida_mm.to_i <= 0
+    "#{ETIQUETAS_ESQUINA_INGLETE[esquina.to_s] || "#{esquina} 45°"} (#{medida_mm.to_i}mm)"
   end
 
   def self.recolectar_piezas_despiece(entity, piezas)
@@ -1706,9 +1785,9 @@ module LPenafiel_GeneradorMueblesExacto
     path += ".csv" unless File.extname(path).downcase == ".csv"
 
     contenido = CSV.generate(:col_sep => ';', :force_quotes => true) do |csv|
-      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto']
+      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto', 'Inglete']
       filas.each do |fila|
-        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto].map { |clave| fila[clave] }
+        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete].map { |clave| fila[clave] }
       end
     end
     File.binwrite(path, "\xEF\xBB\xBF".b + contenido.encode('UTF-8'))
@@ -1759,8 +1838,9 @@ module LPenafiel_GeneradorMueblesExacto
         "<td class='#{clase_editable} num'#{editable ? " data-campo='canto2'" : ""}>#{html_escape(fila['canto2'])}</td>" \
         "<td class='#{clase_editable} num'#{editable ? " data-campo='placa'" : ""}>#{html_escape(fila['placa'])}</td>" \
         "<td class='#{clase_editable}'#{editable ? " data-campo='material'" : ""}>#{html_escape(fila['material'])}</td>" \
-        "<td>#{html_escape(fila['tipo_canto'])}</td>" \
-        "<td>#{html_escape(fila['color_canto'])}</td>" \
+        "<td#{editable ? " data-campo='tipo_canto'" : ""}>#{html_escape(fila['tipo_canto'])}</td>" \
+        "<td#{editable ? " data-campo='color_canto'" : ""}>#{html_escape(fila['color_canto'])}</td>" \
+        "<td#{editable ? " data-campo='inglete'" : ""}>#{html_escape(fila['inglete'])}</td>" \
         "</tr>"
       end.join
 
@@ -1772,7 +1852,7 @@ module LPenafiel_GeneradorMueblesExacto
       vista_html = vista_guardada.start_with?('data:image/') ? "<img class='modulo-view' src='#{html_escape(vista_guardada)}' alt='Vista 3D guardada de #{html_escape(modulo)}'>" : svg_modulo_despiece(modulo, filas_originales)
       "<section class='modulo-page'><div class='modulo-head'>#{vista_html}<div><h3>Modulo: #{html_escape(modulo)}</h3><p>Vista 3D sincronizada al construir o actualizar este módulo. Cada módulo conserva su propia cámara.</p></div></div>" \
       "<table data-modulo='#{html_escape(modulo)}'>" \
-      "<thead><tr><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th></tr></thead>" \
+      "<thead><tr><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th></tr></thead>" \
       "<tbody>#{filas_modulo}</tbody>" \
       "</table></section>"
     end.join
@@ -1859,7 +1939,8 @@ module LPenafiel_GeneradorMueblesExacto
         pieza[:placa],
         pieza[:material],
         pieza[:tipo_canto],
-        pieza[:color_canto]
+        pieza[:color_canto],
+        pieza[:inglete]
       ]
       agrupado[clave] ||= pieza.merge(:cantidad => 0)
       agrupado[clave][:cantidad] += 1
@@ -1877,7 +1958,8 @@ module LPenafiel_GeneradorMueblesExacto
         "placa" => pieza[:placa],
         "material" => pieza[:material],
         "tipo_canto" => pieza[:tipo_canto],
-        "color_canto" => pieza[:color_canto]
+        "color_canto" => pieza[:color_canto],
+        "inglete" => pieza[:inglete]
       }
     end
     filas_html = filas_html_despiece(filas_data, true)
