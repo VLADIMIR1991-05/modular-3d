@@ -388,7 +388,8 @@
           for (var hf=0;hf<frontCount;hf+=1) {
             var doorMeta=localMeta('door','h_front','_'+(hf+1));
             doorMeta.materialKey='H_PUERTA_'+(internalFront?'INT':'EXT')+'_'+nid+'_'+(hf+1);
-            addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:-frontT,COLORS.front,'front',false,doorMeta);
+            var externalEmbutida=!internalFront&&String(data.montaje_puerta||'SOLAPADA').toUpperCase()==='EMBUTIDA';
+            addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:(externalEmbutida?0:-frontT),COLORS.front,'front',false,doorMeta);
           }
         }
       });

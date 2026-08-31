@@ -1091,11 +1091,14 @@ module LPenafiel_GeneradorMueblesExacto
           alto_puerta = alto_nodo - (margen_lateral * 2)
           next if ancho_puerta <= 0 || alto_puerta <= 0
           nid_puerta = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
+          externa_embutida = !puerta_interna && (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase == 'EMBUTIDA'
           (1..cantidad).each do |pi|
             nombre_puerta = "H_PUERTA_#{puerta_interna ? 'INT' : 'EXT'}_#{nid_puerta}_#{pi}"
-            # Externa: ocupa exclusivamente el plano exterior, desde -grosor hasta el frente Y=0.
-            # Interna: nace dentro del hueco del espacio seleccionado.
-            y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : -grosor_puerta
+            # Externa solapada: ocupa el plano exterior, desde -grosor hasta el
+            # frente Y=0. Externa embutida: queda a ras (Y=0), dentro del hueco
+            # que ya calculó facadeBox con margen uniforme. Interna: nace
+            # dentro del hueco del espacio seleccionado.
+            y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -grosor_puerta)
             self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
               x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central)), y_puerta, z_min + margen_lateral, 2, 2)
           end
