@@ -227,6 +227,8 @@
           <div class="row"><label for="ancho_total">Anchura exterior (mm)</label><input type="number" id="ancho_total" value="600" min="150"></div>
           <div class="row"><label for="alto_total">Altura exterior (mm)</label><input type="number" id="alto_total" value="760" min="150"></div>
           <div class="row"><label for="prof_total">Profundidad exterior (mm)</label><input type="number" id="prof_total" value="580" min="100"></div>
+          <div class="row"><label>Orientación del módulo</label><button type="button" class="secondary" id="btn_orientacion">Girar 90° (ancho ↔ alto)</button></div>
+          <small>Intercambia anchura y altura exteriores. Útil para pasar de un módulo horizontal (bajo, cajonera) a uno vertical (torre, columna) o viceversa antes de configurar el interior. Si ya dividiste espacios en Configuración, revísalos después de girar.</small>
           <div class="row"><label for="espesor">Espesor general (mm)</label><input type="number" id="espesor" value="15" min="3"></div>
           <div class="row"><label for="juego_general">Juego general de frentes (mm)</label><input type="number" id="juego_general" value="2" min="0" step=".5"></div>
           <div class="row"><label for="madeval">Descuento de fabricacion</label><select id="madeval"><option value="NO">Sin descuento</option><option value="SI">1 mm</option></select></div>
@@ -1196,6 +1198,14 @@
     el('step_prev').addEventListener('click', function() { stepMove(-1); });
     el('step_next').addEventListener('click', function() { stepMove(1); });
     el('restore_sync').addEventListener('click', restoreThicknessSync);
+    el('btn_orientacion').addEventListener('click', function() {
+      var ancho = el('ancho_total').value, alto = el('alto_total').value;
+      el('ancho_total').value = alto;
+      el('alto_total').value = ancho;
+      el('ancho_total').dispatchEvent(new Event('input', { bubbles: true }));
+      el('alto_total').dispatchEvent(new Event('input', { bubbles: true }));
+      actualizarVista();
+    });
     el('space_vertical').addEventListener('click', function() { changeStructure('column', 1); });
     el('space_horizontal').addEventListener('click', function() { changeStructure('row', 1); });
     el('space_vertical_remove').addEventListener('click', function() { changeStructure('column', -1); });
