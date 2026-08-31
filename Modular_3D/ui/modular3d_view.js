@@ -380,17 +380,24 @@
       }
       if (content.indexOf('PUERTA') === 0) {
         var doubleDoor = content.indexOf('DOBLE') >= 0, glass = content.indexOf('VIDRIO') >= 0, doors = doubleDoor ? 2 : 1;
-        var doorW = Math.max(1, (cellW - gap * (doors + 1)) / doors), doorH = Math.max(1, cellH - gap * 2), doorT = number(data, 'puerta_grosor', general);
-        for (var door = 0; door < doors; door += 1) addPiece('Puerta ' + (door + 1), doorW, doorH, doorT, x + gap + door * (doorW + gap), y + gap, -doorT - 3, glass ? COLORS.glass : COLORS.front, 'front', glass);
+        var doorT = number(data, 'puerta_grosor', general);
+        var doorEmbutida = String(data.montaje_puerta || 'SOLAPADA').toUpperCase() === 'EMBUTIDA';
+        var doorW = doorEmbutida ? Math.max(1, (cellW - gap * (doors + 1)) / doors) : Math.max(1, (cellW / doors) - gap * 2);
+        var doorH = Math.max(1, cellH - gap * 2);
+        var doorZ = doorEmbutida ? 0 : -doorT;
+        for (var door = 0; door < doors; door += 1) addPiece('Puerta ' + (door + 1), doorW, doorH, doorT, x + gap + door * (doorW + gap), y + gap, doorZ, glass ? COLORS.glass : COLORS.front, 'front', glass);
       }
     });
 
     if (!hasHierarchy && !spaces.length && data.crear_puerta === 'SI') {
-      var gapDoor = number(data, 'juego_general', 2), doorThickness = number(data, 'puerta_grosor', general);
+      var doorThickness = number(data, 'puerta_grosor', general);
+      var legacyEmbutida = String(data.montaje_puerta || 'SOLAPADA').toUpperCase() === 'EMBUTIDA';
+      var gapDoor = legacyEmbutida ? number(data, 'luz_perimetral', number(data, 'juego_general', 3)) : number(data, 'luz_solape', 1.5);
       var isDouble = data.tipo_puerta === 'DOBLE' || data.tipo_puerta === 'DOBLE_VIDRIO' || (data.tipo_puerta === 'AUTO' && width > 619);
       var isGlass = String(data.tipo_puerta).indexOf('VIDRIO') >= 0, legacyDoors = isDouble ? 2 : 1;
-      var legacyDoorW = (width - gapDoor * (legacyDoors + 1)) / legacyDoors;
-      for (var ld = 0; ld < legacyDoors; ld += 1) addPiece('Puerta ' + (ld + 1), legacyDoorW, height - gapDoor * 2, doorThickness, gapDoor + ld * (legacyDoorW + gapDoor), gapDoor, -doorThickness - 3, isGlass ? COLORS.glass : COLORS.front, 'front', isGlass);
+      var legacyDoorW = legacyEmbutida ? (width - gapDoor * (legacyDoors + 1)) / legacyDoors : (width / legacyDoors) - gapDoor * 2;
+      var legacyZ = legacyEmbutida ? 0 : -doorThickness;
+      for (var ld = 0; ld < legacyDoors; ld += 1) addPiece('Puerta ' + (ld + 1), legacyDoorW, height - gapDoor * 2, doorThickness, gapDoor + ld * (legacyDoorW + gapDoor), gapDoor, legacyZ, isGlass ? COLORS.glass : COLORS.front, 'front', isGlass);
     }
 
     var box = new THREE.Box3().setFromObject(model);

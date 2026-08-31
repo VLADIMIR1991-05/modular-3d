@@ -1232,7 +1232,7 @@ module LPenafiel_GeneradorMueblesExacto
           cantidad = contenido.include?('DOBLE') ? 2 : 1
           fuga_celda = [(space['gap'] || datos['luz_perimetral'] || 1.5).to_f, 0.5].max.mm
           inicio_puertas = @piezas_modulo_actual.length
-          self.crear_puertas_en_caja(entities, modulo_nombre, caja_celda, grosor_puerta_celda, lado_puerta_celda, nil, nil, cantidad, fuga_celda)
+          self.crear_puertas_en_caja(entities, modulo_nombre, caja_celda, grosor_puerta_celda, lado_puerta_celda, nil, nil, cantidad, fuga_celda, (datos['montaje_puerta'] || 'SOLAPADA'))
           puertas_celda = @piezas_modulo_actual[inicio_puertas..-1] || []
           puertas_celda.each { |puerta| self.aplicar_material_vidrio(puerta) } if contenido.include?('VIDRIO')
           datos_celda = datos.merge('sistema_apertura' => (space['opening'] || datos['sistema_apertura']))
@@ -1254,13 +1254,11 @@ module LPenafiel_GeneradorMueblesExacto
         z_min_puerta = zonas_frentes_cajon.empty? ? nil : zonas_frentes_cajon.map { |zona| zona[1] }.max
         unless caja_modulo_estructura.empty?
           inicio_puertas = @piezas_modulo_actual.length
-          fuga_puertas = [
-            (datos['luz_perimetral'] || datos['juego_general'] || 1.5).to_f,
-            (datos['luz_solape'] || 0).to_f
-          ].max.mm
+          montaje_puerta_modulo = (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase
+          fuga_puertas = montaje_puerta_modulo == 'EMBUTIDA' ? (datos['luz_perimetral'] || datos['juego_general'] || 3).to_f.mm : (datos['luz_solape'] || 1.5).to_f.mm
           luz_superior = (datos['luz_sup_frente'] || 0).to_f.mm
           z_max_puerta = caja_modulo_estructura.max.z - luz_superior
-          self.crear_puertas_en_caja(entities, modulo_nombre, caja_modulo_estructura, grosor_puerta, lado_puerta, z_min_puerta, z_max_puerta, cantidad_puertas, fuga_puertas)
+          self.crear_puertas_en_caja(entities, modulo_nombre, caja_modulo_estructura, grosor_puerta, lado_puerta, z_min_puerta, z_max_puerta, cantidad_puertas, fuga_puertas, montaje_puerta_modulo)
           puertas_creadas = @piezas_modulo_actual[inicio_puertas..-1] || []
           if tipo_puerta.include?("VIDRIO")
             puertas_creadas.each { |puerta| self.aplicar_material_vidrio(puerta) }
@@ -1598,7 +1596,13 @@ module LPenafiel_GeneradorMueblesExacto
     end
   end
 
-  def self.crear_puertas_en_caja(entities, modulo_nombre, caja_total, grosor_puerta, lado_unico = :izquierda, z_min_puerta = nil, z_max_puerta = nil, cantidad_forzada = nil, fuga_personalizada = nil)
+  # montaje_puerta: SOLAPADA (por defecto, hoy la única que existía) es la
+  # puerta que cubre el frente del casco desde afuera -ancho > hueco, huelgo
+  # exterior = 1 fuga y huelgo entre hojas = 2 fugas-. EMBUTIDA es la puerta
+  # que queda dentro del hueco -ancho < hueco, huelgo uniforme = 1 fuga en
+  # todos lados, sin sobresalir del plano frontal-. Es independiente del
+  # montaje interior/exterior del casco (que es sobre laterales/base/techo).
+  def self.crear_puertas_en_caja(entities, modulo_nombre, caja_total, grosor_puerta, lado_unico = :izquierda, z_min_puerta = nil, z_max_puerta = nil, cantidad_forzada = nil, fuga_personalizada = nil, montaje_puerta = 'SOLAPADA')
     fuga = fuga_personalizada || 1.5.mm
     ancho_total = caja_total.width
     z_min = z_min_puerta || caja_total.min.z
@@ -1606,14 +1610,15 @@ module LPenafiel_GeneradorMueblesExacto
     alto_total = z_max - z_min
     cantidad_puertas = cantidad_forzada || (ancho_total.to_mm > 619 ? 2 : 1)
     espesor_puerta = grosor_puerta
-    ancho_puerta = (ancho_total / cantidad_puertas) - (fuga * 2)
+    embutida = montaje_puerta.to_s.upcase == 'EMBUTIDA'
+    ancho_puerta = embutida ? (ancho_total - (fuga * (cantidad_puertas + 1))) / cantidad_puertas : (ancho_total / cantidad_puertas) - (fuga * 2)
     alto_puerta = alto_total - (fuga * 2)
 
     return 0 if ancho_puerta <= 0 || alto_puerta <= 0
 
     x_inicio = caja_total.min.x
     x_fin = caja_total.max.x
-    y_frente = caja_total.min.y - espesor_puerta
+    y_frente = embutida ? caja_total.min.y : caja_total.min.y - espesor_puerta
     z_inferior = z_min + fuga
 
     if cantidad_puertas == 1
