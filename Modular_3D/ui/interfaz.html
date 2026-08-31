@@ -222,6 +222,9 @@
         <div class="card">
           <h2>Configuracion inicial</h2>
           <div id="edit_source_notice" class="message warn"></div>
+          <div class="row"><label for="modulo_plantilla">Plantilla</label><select id="modulo_plantilla"><option value="">Empezar en blanco</option></select></div>
+          <div id="modulo_plantilla_desc" class="hint-text"></div>
+          <small>Precarga medidas y casco de un tipo de módulo común como punto de partida; todo queda editable después.</small>
           <div class="row"><label for="tipo_modulo">Tipo de modulo</label><select id="tipo_modulo"><option>BAJO</option><option>ALTO</option><option>CLOSET</option><option>AUXILIAR</option><option>PERSONALIZADO</option></select></div>
           <div class="row"><label for="modulo_nombre">Nombre</label><input id="modulo_nombre" value="BAJO"></div>
           <div class="row"><label for="ancho_total">Anchura exterior (mm)</label><input type="number" id="ancho_total" value="600" min="150"></div>
@@ -1156,6 +1159,35 @@
         sketchup.ejecutarConstruccionMueble(datos);
       }
     }
+
+    var perfilesDisponibles = [];
+    window.Modular3DApplyProfileList = function(perfiles) {
+      perfilesDisponibles = Array.isArray(perfiles) ? perfiles : [];
+      var select = el('modulo_plantilla');
+      if (!select) return;
+      perfilesDisponibles.forEach(function(perfil) {
+        var option = document.createElement('option');
+        option.value = perfil.id;
+        option.textContent = perfil.label || perfil.id;
+        select.appendChild(option);
+      });
+    };
+    if (window.__modular3dProfiles) window.Modular3DApplyProfileList(window.__modular3dProfiles);
+    function aplicarPlantillaSeleccionada() {
+      var id = el('modulo_plantilla').value;
+      var descripcion = el('modulo_plantilla_desc');
+      var perfil = perfilesDisponibles.filter(function(item) { return item.id === id; })[0];
+      if (descripcion) descripcion.textContent = perfil && perfil.description ? perfil.description : '';
+      if (!perfil || !perfil.fields) return;
+      Object.keys(perfil.fields).forEach(function(campo) {
+        var elemento = el(campo);
+        if (!elemento) return;
+        elemento.value = perfil.fields[campo];
+        elemento.dispatchEvent(new Event(elemento.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
+      });
+      actualizarVista();
+    }
+    el('modulo_plantilla').addEventListener('change', aplicarPlantillaSeleccionada);
 
     crearPaneles();
     actualizarNichos();

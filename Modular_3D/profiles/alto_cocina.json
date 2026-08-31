@@ -1,0 +1,28 @@
+{
+  "id": "alto_cocina",
+  "label": "Mueble alto de cocina",
+  "description": "Módulo alto y poco profundo, con dos repisas internas.",
+  "fields": {
+    "tipo_modulo": "ALTO",
+    "modulo_nombre": "ALTO_COCINA",
+    "ancho_total": 600,
+    "alto_total": 900,
+    "prof_total": 350,
+    "espesor": 15,
+    "montaje_izq": "EXTERIOR",
+    "montaje_der": "EXTERIOR",
+    "montaje_superior": "INTERIOR",
+    "montaje_inferior": "INTERIOR",
+    "lleva_lateral_izq": "SI",
+    "lleva_lateral_der": "SI",
+    "lleva_base": "SI",
+    "lleva_techo": "SI",
+    "lleva_respaldo": "SI",
+    "grosor_resp": 6,
+    "montaje_puerta": "SOLAPADA",
+    "crear_puerta": "SI",
+    "tipo_puerta": "AUTO",
+    "num_repisas": 2,
+    "num_divisiones": 0
+  }
+}

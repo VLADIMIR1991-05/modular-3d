@@ -1,0 +1,28 @@
+{
+  "id": "mesa_noche",
+  "label": "Mesa de noche",
+  "description": "Módulo bajo y angosto, sin repisas, con una sola puerta o cajón.",
+  "fields": {
+    "tipo_modulo": "AUXILIAR",
+    "modulo_nombre": "MESA_NOCHE",
+    "ancho_total": 450,
+    "alto_total": 500,
+    "prof_total": 400,
+    "espesor": 15,
+    "montaje_izq": "EXTERIOR",
+    "montaje_der": "EXTERIOR",
+    "montaje_superior": "INTERIOR",
+    "montaje_inferior": "INTERIOR",
+    "lleva_lateral_izq": "SI",
+    "lleva_lateral_der": "SI",
+    "lleva_base": "SI",
+    "lleva_techo": "SI",
+    "lleva_respaldo": "SI",
+    "grosor_resp": 6,
+    "montaje_puerta": "SOLAPADA",
+    "crear_puerta": "SI",
+    "tipo_puerta": "UNICA",
+    "num_repisas": 0,
+    "num_divisiones": 0
+  }
+}

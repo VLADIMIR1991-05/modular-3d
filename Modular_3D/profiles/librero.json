@@ -1,0 +1,27 @@
+{
+  "id": "librero",
+  "label": "Librero abierto",
+  "description": "Módulo vertical sin puertas, con varias repisas y sin respaldo estructural.",
+  "fields": {
+    "tipo_modulo": "ALTO",
+    "modulo_nombre": "LIBRERO",
+    "ancho_total": 800,
+    "alto_total": 1800,
+    "prof_total": 300,
+    "espesor": 18,
+    "montaje_izq": "EXTERIOR",
+    "montaje_der": "EXTERIOR",
+    "montaje_superior": "EXTERIOR",
+    "montaje_inferior": "EXTERIOR",
+    "lleva_lateral_izq": "SI",
+    "lleva_lateral_der": "SI",
+    "lleva_base": "SI",
+    "lleva_techo": "SI",
+    "lleva_respaldo": "NO",
+    "montaje_puerta": "SOLAPADA",
+    "crear_puerta": "NO",
+    "tipo_puerta": "AUTO",
+    "num_repisas": 4,
+    "num_divisiones": 0
+  }
+}

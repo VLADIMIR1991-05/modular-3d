@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sketchup.rb'
+Sketchup.require 'Modular_3D/core/profiles'
 Sketchup.require 'Modular_3D/core/plugin'
 Sketchup.require 'Modular_3D/commands/registry'
 

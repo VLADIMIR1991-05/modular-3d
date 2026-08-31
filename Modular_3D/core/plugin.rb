@@ -1376,6 +1376,14 @@ module LPenafiel_GeneradorMueblesExacto
     end
 
     dialogo.show
+    perfiles_json = JSON.generate(Modular3D::Profiles.listar)
+    UI.start_timer(0.35, false) do
+      begin
+        dialogo.execute_script("window.__modular3dProfiles = #{perfiles_json}; if (window.Modular3DApplyProfileList) { window.Modular3DApplyProfileList(window.__modular3dProfiles); }") if dialogo
+      rescue
+        nil
+      end
+    end
     if datos_iniciales && !datos_iniciales.empty?
       datos_json = JSON.generate(datos_iniciales)
       script = "window.__modular3dInitial = #{datos_json}; if (window.Modular3DLoadInitial) { window.Modular3DLoadInitial(window.__modular3dInitial); }"
