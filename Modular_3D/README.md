@@ -1,7 +1,28 @@
-# Modular_3D 4.6.0-beta.1 · Casco activable, ajuste frontal y sobremedida por pieza
+# Modular_3D 4.7.0-beta.1 · Inglete, esquinero en L, presupuesto y sincronización del visor
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.6.0-beta.1  
+**Versión:** 4.7.0-beta.1  
+
+## Cambios 4.7.0-beta.1
+
+- **Corrección de fondo:** el visor 3D en vivo ahora lee montaje_izq/der/superior/inferior, los 8 retranqueos por panel, lleva_lateral_*/base/techo, la orientación del ajuste posterior/frontal y las 3 variantes de respaldo (SI/INTERNO/SOBREPUESTO) igual que la construcción real; antes siempre mostraba el mismo esquema de laterales pasados sin importar la configuración elegida.
+- **Inglete a 45° por pieza:** cualquier pieza admite un corte a 45° en una de sus 4 esquinas verticales (constante en toda su altura), visible en tiempo real en el visor, con columna propia en el despiece/CSV.
+- **Módulo esquinero en L:** nuevo comando independiente que arma dos alas con costura mitrada a 45° entre ellas.
+- **Montaje de puerta independiente** (solapada/embutida) del montaje del casco, aplicado al sistema de puertas heredado y al ajuste automático por espacio de la jerarquía.
+- **IDs estables por espacio** para las piezas generadas desde la jerarquía (H_CIERRE_*, H_CJ_*, H_PUERTA_*, H_DIV_*, etc.): ya no se nombran por posición, así que reestructurar el árbol no desconecta silenciosamente sus overrides de material/sobremedida.
+- **Plantillas de módulo** (bajo, alto, closet, mesa de noche, librero) que precargan el formulario desde la pestaña Medidas.
+- **Orientación de módulo:** botón para intercambiar ancho/alto exteriores.
+- **Render:** cielo de estudio con degradado, modo técnico (líneas ocultas) y cotas 3D en el propio modelo.
+- **Optimizador de corte:** casilla "Respetar veta" por tablero de stock para no rotar piezas en materiales con veta.
+- **Presupuesto:** nuevo comando que cotiza tableros por material, cantos, herrajes estimados, mano de obra y margen, exportable a PDF.
+- **Biblioteca local:** guarda componentes propios como .skp reales organizados por categoría, sin depender de ningún backend en la nube.
+- **Edición por lotes:** repinta varios módulos seleccionados a la vez.
+- **Diseño libre:** nuevo comando para etiquetar piezas dibujadas a mano y que el despiece/presupuesto las reconozca, completando el flujo junto con "Convertir selección en módulo" ya existente.
+- **Habitación básica:** muros rectos y piso a partir de una lista de tramos (largo + ángulo), sin huecos de puerta/ventana todavía.
+- Se quitó el botón "Guardar en este espacio" en Configuración: esos campos ya se aplicaban en vivo con cada cambio; el botón no hacía nada adicional.
+- Manifiesto migrado a schema 6 (miter_overrides_json, montaje_puerta); los módulos guardados en versiones anteriores se abren igual que antes.
+
+Nota: esta versión no pudo probarse dentro de una sesión real de SketchUp (entorno de desarrollo sin la aplicación instalada). La sintaxis Ruby/JS/JSON de todo el proyecto se validó con herramientas de línea de comandos y la geometría nueva (inglete, muros) se verificó por separado con guiones numéricos, pero la primera apertura dentro de SketchUp debe tratarse como la prueba real.
 
 ## Cambios 4.6.0-beta.1
 

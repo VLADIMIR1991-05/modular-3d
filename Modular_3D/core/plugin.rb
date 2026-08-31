@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.6.0-beta.1
+# Versión: 4.7.0-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -35,7 +35,7 @@ module LPenafiel_GeneradorMueblesExacto
   @contenedor_edicion = nil
   @transformacion_edicion = nil
 
-  MANIFEST_VERSION = 5
+  MANIFEST_VERSION = 6
 
   def self.migrar_manifiesto(manifiesto)
     return manifiesto unless manifiesto.is_a?(Hash)
@@ -48,6 +48,7 @@ module LPenafiel_GeneradorMueblesExacto
     data['material_textures_json'] ||= '{}'
     data['material_texture_meta_json'] ||= '{}'
     data['dimension_overrides_json'] ||= '{}'
+    # Schema 6: inglete por pieza y montaje de puerta independiente del casco.
     data['miter_overrides_json'] ||= '{}'
     data['montaje_puerta'] ||= 'SOLAPADA'
     data['external_front_scope'] ||= 'BY_SPACE'

@@ -223,6 +223,9 @@ module Modular3D
         errores << 'La configuracion de ingletes esta danada.'
       end
 
+      montaje_puerta = datos['montaje_puerta'].to_s
+      errores << "Montaje de puerta no reconocido (#{montaje_puerta})." unless montaje_puerta.empty? || %w[SOLAPADA EMBUTIDA].include?(montaje_puerta.upcase)
+
       { errores: errores, avisos: avisos }
     end
   end
