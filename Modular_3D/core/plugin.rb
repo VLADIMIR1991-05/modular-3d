@@ -1627,6 +1627,62 @@ module LPenafiel_GeneradorMueblesExacto
     mostrar_interfaz_moderna(datos)
   end
 
+  # --- DISEÑO LIBRE: ETIQUETAR PIEZA MANUAL ---
+  # Paso "2. Etiquetar pieza manual" del flujo de diseño libre: en vez de un
+  # tool interactivo de mouse (arriesgado de escribir a ciegas, sin poder
+  # probarlo dentro de SketchUp), usa UI.inputbox -API estable y ya probada
+  # de SketchUp- para asignarle a cualquier grupo/componente dibujado a mano
+  # los mismos atributos LPenafiel que crear_pieza genera automáticamente,
+  # de modo que el despiece, el presupuesto y el optimizador de corte lo
+  # reconozcan igual que a una pieza paramétrica. El paso "1. Crear volumen
+  # guía" no necesita herramienta propia: se dibuja con las herramientas
+  # nativas de SketchUp (rectángulo + empujar/tirar) y se etiqueta aquí; el
+  # paso "3. Empaquetar a módulo" ya existía como convertir_seleccion_en_modulo.
+  def self.etiquetar_pieza_seleccionada
+    model = Sketchup.active_model
+    entidad = model.selection.to_a.find { |item| item.respond_to?(:definition) && item.definition }
+    unless entidad
+      UI.messagebox('Selecciona un único grupo o componente (una pieza dibujada a mano) para etiquetarlo.')
+      return
+    end
+
+    definicion = entidad.definition
+    nombre_actual = definicion.get_attribute('LPenafiel', 'pieza_original').to_s
+    resultado = UI.inputbox(
+      ['Nombre de la pieza:', 'Cantos en los lados largos (0-2):', 'Cantos en los lados cortos (0-2):'],
+      [nombre_actual.empty? ? 'PIEZA_LIBRE' : nombre_actual, '2', '2'],
+      'Etiquetar pieza para despiece'
+    )
+    return unless resultado
+
+    nombre = resultado[0].to_s.strip.upcase.gsub(/\s+/, '_')
+    return UI.messagebox('El nombre no puede quedar vacío.') if nombre.empty?
+
+    cantos_l = [[resultado[1].to_i, 0].max, 2].min
+    cantos_c = [[resultado[2].to_i, 0].max, 2].min
+    caja = entidad.bounds
+    dimensiones = dimensiones_tablero(caja.width, caja.depth, caja.height)
+    placa = placa_mm(caja.width, caja.depth, caja.height)
+    codigo = codigo_pieza(nombre)
+    nombre_definicion = nombre_pieza(codigo, dimensiones, cantos_l, cantos_c)
+
+    model.start_operation('Etiquetar pieza de diseño libre', true)
+    definicion.name = nombre_definicion
+    definicion.description = "#{cantos_l}L-#{cantos_c}C"
+    definicion.set_attribute('LPenafiel', 'pieza_original', nombre)
+    definicion.set_attribute('LPenafiel', 'codigo', codigo)
+    definicion.set_attribute('LPenafiel', 'dimension_1_mm', dimensiones[0])
+    definicion.set_attribute('LPenafiel', 'dimension_2_mm', dimensiones[1])
+    definicion.set_attribute('LPenafiel', 'placa_mm', placa)
+    definicion.set_attribute('LPenafiel', 'cantos_largos', cantos_l)
+    definicion.set_attribute('LPenafiel', 'cantos_cortos', cantos_c)
+    definicion.set_attribute('LPenafiel', 'modulo', 'DISENO_LIBRE')
+    definicion.set_attribute('LPenafiel', 'modulo_despiece', 'DISENO_LIBRE')
+    entidad.name = nombre_definicion if entidad.respond_to?(:name=)
+    model.commit_operation
+    UI.messagebox("Pieza etiquetada como #{nombre_definicion}. Ya aparecerá en Despiece y Presupuesto.")
+  end
+
   def self.clasificar_pieza_externa(entity, caja_modulo, tolerancia)
     return 'PIEZA' unless entity.respond_to?(:bounds)
     caja = entity.bounds

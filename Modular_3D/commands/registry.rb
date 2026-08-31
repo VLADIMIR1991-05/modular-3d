@@ -9,13 +9,14 @@ Sketchup.require 'Modular_3D/commands/cutlist'
 Sketchup.require 'Modular_3D/commands/budget'
 Sketchup.require 'Modular_3D/commands/library'
 Sketchup.require 'Modular_3D/commands/batch_edit'
+Sketchup.require 'Modular_3D/commands/tag_piece'
 Sketchup.require 'Modular_3D/commands/updater'
 
 module Modular3D
   module Commands
     module_function
 
-    PRIMARY_COMMANDS = [CreateModule, EditModule, ConvertModule, CornerModule, Cutlist, Budget, LibraryCommand, BatchEdit].freeze
+    PRIMARY_COMMANDS = [CreateModule, EditModule, ConvertModule, CornerModule, Cutlist, Budget, LibraryCommand, BatchEdit, TagPiece].freeze
 
     def register
       toolbar = UI::Toolbar.new(Modular3D::PRODUCT_NAME)
