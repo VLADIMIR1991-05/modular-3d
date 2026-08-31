@@ -168,7 +168,25 @@
     .hierarchy-inspector details{margin:5px 0;border:1px solid var(--line);border-radius:6px;padding:6px}.hierarchy-inspector summary{cursor:pointer;color:#394d5a;font-weight:800}.hierarchy-inspector .row{grid-template-columns:1fr 125px;margin:4px 0}.hierarchy-inspector input,.hierarchy-inspector select{padding:6px}.hierarchy-inspector button{padding:8px}
     .checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0}.checks-grid label{display:flex;gap:5px;align-items:center}.checks-grid input{width:auto}.hierarchy-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .legacy-space-panel{display:none}.review-hierarchy-layout{display:grid;grid-template-columns:minmax(300px,1fr) 290px;gap:10px;margin-top:9px}.review-plan-wrap{min-width:0}.review-plan{height:500px}
-    .m3dv-stage{height:470px}.m3dv-navigator{width:142px;height:133px;display:block;padding:0;background:rgba(17,22,27,.74);right:5px;top:5px}.view-cube-pro{display:block;width:124px;height:112px;margin:2px auto;overflow:visible}.view-cube-pro .cube-face{fill:#394650;stroke:#9fb0bc;stroke-width:1.5;cursor:pointer;transition:fill .12s}.view-cube-pro .cube-face:hover,.view-cube-pro .cube-active{fill:var(--brand);stroke:#fff}.view-cube-pro text{fill:#fff;font-size:7px;font-weight:800;text-anchor:middle;pointer-events:none}.view-cube-pro .cube-edge{fill:none;stroke:transparent;stroke-width:10;cursor:pointer}.view-cube-pro .cube-edge:hover,.view-cube-pro .cube-edge.cube-active{stroke:rgba(240,100,36,.9)}.view-cube-pro .cube-corner{fill:#95a6b2;stroke:#e8eef2;stroke-width:1;cursor:pointer}.view-cube-pro .cube-corner:hover,.view-cube-pro .cube-corner.cube-active{fill:var(--brand);stroke:#fff;stroke-width:2}
+    .m3dv-stage{height:470px}.m3dv-navigator{width:142px;height:133px;display:block;padding:0;background:rgba(17,22,27,.74);right:5px;top:5px}
+    .view-navigator{--nav-size:124px;--cube-size:62px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:4px auto 0;display:grid;grid-template:16px 1fr 16px/16px 1fr 16px;filter:drop-shadow(0 5px 10px rgba(0,0,0,.38));user-select:none;touch-action:none}
+    .view-navigator button{min-width:0;padding:0;border:0;border-radius:4px;color:#eef2f5;background:rgba(38,45,52,.9);font-size:10px;line-height:1;cursor:pointer;transition:background .12s,transform .12s,color .12s}
+    .view-navigator button:hover,.view-navigator button.active{background:var(--brand);color:#161a1d}
+    .view-navigator button:active{transform:scale(.92)}
+    .nav-arrow-up{grid-area:1/2}.nav-arrow-down{grid-area:3/2}.nav-arrow-left{grid-area:2/1}.nav-arrow-right{grid-area:2/3}
+    .nav-face{grid-area:2/2;display:grid;place-items:center;perspective:280px;cursor:grab}
+    .nav-face:active{cursor:grabbing}
+    .nav-cube{position:relative;width:var(--cube-size);height:var(--cube-size);transform-style:preserve-3d;transition:transform .1s linear}
+    .nav-cube-face{position:absolute;inset:0;display:grid;grid-template-columns:22% 56% 22%;grid-template-rows:22% 56% 22%;gap:0;padding:0;border:1px solid rgba(255,255,255,.52);background:rgba(24,29,34,.96);backface-visibility:hidden}
+    .nav-cube-face button{border:1px solid rgba(255,255,255,.2);border-radius:0;background:rgba(65,75,84,.98)}
+    .nav-cube-face button:hover,.nav-cube-face button.linked,.nav-cube-face button.active{background:var(--brand);color:#161a1d}
+    .nav-cube-face .nav-center{font-size:7px;font-weight:850;letter-spacing:.02em;background:rgba(50,58,65,.98)}
+    .nav-cube .cube-front{transform:rotateY(180deg) translateZ(calc(var(--cube-size)/2))}
+    .nav-cube .cube-back{transform:translateZ(calc(var(--cube-size)/2))}
+    .nav-cube .cube-right{transform:rotateY(90deg) translateZ(calc(var(--cube-size)/2))}
+    .nav-cube .cube-left{transform:rotateY(-90deg) translateZ(calc(var(--cube-size)/2))}
+    .nav-cube .cube-top{transform:rotateX(-90deg) translateZ(calc(var(--cube-size)/2))}
+    .nav-cube .cube-bottom{transform:rotateX(90deg) translateZ(calc(var(--cube-size)/2))}
     .cube-home{position:absolute;right:0;bottom:-9px;width:26px!important;height:26px!important;padding:0!important;border-radius:50%!important;background:var(--brand)!important}.m3dv-toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}.m3dv-toolbar .redundant-view{display:none}
     .m3dv-navigator{opacity:.72;transition:opacity .18s ease}.m3dv-navigator:hover{opacity:1}
     .material-unico-box{margin:10px 0;padding:11px;border:1px solid var(--line);border-radius:8px;background:#fff}.material-unico-box>label,.check-line{display:flex;align-items:center;gap:7px;font-weight:700;color:#334955}.check-line{margin-top:10px}
@@ -206,7 +224,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.7.0-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.7.1-beta.1</div>
   </header>
 
   <main>
@@ -477,18 +495,13 @@
         </div>
         <div class="m3dv-space-badge" id="view_space_badge"><b>ESPACIO ACTIVO</b><span id="view_space_text"></span></div>
         <div class="m3dv-navigator" aria-label="Cubo profesional de navegación">
-          <svg class="view-cube-pro" viewBox="0 0 128 116" role="img" aria-label="Cubo de vistas con caras, aristas y esquinas">
-            <polygon id="cube_face_top" class="cube-face" points="15,35 62,8 113,31 64,58" data-m3dv-view="top"></polygon>
-            <polygon id="cube_face_front" class="cube-face" points="15,35 64,58 64,106 15,80" data-m3dv-view="front"></polygon>
-            <polygon id="cube_face_side" class="cube-face" points="64,58 113,31 113,78 64,106" data-m3dv-view="right"></polygon>
-            <text id="cube_label_top" x="64" y="31">ARRIBA</text><text id="cube_label_front" x="38" y="70">FRENTE</text><text id="cube_label_side" x="89" y="69">DER.</text>
-            <path class="cube-edge" d="M15 35 L62 8" data-m3dv-vector="-1,1,1"></path><path class="cube-edge" d="M62 8 L113 31" data-m3dv-vector="1,1,1"></path>
-            <path class="cube-edge" d="M15 35 L64 58" data-m3dv-vector="-1,0,1"></path><path class="cube-edge" d="M64 58 L113 31" data-m3dv-vector="1,0,1"></path>
-            <path class="cube-edge" d="M15 80 L64 106" data-m3dv-vector="-1,-1,1"></path><path class="cube-edge" d="M64 106 L113 78" data-m3dv-vector="1,-1,1"></path>
-            <circle class="cube-corner" cx="15" cy="35" r="5" data-m3dv-vector="-1,1,1"></circle><circle class="cube-corner" cx="62" cy="8" r="5" data-m3dv-vector="0,1,1"></circle>
-            <circle class="cube-corner" cx="113" cy="31" r="5" data-m3dv-vector="1,1,1"></circle><circle class="cube-corner" cx="64" cy="58" r="5" data-m3dv-vector="1,1,1"></circle>
-            <circle class="cube-corner" cx="15" cy="80" r="5" data-m3dv-vector="-1,-1,1"></circle><circle class="cube-corner" cx="64" cy="106" r="5" data-m3dv-vector="0,-1,1"></circle><circle class="cube-corner" cx="113" cy="78" r="5" data-m3dv-vector="1,-1,1"></circle>
-          </svg>
+          <div class="view-navigator" id="view_navigator" aria-label="Cubo de navegación 3D">
+            <button type="button" class="nav-arrow-up" data-orbit="up" title="Girar hacia arriba">▲</button>
+            <button type="button" class="nav-arrow-left" data-orbit="left" title="Girar hacia la izquierda">◀</button>
+            <div class="nav-face" id="view_cube_face"><div class="nav-cube" id="view_cube"></div></div>
+            <button type="button" class="nav-arrow-right" data-orbit="right" title="Girar hacia la derecha">▶</button>
+            <button type="button" class="nav-arrow-down" data-orbit="down" title="Girar hacia abajo">▼</button>
+          </div>
           <button type="button" id="view_home" class="cube-home" title="Vista isométrica">⌂</button>
           <button type="button" id="view_projection" hidden>Perspectiva</button>
         </div>

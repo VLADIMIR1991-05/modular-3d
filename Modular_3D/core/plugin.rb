@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.7.0-beta.1
+# Versión: 4.7.1-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1700,6 +1700,82 @@ module LPenafiel_GeneradorMueblesExacto
     'PIEZA_SIN_CLASIFICAR'
   end
 
+  CODIGOS_ROL_EXTERNO = {
+    'LATERAL_IZQUIERDO' => 'LAT', 'LATERAL_DERECHO' => 'LAT', 'BASE' => 'BAS', 'TAPA' => 'TEC',
+    'RESPALDO' => 'RES', 'REPISA' => 'REP', 'DIVISION' => 'DIV', 'PIEZA_SIN_CLASIFICAR' => 'PZA', 'PIEZA' => 'PZA'
+  }.freeze
+
+  # Encuentra las piezas "de verdad" a etiquetar dentro de una selección: si
+  # el usuario seleccionó varios grupos/componentes (una pieza por tablero,
+  # la práctica normal en SketchUp), cada uno es una pieza. Si seleccionó UN
+  # solo grupo que por dentro contiene varios grupos/componentes hijos (todo
+  # el mueble agrupado de una vez), se baja un nivel y se etiqueta cada hijo
+  # en vez del contenedor entero. Geometría suelta sin agrupar (caras/aristas
+  # directamente en el modelo) no se puede separar en piezas de forma
+  # confiable, así que se reporta aparte para avisarle al usuario.
+  def self.recolectar_piezas_para_importar(seleccion)
+    piezas = []
+    sin_agrupar = 0
+    seleccion.each do |entity|
+      if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+        hijos = entity.respond_to?(:definition) && entity.definition ? entity.definition.entities : []
+        subgrupos = hijos.select { |hijo| hijo.is_a?(Sketchup::Group) || hijo.is_a?(Sketchup::ComponentInstance) }
+        if subgrupos.length > 1 && subgrupos.length == hijos.to_a.reject { |h| h.is_a?(Sketchup::Edge) }.length
+          piezas.concat(subgrupos)
+        else
+          piezas << entity
+        end
+      elsif entity.respond_to?(:bounds)
+        sin_agrupar += 1
+      end
+    end
+    [piezas, sin_agrupar]
+  end
+
+  # Migración real de piezas dibujadas fuera del plugin: no basta con
+  # encapsular la selección en un grupo con un manifiesto -eso solo describe
+  # el módulo como conjunto-, cada pieza necesita los mismos atributos
+  # LPenafiel que crear_pieza le pone a una pieza paramétrica (codigo,
+  # dimensiones, placa, cantos) para que datos_pieza_para_despiece la
+  # reconozca y aparezca en Despiece/Presupuesto/Optimizador. Sin esto, un
+  # mueble importado quedaba visualmente correcto pero invisible para esas
+  # herramientas.
+  def self.etiquetar_piezas_importadas(seleccion, caja_modulo, tolerancia, modulo_nombre)
+    contador_por_codigo = Hash.new(0)
+    seleccion.each do |entity|
+      next unless entity.respond_to?(:definition) && entity.definition && entity.respond_to?(:bounds)
+
+      definicion = entity.definition
+      siguiente = definicion.get_attribute('LPenafiel', 'codigo').to_s
+      next unless siguiente.empty? # conserva piezas que ya vinieran etiquetadas (p. ej. de otro módulo Modular_3D)
+
+      rol = clasificar_pieza_externa(entity, caja_modulo, tolerancia)
+      codigo = CODIGOS_ROL_EXTERNO[rol] || 'PZA'
+      contador_por_codigo[codigo] += 1
+      nombre_pieza_original = "#{rol}_#{contador_por_codigo[codigo]}"
+
+      caja = entity.bounds
+      dimensiones = dimensiones_tablero(caja.width, caja.depth, caja.height)
+      placa = placa_mm(caja.width, caja.depth, caja.height)
+      cantos_l = 2
+      cantos_c = 2
+      nombre_definicion = nombre_pieza(codigo, dimensiones, cantos_l, cantos_c)
+
+      definicion.name = nombre_definicion if definicion.respond_to?(:name=)
+      definicion.description = "#{cantos_l}L-#{cantos_c}C · #{rol}"
+      definicion.set_attribute('LPenafiel', 'modulo', modulo_nombre)
+      definicion.set_attribute('LPenafiel', 'modulo_despiece', modulo_nombre)
+      definicion.set_attribute('LPenafiel', 'pieza_original', nombre_pieza_original)
+      definicion.set_attribute('LPenafiel', 'codigo', codigo)
+      definicion.set_attribute('LPenafiel', 'dimension_1_mm', dimensiones[0])
+      definicion.set_attribute('LPenafiel', 'dimension_2_mm', dimensiones[1])
+      definicion.set_attribute('LPenafiel', 'placa_mm', placa)
+      definicion.set_attribute('LPenafiel', 'cantos_largos', cantos_l)
+      definicion.set_attribute('LPenafiel', 'cantos_cortos', cantos_c)
+      entity.name = nombre_definicion if entity.respond_to?(:name=)
+    end
+  end
+
   def self.convertir_seleccion_en_modulo
     model = Sketchup.active_model
     seleccion = model.selection.to_a
@@ -1729,14 +1805,15 @@ module LPenafiel_GeneradorMueblesExacto
       nil
     end
     source = datos ? 'MIGRATED' : 'IMPORTED'
+    piezas_a_etiquetar, sin_agrupar = recolectar_piezas_para_importar(seleccion)
     unless datos
-      menores = seleccion.map do |entity|
+      menores = piezas_a_etiquetar.map do |entity|
         next unless entity.respond_to?(:bounds)
         [entity.bounds.width, entity.bounds.depth, entity.bounds.height].map(&:to_mm).select { |v| v > 0.5 }.min
       end.compact.sort
       espesor = menores.empty? ? 15.0 : menores[menores.length / 2]
       tolerancia = [espesor * 1.8, 30.0].max
-      inventario = seleccion.map.with_index do |entity, index|
+      inventario = piezas_a_etiquetar.map.with_index do |entity, index|
         b = entity.bounds
         {'id' => "imported_#{index + 1}", 'role' => clasificar_pieza_externa(entity, caja, tolerancia), 'name' => (entity.respond_to?(:name) ? entity.name.to_s : ''), 'w' => b.width.to_mm.round(2), 'd' => b.depth.to_mm.round(2), 'h' => b.height.to_mm.round(2)}
       end
@@ -1755,11 +1832,18 @@ module LPenafiel_GeneradorMueblesExacto
     manifiesto = crear_manifiesto(datos, modulo_nombre, datos['module_uuid'], source)
     model.start_operation('Convertir selección en módulo Modular_3D', true)
     begin
+      etiquetar_piezas_importadas(piezas_a_etiquetar, caja, [datos['espesor'].to_f * 1.8, 30.0].max, modulo_nombre) if source == 'IMPORTED'
       contenedor = encapsular_modulo(model.active_entities, seleccion, manifiesto)
       model.selection.clear
       model.selection.add(contenedor) if contenedor
       model.commit_operation
-      UI.messagebox(source == 'MIGRATED' ? 'Módulo anterior migrado. Selecciónalo y pulsa Editar módulo.' : 'Selección encapsulada. Revisa la clasificación de piezas al abrir Editar módulo.')
+      mensaje = if source == 'MIGRATED'
+                  'Módulo anterior migrado. Selecciónalo y pulsa Editar módulo.'
+                else
+                  "Selección encapsulada y #{piezas_a_etiquetar.length} pieza(s) etiquetada(s) para despiece (lateral/base/techo/repisa/respaldo según su tamaño). Revisa la clasificación desde Despiece y corrígela ahí si alguna quedó mal."
+                end
+      mensaje += "\n\nAviso: #{sin_agrupar} elemento(s) de la selección no estaban agrupados como piezas independientes y no se pudieron etiquetar por separado; agrúpalos (clic derecho > Crear grupo) y vuelve a convertir." if sin_agrupar.positive?
+      UI.messagebox(mensaje)
     rescue StandardError => error
       model.abort_operation
       UI.messagebox("No se pudo convertir la selección:\n#{error.message}")

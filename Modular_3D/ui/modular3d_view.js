@@ -659,29 +659,101 @@
     controls.target.copy(center); camera.lookAt(center); controls.update(); syncNavigator(); requestRender();
   }
 
+  /* Cubo de navegación 3D real (CSS transform-style:preserve-3d), inspirado
+     en github.com/VLADIMIR1991-05/MODULAR-3D-VIEW: 6 caras absolutas con su
+     propia rotateX/Y/translateZ, cada una con una grilla de 9 botones
+     (centro = vista de frente; bordes y esquinas = vistas oblicuas). A
+     diferencia del cubo SVG plano anterior, este gira de verdad para
+     reflejar el ángulo de cámara actual. Los clics reutilizan setViewVector,
+     ya usado por el resto del visor (view cube -> misma cámara, sin duplicar
+     lógica de movimiento).
+   */
+  var NAV_CUBE_FACES = [
+    { name: 'front', label: 'FRENTE', dir: [0, 0, 1], right: [1, 0, 0], up: [0, 1, 0] },
+    { name: 'back', label: 'ATRÁS', dir: [0, 0, -1], right: [-1, 0, 0], up: [0, 1, 0] },
+    { name: 'right', label: 'DER.', dir: [1, 0, 0], right: [0, 0, -1], up: [0, 1, 0] },
+    { name: 'left', label: 'IZQ.', dir: [-1, 0, 0], right: [0, 0, 1], up: [0, 1, 0] },
+    { name: 'top', label: 'ARRIBA', dir: [0, 1, 0], right: [1, 0, 0], up: [0, 0, -1] },
+    { name: 'bottom', label: 'ABAJO', dir: [0, -1, 0], right: [1, 0, 0], up: [0, 0, 1] }
+  ];
+  var navigatorDragging = false;
+  function buildNavCube() {
+    var cube = byId('view_cube');
+    if (!cube || cube.childElementCount) return;
+    var rows = [1, 0, -1], columns = [-1, 0, 1];
+    NAV_CUBE_FACES.forEach(function (face) {
+      var element = document.createElement('div');
+      element.className = 'nav-cube-face cube-' + face.name;
+      rows.forEach(function (row) {
+        columns.forEach(function (column) {
+          var direction = new THREE.Vector3(face.dir[0], face.dir[1], face.dir[2])
+            .addScaledVector(new THREE.Vector3(face.right[0], face.right[1], face.right[2]), column)
+            .addScaledVector(new THREE.Vector3(face.up[0], face.up[1], face.up[2]), row);
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.view = direction.toArray().join(',');
+          if (row === 0 && column === 0) { button.className = 'nav-center'; button.textContent = face.label; button.title = 'Vista ' + face.label.toLowerCase(); }
+          else button.title = 'Vista oblicua desde ' + face.label.toLowerCase();
+          button.addEventListener('click', function () {
+            if (navigatorDragging) return;
+            setViewVector(button.dataset.view);
+          });
+          element.appendChild(button);
+        });
+      });
+      cube.appendChild(element);
+    });
+    var face = byId('view_cube_face'), previous = null;
+    face.addEventListener('pointerdown', function (event) { navigatorDragging = false; previous = { x: event.clientX, y: event.clientY }; });
+    face.addEventListener('pointermove', function (event) {
+      if (!previous) return;
+      var dx = event.clientX - previous.x, dy = event.clientY - previous.y;
+      if (Math.abs(dx) + Math.abs(dy) > 2 && !navigatorDragging) { navigatorDragging = true; face.setPointerCapture(event.pointerId); }
+      if (navigatorDragging) {
+        if (Math.abs(dx) >= 1) orbitStep(dx > 0 ? 'right' : 'left', Math.abs(dx) * .01);
+        if (Math.abs(dy) >= 1) orbitStep(dy > 0 ? 'down' : 'up', Math.abs(dy) * .01);
+        previous = { x: event.clientX, y: event.clientY };
+      }
+    });
+    var endDrag = function () { previous = null; setTimeout(function () { navigatorDragging = false; }, 0); };
+    face.addEventListener('pointerup', endDrag);
+    face.addEventListener('pointercancel', endDrag);
+    document.querySelectorAll('[data-orbit]').forEach(function (button) {
+      button.addEventListener('click', function () { orbitStep(button.dataset.orbit); });
+    });
+  }
+  function orbitStep(action, angle) {
+    if (!camera || !controls) return;
+    angle = angle || Math.PI / 8;
+    var offset = camera.position.clone().sub(controls.target), distance = offset.length();
+    if (!distance) return;
+    offset.normalize();
+    if (action === 'left' || action === 'right') {
+      offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), action === 'left' ? angle : -angle);
+    } else {
+      var spherical = new THREE.Spherical().setFromVector3(offset);
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi + (action === 'up' ? -angle : angle), 0.06, Math.PI - 0.06);
+      offset.setFromSpherical(spherical);
+    }
+    camera.position.copy(controls.target).add(offset.multiplyScalar(distance));
+    camera.up.set(0, 1, 0);
+    camera.lookAt(controls.target);
+    controls.update();
+    syncNavigator();
+    requestRender();
+  }
   function syncNavigator() {
     if (!camera || !controls) return;
-    var direction = camera.position.clone().sub(controls.target).normalize(), best = null, bestDot = -2;
-    var mainName,sideName;
-    if(Math.abs(direction.z)>=Math.abs(direction.x)){mainName=direction.z>0?'front':'back';sideName=direction.x>=0?'right':'left';}
-    else{mainName=direction.x>=0?'right':'left';sideName=direction.z>0?'front':'back';}
-    var topName=direction.y>=-0.12?'top':'bottom',labels={front:'FRENTE',back:'ATRÁS',right:'DER.',left:'IZQ.',top:'ARRIBA',bottom:'ABAJO'};
-    [[byId('cube_face_front'),byId('cube_label_front'),mainName],[byId('cube_face_side'),byId('cube_label_side'),sideName],[byId('cube_face_top'),byId('cube_label_top'),topName]].forEach(function(item){if(item[0])item[0].dataset.m3dvView=item[2];if(item[1])item[1].textContent=labels[item[2]];});
-    var opposite={front:'back',back:'front',right:'left',left:'right',top:'bottom',bottom:'top'};
-    function faceVector(name){if(name==='front')return new THREE.Vector3(0,0,1);if(name==='back')return new THREE.Vector3(0,0,-1);if(name==='right')return new THREE.Vector3(1,0,0);if(name==='left')return new THREE.Vector3(-1,0,0);if(name==='top')return new THREE.Vector3(0,1,0);return new THREE.Vector3(0,-1,0);}
-    function setVector(element,names){if(!element)return;var vector=new THREE.Vector3();names.forEach(function(name){vector.add(faceVector(name));});element.dataset.m3dvVector=vector.normalize().toArray().join(',');}
-    var cubeEdges=document.querySelectorAll('.view-cube-pro .cube-edge'),cubeCorners=document.querySelectorAll('.view-cube-pro .cube-corner'),bottomName=opposite[topName],outerName=opposite[sideName];
-    setVector(cubeEdges[0],[topName,mainName]);setVector(cubeEdges[1],[topName,sideName]);setVector(cubeEdges[2],[mainName,outerName]);setVector(cubeEdges[3],[mainName,sideName]);setVector(cubeEdges[4],[bottomName,mainName]);setVector(cubeEdges[5],[bottomName,sideName]);
-    setVector(cubeCorners[0],[topName,mainName,outerName]);setVector(cubeCorners[1],[topName,mainName]);setVector(cubeCorners[2],[topName,mainName,sideName]);setVector(cubeCorners[3],[topName,sideName]);setVector(cubeCorners[4],[bottomName,mainName,outerName]);setVector(cubeCorners[5],[bottomName,mainName]);setVector(cubeCorners[6],[bottomName,mainName,sideName]);
-    document.querySelectorAll('[data-m3dv-vector],[data-m3dv-view]').forEach(function(button) {
-      var vector = null, name = button.dataset.m3dvView;
-      if (button.dataset.m3dvVector) { var p=button.dataset.m3dvVector.split(',').map(Number); vector=new THREE.Vector3(p[0],p[1],p[2]).normalize(); }
-      else if (name === 'front') vector=new THREE.Vector3(0,0,1); else if(name==='back')vector=new THREE.Vector3(0,0,-1); else if(name==='right')vector=new THREE.Vector3(1,0,0); else if(name==='left')vector=new THREE.Vector3(-1,0,0); else if(name==='top')vector=new THREE.Vector3(0,1,0); else if(name==='bottom')vector=new THREE.Vector3(0,-1,0);
-      button.classList.remove('cube-active');if(vector){var dot=vector.dot(direction);if(dot>bestDot){bestDot=dot;best=button;}}
+    var direction = camera.position.clone().sub(controls.target).normalize();
+    var yaw = THREE.MathUtils.radToDeg(Math.atan2(direction.x, direction.z));
+    var pitch = THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1)));
+    var cube = byId('view_cube');
+    if (cube) cube.style.transform = 'rotateX(' + pitch + 'deg) rotateY(' + (-yaw) + 'deg)';
+    document.querySelectorAll('.nav-cube-face [data-view]').forEach(function (button) {
+      var parts = button.dataset.view.split(',').map(Number);
+      var candidate = new THREE.Vector3(parts[0], parts[1], parts[2]).normalize();
+      button.classList.toggle('active', candidate.dot(direction) > .995);
     });
-    if(best)best.classList.add('cube-active');
-    var cube=document.querySelector('.view-cube-pro');
-    if(cube){var azimuth=Math.atan2(direction.x,direction.z)*180/Math.PI;cube.style.setProperty('--cube-azimuth',azimuth.toFixed(1)+'deg');cube.setAttribute('data-synced','true');}
   }
 
   function frameModel() { setView('iso'); }
@@ -759,6 +831,7 @@
       else { var span = modelMaxSize() * 0.72; camera.left = -span * w / h; camera.right = span * w / h; camera.top = span; camera.bottom = -span; }
       camera.updateProjectionMatrix(); renderer.setSize(w, h, false); requestRender();
     });
+    buildNavCube();
     bind('view_home', frameModel); bind('view_iso', function(){ setView('iso'); });
     bind('view_mode_space',function(){setSelectionMode('space');});bind('view_mode_piece',function(){setSelectionMode('piece');});
     bind('view_piece_focus',focusSelected);bind('view_piece_isolate',isolateSelected);bind('view_piece_visibility',toggleSelectedVisibility);bind('view_piece_edit',editSelected);
@@ -774,8 +847,6 @@
     bind('view_dimensions', function(){ dimensionsVisible = !dimensionsVisible; byId('view_dimensions').classList.toggle('active', dimensionsVisible); if (dimensionsVisible && !dimensionGroup) buildDimensionLabels(); updateDimensionLabels(); requestRender(); });
     var explosion = byId('view_explosion'); if (explosion) explosion.addEventListener('input', function(){ exploded = Number(explosion.value) || 0; applyVisualState(); });
     var search = byId('view_search'); if (search) search.addEventListener('input', function(){ buildTree(search.value); });
-    document.querySelectorAll('[data-m3dv-view]').forEach(function(button){ button.addEventListener('click', function(){ setView(button.dataset.m3dvView); }); });
-    document.querySelectorAll('[data-m3dv-vector]').forEach(function(button){ button.addEventListener('click', function(){ setViewVector(button.dataset.m3dvVector); }); });
     renderer.setAnimationLoop(function(){
       if (document.hidden) return;
       var changed = controls.update();

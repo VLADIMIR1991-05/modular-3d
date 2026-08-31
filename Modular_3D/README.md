@@ -1,7 +1,13 @@
-# Modular_3D 4.7.0-beta.1 · Inglete, esquinero en L, presupuesto y sincronización del visor
+# Modular_3D 4.7.1-beta.1 · Migración real de piezas externas y cubo de navegación 3D
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.7.0-beta.1  
+**Versión:** 4.7.1-beta.1  
+
+## Cambios 4.7.1-beta.1
+
+- **Migración real de piezas externas:** "Convertir selección en módulo" ahora etiqueta cada pieza detectada (lateral izq./der., base, techo, respaldo, repisa, división) con los mismos atributos que una pieza paramétrica (código, dimensiones, placa, cantos), no solo el contenedor completo. Antes el módulo quedaba visualmente correcto pero invisible para Despiece/Presupuesto/Optimizador porque a las piezas individuales nunca se les asignaba `codigo`. También distingue selecciones de un solo grupo con varios sub-grupos hijos (baja un nivel y etiqueta cada hijo) y avisa si hay geometría suelta sin agrupar que no se pudo separar en piezas.
+- **Cubo de navegación 3D real:** se reemplazó el cubo plano en SVG (una imagen isométrica fija que solo resaltaba un color) por un cubo CSS genuino con 6 caras que rotan de verdad (`transform-style: preserve-3d`), cada una con una grilla de 9 vistas (centro + 8 oblicuas), arrastrable con el mouse y con flechas de órbita, igual en técnica al de github.com/VLADIMIR1991-05/MODULAR-3D-VIEW pero conectado al sistema de cámara que ya tenía Modular_3D (reutiliza `setViewVector`, no duplica lógica de movimiento).
+- **Investigado el reporte de "Hueco delantero no obedece":** revisé la cadena completa (ids de campo, `datosFormulario`, `build()`, `addPiece`) y no encontré un defecto de código — la asignación X/Y/Z del retranqueo frontal coincide exactamente con la de `crear_pieza` en Ruby. Sí confirmé dos cosas reales: (1) tanto el HTML (`min="0"`) como `Validation.validar` en Ruby rechazan explícitamente valores negativos ("no puede ser negativo"), así que -3 nunca fue un valor soportado por diseño; (2) 3 mm sobre un panel de ~580 mm de fondo es un cambio visualmente muy sutil en la vista isométrica por defecto. Pendiente de confirmar con una prueba con un valor positivo más grande (p. ej. 50 mm) para descartar del todo un problema real.
 
 ## Cambios 4.7.0-beta.1
 
