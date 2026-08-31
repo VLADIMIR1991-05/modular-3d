@@ -4,6 +4,7 @@ Sketchup.require 'Modular_3D/commands/base'
 Sketchup.require 'Modular_3D/commands/create_module'
 Sketchup.require 'Modular_3D/commands/edit_module'
 Sketchup.require 'Modular_3D/commands/convert_module'
+Sketchup.require 'Modular_3D/commands/corner_module'
 Sketchup.require 'Modular_3D/commands/cutlist'
 Sketchup.require 'Modular_3D/commands/updater'
 
@@ -11,7 +12,7 @@ module Modular3D
   module Commands
     module_function
 
-    PRIMARY_COMMANDS = [CreateModule, EditModule, ConvertModule, Cutlist].freeze
+    PRIMARY_COMMANDS = [CreateModule, EditModule, ConvertModule, CornerModule, Cutlist].freeze
 
     def register
       toolbar = UI::Toolbar.new(Modular3D::PRODUCT_NAME)
