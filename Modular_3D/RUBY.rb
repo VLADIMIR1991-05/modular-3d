@@ -2,6 +2,7 @@
 
 require 'sketchup.rb'
 Sketchup.require 'Modular_3D/core/profiles'
+Sketchup.require 'Modular_3D/core/library'
 Sketchup.require 'Modular_3D/core/plugin'
 Sketchup.require 'Modular_3D/commands/registry'
 

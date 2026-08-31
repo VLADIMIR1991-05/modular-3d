@@ -2724,4 +2724,110 @@ module LPenafiel_GeneradorMueblesExacto
     dialogo.show
   end
 
+  # --- BIBLIOTECA LOCAL ---
+  def self.html_lista_biblioteca
+    manifest = Modular3D::Library.cargar_manifest
+    return '<p class="vacio">Aún no has guardado nada. Selecciona un grupo o componente y usa el formulario de arriba.</p>' if manifest['items'].empty?
+
+    por_categoria = manifest['items'].group_by { |item| [item['categoria'], item['subcategoria']] }
+    por_categoria.keys.sort.map do |clave|
+      categoria, subcategoria = clave
+      titulo = subcategoria.to_s.empty? ? categoria.to_s : "#{categoria} / #{subcategoria}"
+      filas = por_categoria[clave].map do |item|
+        "<div class='item-biblioteca'>" \
+        "<span>#{html_escape(item['nombre'])}</span>" \
+        "<div class='acciones-item'>" \
+        "<button onclick=\"sketchup.bibliotecaCargar('#{item['id']}')\">Insertar</button>" \
+        "<button class='secondary' onclick=\"sketchup.bibliotecaEliminar('#{item['id']}')\">Eliminar</button>" \
+        "</div></div>"
+      end.join
+      "<div class='categoria-biblioteca'><h3>#{html_escape(titulo)}</h3>#{filas}</div>"
+    end.join
+  end
+
+  def self.mostrar_biblioteca
+    return unless acceso_autorizado?
+
+    html = <<-HTML
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; margin: 18px; color: #111827; background: #f8fafc; }
+  h2 { margin: 0 0 4px 0; }
+  h3 { margin: 14px 0 6px 0; font-size: 13px; color: #1f2937; text-transform: uppercase; letter-spacing: .4px; }
+  .ruta { font-size: 11px; color: #64748b; margin-bottom: 14px; word-break: break-all; }
+  .row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 8px; font-size: 12px; width: 100%; }
+  button { border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff; border-radius: 5px; padding: 7px 12px; font-size: 12px; cursor: pointer; }
+  button.secondary { background: #fff; color: #b42318; border-color: #b42318; }
+  .categoria-biblioteca { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; background: #fff; }
+  .item-biblioteca { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-top: 1px solid #f1f5f9; }
+  .item-biblioteca:first-of-type { border-top: none; }
+  .acciones-item { display: flex; gap: 6px; }
+  .vacio { color: #64748b; font-size: 12px; }
+  #mensaje { display: none; margin: 10px 0; padding: 8px 10px; border-radius: 6px; font-size: 12px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  #mensaje.error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+</style>
+</head>
+<body>
+  <h2>Biblioteca local</h2>
+  <p class="ruta">Se guarda como archivos .skp normales en: #{html_escape(Modular3D::Library.raiz)}<br>Para llevarla a otro equipo, copia esa carpeta completa (no hay sincronización en la nube).</p>
+  <div id="mensaje"></div>
+  <h3>Guardar la selección actual</h3>
+  <div class="row"><label>Categoría</label><input id="lib_categoria" value="General"></div>
+  <div class="row"><label>Subcategoría</label><input id="lib_subcategoria" placeholder="Opcional"></div>
+  <div class="row"><label>Nombre</label><input id="lib_nombre" placeholder="Ej. Tirador barra 128mm"></div>
+  <button onclick="guardar()">Guardar selección</button>
+  <h3>Elementos guardados</h3>
+  <div id="lista">#{html_lista_biblioteca}</div>
+  <script>
+    function mostrarMensaje(texto, esError) {
+      var el = document.getElementById('mensaje');
+      el.textContent = texto; el.className = esError ? 'error' : ''; el.style.display = 'block';
+    }
+    function guardar() {
+      sketchup.bibliotecaGuardar(
+        document.getElementById('lib_categoria').value,
+        document.getElementById('lib_subcategoria').value,
+        document.getElementById('lib_nombre').value
+      );
+    }
+    window.Modular3DLibraryResult = function (resultado) {
+      mostrarMensaje(resultado.message, !resultado.ok);
+      if (resultado.ok && resultado.lista) document.getElementById('lista').innerHTML = resultado.lista;
+    };
+  </script>
+</body>
+</html>
+    HTML
+
+    dialogo = UI::HtmlDialog.new({
+      :dialog_title => "#{Modular3D::PRODUCT_NAME} | Biblioteca local",
+      :preferences_key => 'com.lpenafiel.modular3d.biblioteca',
+      :scrollable => true,
+      :resizable => true,
+      :width => 480,
+      :height => 640,
+      :style => UI::HtmlDialog::STYLE_WINDOW
+    })
+    dialogo.set_html(html)
+    dialogo.add_action_callback('bibliotecaGuardar') do |_action_context, categoria, subcategoria, nombre|
+      resultado = Modular3D::Library.guardar_seleccion(categoria, subcategoria, nombre)
+      resultado[:lista] = html_lista_biblioteca if resultado[:ok]
+      dialogo.execute_script("window.Modular3DLibraryResult(#{JSON.generate(resultado)})")
+    end
+    dialogo.add_action_callback('bibliotecaCargar') do |_action_context, id|
+      resultado = Modular3D::Library.cargar_item(id)
+      dialogo.execute_script("window.Modular3DLibraryResult(#{JSON.generate(resultado)})")
+    end
+    dialogo.add_action_callback('bibliotecaEliminar') do |_action_context, id|
+      resultado = Modular3D::Library.eliminar_item(id)
+      resultado[:lista] = html_lista_biblioteca if resultado[:ok]
+      dialogo.execute_script("window.Modular3DLibraryResult(#{JSON.generate(resultado)})")
+    end
+    dialogo.show
+  end
+
 end
