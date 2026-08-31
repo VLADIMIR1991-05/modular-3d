@@ -22,6 +22,10 @@
     if (category === 'interior' || String(role || '').indexOf('local-') === 0 || String(role || '').indexOf('separator-') === 0) return 'interior';
     return 'casco';
   }
+  function stableHierarchyId(value, fallback) {
+    var clean = String(value == null ? '' : value).toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return clean || String(fallback == null ? 'N' : fallback);
+  }
   function colorNumber(value, fallback) {
     var text = String(value || '').replace('#','');
     return /^[0-9a-f]{6}$/i.test(text) ? parseInt(text,16) : fallback;
@@ -204,42 +208,115 @@
     var colSeparator = physicalX ? general : 0, rowSeparator = physicalZ ? general : 0;
     var colStarts = cumulative(colSizes, leftT, colSeparator), rowStarts = cumulative(rowSizes, bottomT, rowSeparator);
 
-    addPiece('Lateral izquierdo', leftT, height, depth, 0, 0, 0, COLORS.lateral, 'lateral', false, {pieceId:'shell-left',materialKey:'LAT_IZQ',role:'shell-left',sourceField:'grosor_izq'});
-    addPiece('Lateral derecho', rightT, height, depth, width - rightT, 0, 0, COLORS.lateral, 'lateral', false, {pieceId:'shell-right',materialKey:'LAT_DER',role:'shell-right',sourceField:'grosor_der'});
-    addPiece('Panel inferior', innerW, bottomT, depth, leftT, 0, 0, COLORS.horizontal, 'horizontal', false, {pieceId:'shell-bottom',materialKey:'BASE',role:'shell-bottom',sourceField:'grosor_inferior'});
-    addPiece('Panel superior', innerW, topT, depth, leftT, height - topT, 0, COLORS.horizontal, 'top', false, {pieceId:'shell-top',materialKey:'TECHO',role:'shell-top',sourceField:'grosor_superior'});
+    /* Casco: replica EXACTA de la lógica de plugin.rb (montaje interior/exterior,
+       retranqueos por panel y paneles activables) para que la previsualización
+       nunca difiera de la geometría real que se construye en SketchUp. */
+    var madevalDelta = String(data.madeval || 'NO') === 'SI' ? 1 : 0;
+    var usableW = Math.max(1, innerW - madevalDelta);
+    var mountLeft = String(data.montaje_izq || 'EXTERIOR').toUpperCase();
+    var mountRight = String(data.montaje_der || 'EXTERIOR').toUpperCase();
+    var mountTop = String(data.montaje_superior || 'INTERIOR').toUpperCase();
+    var mountBottom = String(data.montaje_inferior || 'INTERIOR').toUpperCase();
+    var hasLeft = String(data.lleva_lateral_izq || 'SI') !== 'NO';
+    var hasRight = String(data.lleva_lateral_der || 'SI') !== 'NO';
+    var hasBottom = String(data.lleva_base || 'SI') !== 'NO';
+    var hasTop = String(data.lleva_techo || 'SI') !== 'NO';
+    var setbackFrontTop = number(data, 'retranqueo_frontal_superior', 0), setbackBackTop = number(data, 'retranqueo_trasero_superior', 0);
+    var setbackFrontBottom = number(data, 'retranqueo_frontal_inferior', 0), setbackBackBottom = number(data, 'retranqueo_trasero_inferior', 0);
+    var setbackFrontLeft = number(data, 'retranqueo_frontal_izq', 0), setbackBackLeft = number(data, 'retranqueo_trasero_izq', 0);
+    var setbackFrontRight = number(data, 'retranqueo_frontal_der', 0), setbackBackRight = number(data, 'retranqueo_trasero_der', 0);
+
+    var depthLeft = Math.max(1, depth - setbackFrontLeft - setbackBackLeft);
+    var depthRight = Math.max(1, depth - setbackFrontRight - setbackBackRight);
+    var heightLeft = mountLeft === 'INTERIOR' ? innerH : height, heightRight = mountRight === 'INTERIOR' ? innerH : height;
+    var zLeft = mountLeft === 'INTERIOR' ? bottomT : 0, zRight = mountRight === 'INTERIOR' ? bottomT : 0;
+    if (hasLeft) addPiece('Lateral izquierdo', leftT, heightLeft, depthLeft, 0, zLeft, setbackFrontLeft, COLORS.lateral, 'lateral', false, {pieceId:'shell-left',materialKey:'LAT_IZQ',role:'shell-left',sourceField:'grosor_izq'});
+    if (hasRight) addPiece('Lateral derecho', rightT, heightRight, depthRight, width - rightT, zRight, setbackFrontRight, COLORS.lateral, 'lateral', false, {pieceId:'shell-right',materialKey:'LAT_DER',role:'shell-right',sourceField:'grosor_der'});
+
+    var bottomW = mountBottom === 'EXTERIOR' ? width : usableW, bottomX = mountBottom === 'EXTERIOR' ? 0 : leftT;
+    var bottomDepth = Math.max(1, depth - setbackFrontBottom - setbackBackBottom);
+    if (hasBottom) addPiece('Panel inferior', bottomW, bottomT, bottomDepth, bottomX, 0, setbackFrontBottom, COLORS.horizontal, 'horizontal', false, {pieceId:'shell-bottom',materialKey:'BASE',role:'shell-bottom',sourceField:'grosor_inferior'});
+
+    var topW = mountTop === 'EXTERIOR' ? width : usableW, topX = mountTop === 'EXTERIOR' ? 0 : leftT;
+    var topDepth = Math.max(1, depth - setbackFrontTop - setbackBackTop);
+    if (hasTop) addPiece('Panel superior', topW, topT, topDepth, topX, height - topT, setbackFrontTop, COLORS.horizontal, 'top', false, {pieceId:'shell-top',materialKey:'TECHO',role:'shell-top',sourceField:'grosor_superior'});
 
     if (!hasHierarchy && physicalX) for (var c = 0; c < colSizes.length - 1; c += 1) {
       addPiece('División vertical ' + (c + 1), general, innerH, interiorDepth, colStarts[c] + colSizes[c], bottomT, interiorSetback, COLORS.interior, 'interior');
     }
     if (!hasHierarchy && physicalZ) for (var r = 0; r < rowSizes.length - 1; r += 1) {
-      addPiece('Repisa ' + (r + 1), innerW, general, interiorDepth, leftT, rowStarts[r] + rowSizes[r], interiorSetback, COLORS.interior, 'interior');
+      addPiece('Repisa ' + (r + 1), usableW, general, interiorDepth, leftT, rowStarts[r] + rowSizes[r], interiorSetback, COLORS.interior, 'interior');
     }
 
-    if (data.lleva_respaldo !== 'NO') {
-      var backT = number(data, 'grosor_resp', 6), adjustmentT=number(data,'grosor_ajuste',general), rearOffset=number(data,'distancia_plano_posterior',0), rearGap=number(data,'separacion_ajuste_respaldo',2);
-      var structuralBack=backT>=15, adjustmentCount=String(data.cantidad_ajustes||'AUTO').toUpperCase()==='AUTO'?(height>760?2:1):Math.max(0,parseInt(data.cantidad_ajustes,10)||0);
-      if(structuralBack)adjustmentCount=0;
-      var adjustmentY=Math.max(0,depth-rearOffset-adjustmentT), backY=structuralBack?Math.max(0,depth-rearOffset-backT):Math.max(0,adjustmentY-rearGap-backT);
-      addPiece('Respaldo', innerW, innerH, backT, leftT, bottomT, backY, COLORS.back, 'back', false, {pieceId:'back',materialKey:'RESPALDO',role:'back',sourceField:'grosor_resp'});
-      var adjustmentH=number(data,'alto_ajuste',60);
-      for(var ai=0;ai<adjustmentCount;ai+=1){var az=bottomT+(innerH-adjustmentH)*(adjustmentCount===1?1:(ai/(adjustmentCount-1)));addPiece('Ajuste posterior '+(ai+1),innerW,adjustmentH,adjustmentT,leftT,az,adjustmentY,COLORS.handle,'adjustment',false,{role:'rear-adjustment',sourceField:'grosor_ajuste'});}
+    /* Sistema posterior: mismas 3 variantes y la misma secuencia atrás->adelante
+       que plugin.rb (distancia posterior -> ajuste -> separación -> respaldo). */
+    var backMode = String(data.lleva_respaldo == null ? 'SI' : data.lleva_respaldo).toUpperCase();
+    var adjustmentT = number(data, 'grosor_ajuste', general), adjustmentH = number(data, 'alto_ajuste', 60);
+    var rearOffset = number(data, 'distancia_plano_posterior', 0), rearGap = number(data, 'separacion_ajuste_respaldo', 2);
+    var backT = number(data, 'grosor_resp', 6), structuralBack = backT >= 15;
+    var adjustmentCountRaw = String(data.cantidad_ajustes == null ? 'AUTO' : data.cantidad_ajustes).toUpperCase();
+    var adjustmentCount = 0;
+    if (backMode !== 'NO' && !structuralBack) {
+      adjustmentCount = adjustmentCountRaw === 'AUTO' ? (height > 760 ? 2 : 1) : Math.max(0, parseInt(adjustmentCountRaw, 10) || 0);
+      adjustmentCount = Math.max(0, Math.min(4, adjustmentCount));
+    }
+    var adjustmentY = Math.max(0, depth - rearOffset - adjustmentT);
+    var zTopAdjustment = height - topT - adjustmentH;
+    function addAdjustmentSquares(prefix, yStart) {
+      addPiece(prefix + ' · escuadra izq.', adjustmentT, adjustmentT, adjustmentH, leftT, zTopAdjustment, yStart, COLORS.handle, 'adjustment', false, {role:'rear-adjustment',sourceField:'grosor_ajuste'});
+      addPiece(prefix + ' · escuadra der.', adjustmentT, adjustmentT, adjustmentH, width - rightT - adjustmentT, zTopAdjustment, yStart, COLORS.handle, 'adjustment', false, {role:'rear-adjustment',sourceField:'grosor_ajuste'});
+    }
+    if (adjustmentCount > 0) {
+      var rearOrientation = String(data.ajuste_posterior_orientacion || 'HORIZONTAL').toUpperCase();
+      if (rearOrientation === 'VERTICAL') addAdjustmentSquares('Ajuste posterior', adjustmentY);
+      else addPiece('Ajuste superior', usableW, adjustmentH, adjustmentT, leftT, zTopAdjustment, adjustmentY, COLORS.handle, 'adjustment', false, {role:'rear-adjustment',sourceField:'grosor_ajuste'});
+      if (adjustmentCount > 1) for (var aidx = 2; aidx <= adjustmentCount; aidx += 1) {
+        var rearSpan = height - topT - bottomT - adjustmentH;
+        var fraction = aidx === 2 ? 0.5 : (adjustmentCount - aidx + 1) / adjustmentCount;
+        var az = bottomT + (rearSpan * fraction) - (adjustmentH / 2);
+        az = Math.max(bottomT, Math.min(zTopAdjustment - adjustmentH, az));
+        addPiece('Ajuste posterior ' + (aidx - 1), usableW, adjustmentH, adjustmentT, leftT, az, adjustmentY, COLORS.handle, 'adjustment', false, {role:'rear-adjustment',sourceField:'grosor_ajuste'});
+      }
+    }
+    if (String(data.ajuste_frontal_activo || 'NO').toUpperCase() === 'SI') {
+      var frontOrientation = String(data.ajuste_frontal_orientacion || 'HORIZONTAL').toUpperCase();
+      if (frontOrientation === 'VERTICAL') addAdjustmentSquares('Ajuste frontal', 0);
+      else addPiece('Ajuste frontal', usableW, adjustmentH, adjustmentT, leftT, zTopAdjustment, 0, COLORS.handle, 'adjustment', false, {role:'front-adjustment',sourceField:'grosor_ajuste'});
+    }
+
+    if (backMode === 'SI') {
+      var groove = number(data, 'profundidad_ranura', 5);
+      var backW = innerW + groove * 2, backH = innerH + groove * 2;
+      var rearClearance = structuralBack ? (rearOffset + backT) : (rearOffset + adjustmentT + rearGap + backT);
+      var backY = depth - rearClearance;
+      addPiece('Respaldo', backW, backH, backT, leftT - groove, bottomT - groove, backY, COLORS.back, 'back', false, {pieceId:'back',materialKey:'RESPALDO',role:'back',sourceField:'grosor_resp'});
+    } else if (backMode === 'INTERNO') {
+      var backYInterno = structuralBack ? (depth - rearOffset - backT) : (adjustmentY - rearGap - backT);
+      addPiece('Respaldo interno', innerW, innerH, backT, leftT, bottomT, backYInterno, COLORS.back, 'back', false, {pieceId:'back',materialKey:'RESPALDO_INTERNO',role:'back',sourceField:'grosor_resp'});
+    } else if (backMode === 'SOBREPUESTO') {
+      var overlayGap = 1.5, backYSobre = depth - rearOffset - backT;
+      addPiece('Respaldo sobrepuesto', width - overlayGap * 2, height - overlayGap * 2, backT, overlayGap, overlayGap, backYSobre, COLORS.back, 'back', false, {pieceId:'back',materialKey:'RESPALDO_SOBREPUESTO',role:'back',sourceField:'grosor_resp'});
     }
 
     /* Configuración jerárquica: la geometría resuelta alimenta directamente al visor. */
     if (hierarchyGeometry && Array.isArray(hierarchyGeometry.separators)) {
       (hierarchyGeometry.nodes || []).forEach(addSpaceHit);
+      var separatorsByParent = {};
       hierarchyGeometry.separators.forEach(function(separator, index) {
+        var parentId = stableHierarchyId(separator.parent, 'ROOT');
+        separatorsByParent[parentId] = (separatorsByParent[parentId] || 0) + 1;
+        var suffix = parentId + '_' + separatorsByParent[parentId];
         addPiece(
           (separator.axis === 'X' ? 'Divisor vertical ' : (separator.axis === 'Z' ? 'Repisa ' : 'Separador de profundidad ')) + (index + 1),
           separator.w, separator.h, separator.d, separator.x, separator.z, separator.y,
-          COLORS.interior, 'interior', false, {pieceId:'separator_'+index,materialKey:(separator.axis==='X'?'H_DIV_X_':(separator.axis==='Z'?'H_REP_Z_':'H_DIV_Y_'))+(index+1),role:'separator-'+String(separator.axis||'').toLowerCase(),ownerSpaceId:separator.parent,parentSpaceId:separator.parent,sourceField:'hierarchy_expr'}
+          COLORS.interior, 'interior', false, {pieceId:'separator_'+index,materialKey:(separator.axis==='X'?'H_DIV_X_':(separator.axis==='Z'?'H_REP_Z_':'H_DIV_Y_'))+suffix,role:'separator-'+String(separator.axis||'').toLowerCase(),ownerSpaceId:separator.parent,parentSpaceId:separator.parent,sourceField:'hierarchy_expr'}
         );
       });
       (hierarchyGeometry.nodes || []).forEach(function(node,nodeIndex) {
         var b = node.box, nodeLabel=node.display_name||node.name||node.id, content = String(node.content || 'VACIO'), gap = Number(node.gap == null ? 3 : node.gap), drawerCount = Math.max(0, parseInt(node.drawers, 10) || 0);
         var isLeaf = !(node.children || []).length, enclosure = node.enclosure || {};
-        var localMeta=function(role,field,suffix){var prefixes={'local-left':'H_CIERRE_IZQ_','local-right':'H_CIERRE_DER_','local-bottom':'H_BASE_','local-top':'H_TECHO_','local-back':'H_RESP_','local-shelf':'H_REP_LOCAL_','door':'H_PUERTA_','drawer-front':'H_CJ_'};return{pieceId:role+'_'+node.id+(suffix||''),materialKey:(prefixes[role]||('H_'+role.toUpperCase().replace(/-/g,'_')+'_'))+(nodeIndex+1)+(suffix||''),role:role,ownerSpaceId:node.id,parentSpaceId:node.id,sourceField:field};};
+        var nid = stableHierarchyId(node.id, 'IDX' + (nodeIndex + 1));
+        var localMeta=function(role,field,suffix){var prefixes={'local-left':'H_CIERRE_IZQ_','local-right':'H_CIERRE_DER_','local-bottom':'H_BASE_','local-top':'H_TECHO_','local-back':'H_RESP_','local-shelf':'H_REP_LOCAL_','door':'H_PUERTA_','drawer-front':'H_CJ_'};return{pieceId:role+'_'+node.id+(suffix||''),materialKey:(prefixes[role]||('H_'+role.toUpperCase().replace(/-/g,'_')+'_'))+nid+(suffix||''),role:role,ownerSpaceId:node.id,parentSpaceId:node.id,sourceField:field};};
         if (enclosure.left) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-left','h_left'));
         if (enclosure.right) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x+b.w-general,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-right','h_right'));
         if (enclosure.bottom) addPiece('Base local · '+nodeLabel,b.w,general,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
@@ -264,7 +341,7 @@
           var frontW = Math.max(1,(fb.w-(internalFront?gap*2:0)-gapCenter*(frontCount-1))/frontCount), frontH = Math.max(1,fb.h-(internalFront?gap*2:0)), frontT = number(data,'puerta_grosor',general);
           for (var hf=0;hf<frontCount;hf+=1) {
             var doorMeta=localMeta('door','h_front','_'+(hf+1));
-            doorMeta.materialKey='H_PUERTA_'+(internalFront?'INT':'EXT')+'_'+(nodeIndex+1)+'_'+(hf+1);
+            doorMeta.materialKey='H_PUERTA_'+(internalFront?'INT':'EXT')+'_'+nid+'_'+(hf+1);
             addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:-frontT,COLORS.front,'front',false,doorMeta);
           }
         }

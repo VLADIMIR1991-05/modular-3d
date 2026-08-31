@@ -162,6 +162,16 @@ module LPenafiel_GeneradorMueblesExacto
     codigo ? codigo[1] : nombre_base
   end
 
+  # ID estable para nombrar piezas generadas desde la jerarquía: usa el id del
+  # nodo/espacio (persistente aunque se reordenen o inserten hermanos) en vez
+  # de la posición dentro del arreglo, para que material_overrides_json y
+  # dimension_overrides_json no se desincronicen al reestructurar el árbol.
+  def self.id_pieza_jerarquia(valor, respaldo = nil)
+    limpio = valor.to_s.strip.upcase.gsub(/[^A-Z0-9]+/, '_').gsub(/\A_+|_+\z/, '')
+    return limpio unless limpio.empty?
+    respaldo.to_s.empty? ? 'N' : respaldo.to_s
+  end
+
   def self.dimension_mm(valor)
     valor.to_mm.round
   end
@@ -904,14 +914,18 @@ module LPenafiel_GeneradorMueblesExacto
 
       # Motor jerárquico: usa las mismas cajas exactas calculadas por el plano 2D y MODULAR-3D VIEW.
       if hierarchy_geometry
-        (hierarchy_geometry['separators'] || []).each_with_index do |separator, index|
+        separadores_por_padre = Hash.new(0)
+        (hierarchy_geometry['separators'] || []).each do |separator|
           next unless separator.is_a?(Hash)
           axis = separator['axis'].to_s.upcase
           ancho = separator['w'].to_f.mm
           fondo = separator['d'].to_f.mm
           alto = separator['h'].to_f.mm
           next if ancho <= 0 || fondo <= 0 || alto <= 0
-          codigo = axis == 'X' ? "H_DIV_X_#{index + 1}" : (axis == 'Z' ? "H_REP_Z_#{index + 1}" : "H_DIV_Y_#{index + 1}")
+          padre_id = id_pieza_jerarquia(separator['parent'], 'ROOT')
+          separadores_por_padre[padre_id] += 1
+          sufijo = "#{padre_id}_#{separadores_por_padre[padre_id]}"
+          codigo = axis == 'X' ? "H_DIV_X_#{sufijo}" : (axis == 'Z' ? "H_REP_Z_#{sufijo}" : "H_DIV_Y_#{sufijo}")
           self.crear_pieza(entities, modulo_nombre, codigo, ancho, fondo, alto,
             separator['x'].to_f.mm, separator['y'].to_f.mm, separator['z'].to_f.mm, 1, 1)
         end
@@ -920,11 +934,12 @@ module LPenafiel_GeneradorMueblesExacto
           next unless node.is_a?(Hash) && node['box'].is_a?(Hash) && node['enclosure'].is_a?(Hash)
           box = node['box']; enc = node['enclosure']; x = box['x'].to_f.mm; y = box['y'].to_f.mm; z = box['z'].to_f.mm
           w = box['w'].to_f.mm; d = box['d'].to_f.mm; h = box['h'].to_f.mm
-          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{node_index + 1}", espesor, d, h, x, y, z, 1, 1) if enc['left']
-          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{node_index + 1}", espesor, d, h, x + w - espesor, y, z, 1, 1) if enc['right']
-          self.crear_pieza(entities, modulo_nombre, "H_BASE_#{node_index + 1}", w, d, espesor, x, y, z, 1, 0) if enc['bottom']
-          self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{node_index + 1}", w, d, espesor, x, y, z + h - espesor, 1, 0) if enc['top']
-          self.crear_pieza(entities, modulo_nombre, "H_RESP_#{node_index + 1}", w, grosor_resp, h, x, y + d - grosor_resp, z, 0, 0) if enc['back']
+          nid = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
+          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{nid}", espesor, d, h, x, y, z, 1, 1) if enc['left']
+          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{nid}", espesor, d, h, x + w - espesor, y, z, 1, 1) if enc['right']
+          self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", w, d, espesor, x, y, z, 1, 0) if enc['bottom']
+          self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d, espesor, x, y, z + h - espesor, 1, 0) if enc['top']
+          self.crear_pieza(entities, modulo_nombre, "H_RESP_#{nid}", w, grosor_resp, h, x, y + d - grosor_resp, z, 0, 0) if enc['back']
         end
 
         leaf_nodes = hierarchy_geometry['nodes'].select { |node| node.is_a?(Hash) && (!node['children'].is_a?(Array) || node['children'].empty?) }
@@ -933,13 +948,14 @@ module LPenafiel_GeneradorMueblesExacto
           x_min = box['x'].to_f.mm; y_min = box['y'].to_f.mm; z_min = box['z'].to_f.mm
           ancho_nodo = box['w'].to_f.mm; fondo_nodo = box['d'].to_f.mm; alto_nodo = box['h'].to_f.mm
           next if ancho_nodo <= 0 || fondo_nodo <= 0 || alto_nodo <= 0
+          nid = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
           contenido = node['content'].to_s.upcase
           if contenido == 'REPISAS'
             cantidad = [[node['shelves'].to_i, 1].max, 20].min
             distancia = (alto_nodo - (cantidad * espesor)) / (cantidad + 1)
             (1..cantidad).each do |ri|
               z_rep = z_min + (ri * distancia) + ((ri - 1) * espesor)
-              self.crear_pieza(entities, modulo_nombre, "H_REP_LOCAL_#{node_index + 1}_#{ri}", ancho_nodo, fondo_nodo, espesor, x_min, y_min, z_rep, 1, 0)
+              self.crear_pieza(entities, modulo_nombre, "H_REP_LOCAL_#{nid}_#{ri}", ancho_nodo, fondo_nodo, espesor, x_min, y_min, z_rep, 1, 0)
             end
           end
           if contenido.start_with?('CAJONES')
@@ -953,7 +969,7 @@ module LPenafiel_GeneradorMueblesExacto
               (1..cantidad).each do |ci|
                 base_x = x_min + holgura
                 base_z = z_min + fuga_h + ((ci - 1) * (altura_caja + fuga_h))
-                prefix = "H_CJ_#{node_index + 1}_#{ci}"
+                prefix = "H_CJ_#{nid}_#{ci}"
                 self.crear_pieza(entities, modulo_nombre, "#{prefix}_LAT_IZQ", espesor, fondo_caja, altura_caja, base_x, y_min, base_z, 1, 0)
                 self.crear_pieza(entities, modulo_nombre, "#{prefix}_LAT_DER", espesor, fondo_caja, altura_caja, base_x + ancho_caja - espesor, y_min, base_z, 1, 0)
                 self.crear_pieza(entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, base_x + espesor, y_min, base_z, 1, 0)
@@ -1006,8 +1022,9 @@ module LPenafiel_GeneradorMueblesExacto
           ancho_puerta = (ancho_nodo - (margen_lateral * 2) - (fuga_central * (cantidad - 1))) / cantidad
           alto_puerta = alto_nodo - (margen_lateral * 2)
           next if ancho_puerta <= 0 || alto_puerta <= 0
+          nid_puerta = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
           (1..cantidad).each do |pi|
-            nombre_puerta = "H_PUERTA_#{puerta_interna ? 'INT' : 'EXT'}_#{node_index + 1}_#{pi}"
+            nombre_puerta = "H_PUERTA_#{puerta_interna ? 'INT' : 'EXT'}_#{nid_puerta}_#{pi}"
             # Externa: ocupa exclusivamente el plano exterior, desde -grosor hasta el frente Y=0.
             # Interna: nace dentro del hueco del espacio seleccionado.
             y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : -grosor_puerta
