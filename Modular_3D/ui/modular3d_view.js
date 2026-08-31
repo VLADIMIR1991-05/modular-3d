@@ -1,0 +1,588 @@
+(function () {
+  'use strict';
+
+  var scene, camera, renderer, controls, model, grid, floor, selected, selectionBox, spaceSelection;
+  var meshes = [], spaceMeshes = [], selectedSpaceId = null, currentData = {}, needsRender = true, orthographic = false;
+  var selectionMode = 'space', isolated = false;
+  var exploded = 0, transparent = false, shadows = true, edgesVisible = true;
+  var raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
+  var pointerStart = null;
+  var originalCenter = new THREE.Vector3(), originalSize = new THREE.Vector3();
+  var COLORS = {
+    lateral: 0xc99258, horizontal: 0xe0b37c, interior: 0xd7a66e,
+    back: 0xcdbda8, front: 0xf06424, drawer: 0xb87543,
+    glass: 0x73b9d6, handle: 0x4d5963
+  };
+
+  function materialGroup(category, role) {
+    if (category === 'front') return 'frentes';
+    if (category === 'drawer') return 'cajones';
+    if (category === 'back') return 'respaldo';
+    if (category === 'handle' || category === 'adjustment') return 'herrajes';
+    if (category === 'interior' || String(role || '').indexOf('local-') === 0 || String(role || '').indexOf('separator-') === 0) return 'interior';
+    return 'casco';
+  }
+  function colorNumber(value, fallback) {
+    var text = String(value || '').replace('#','');
+    return /^[0-9a-f]{6}$/i.test(text) ? parseInt(text,16) : fallback;
+  }
+  function resolvedPieceStyle(category, role, pieceId, materialKey, fallback) {
+    var group=materialGroup(category,role),overrides={},textures={},textureMeta={};
+    try{overrides=JSON.parse(currentData.material_overrides_json||'{}')||{};}catch(_e){overrides={};}
+    try{textures=JSON.parse(currentData.material_textures_json||'{}')||{};}catch(_t){textures={};}
+    try{textureMeta=JSON.parse(currentData.material_texture_meta_json||'{}')||{};}catch(_m){textureMeta={};}
+    var override=overrides[materialKey]||overrides[pieceId]||null;
+    var useGlobal=currentData.material_unico==='SI',groupCustom=currentData['material_'+group+'_custom']==='SI';
+    var groupColor=useGlobal&&!groupCustom?currentData.material_global_color:currentData['material_'+group+'_color'],groupName=useGlobal&&!groupCustom?currentData.material_global_nombre:currentData['material_'+group+'_nombre'];
+    var resolvedColor=colorNumber(override&&override.color, colorNumber(groupColor,fallback)),edgeMode=String(currentData.edge_mode||'MIXED'),edge=(override&&override.edge&&override.edge!=='INHERIT')?override.edge:(edgeMode==='ALL_HARD'?'HARD':(edgeMode==='ALL_PVC'?'PVC':(group==='frentes'?'HARD':'PVC'))),edgeColor=(override&&override.edgeColor&&override.edgeColor!=='INHERIT')?override.edgeColor:('#'+resolvedColor.toString(16).padStart(6,'0'));
+    var textureKey=useGlobal&&!groupCustom?'global':group,meta=textureMeta[textureKey]||{};
+    return {group:group,color:resolvedColor,name:(override&&override.name)||groupName||group,custom:!!override,texture:(override&&override.texture)||textures[textureKey]||'',rotation:Number(override&&override.rotation!=='INHERIT'?override.rotation:meta.rotation)||0,scale:Number(meta.scale)||600,edge:edge,edgeColor:edgeColor};
+  }
+
+  function byId(id) { return document.getElementById(id); }
+  function number(data, key, fallback) {
+    var value = Number(data[key]);
+    return isFinite(value) ? value : fallback;
+  }
+  function requestRender() { needsRender = true; }
+  function disposeMaterial(material) {
+    if (!material) return;
+    if (Array.isArray(material)) material.forEach(disposeMaterial);
+    else material.dispose();
+  }
+  function disposeObject(object){if(!object)return;scene.remove(object);object.traverse(function(item){if(item.geometry)item.geometry.dispose();if(item.material)disposeMaterial(item.material);});}
+  function clearModel() {
+    if (selectionBox) disposeObject(selectionBox);
+    if (spaceSelection) scene.remove(spaceSelection);
+    selectionBox = null;
+    spaceSelection = null;
+    selected = null;
+    isolated = false;
+    if(byId('view_piece_isolate'))byId('view_piece_isolate').classList.remove('active');
+    spaceMeshes.forEach(function(mesh){scene.remove(mesh);if(mesh.geometry)mesh.geometry.dispose();if(mesh.material)disposeMaterial(mesh.material);});
+    spaceMeshes = [];
+    if (model) {
+      scene.remove(model);
+      model.traverse(function (item) {
+        if (item.geometry) item.geometry.dispose();
+        if (item.material) disposeMaterial(item.material);
+      });
+    }
+    model = new THREE.Group();
+    scene.add(model);
+    meshes = [];
+  }
+
+  function addSpaceHit(node) {
+    var b=node&&node.box;if(!b||b.w<=0||b.h<=0||b.d<=0)return;
+    var geometry=new THREE.BoxGeometry(b.w,b.h,b.d),hit=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xff6b1a,transparent:true,opacity:0.012,depthWrite:false,side:THREE.DoubleSide}));
+    hit.position.set(b.x+b.w/2,b.z+b.h/2,-(b.y+b.d/2));hit.userData={spaceId:node.id,spaceNode:node,spaceVolume:b.w*b.h*b.d};hit.renderOrder=900;scene.add(hit);spaceMeshes.push(hit);
+  }
+
+  function selectSpace(nodeId, emitEvent) {
+    if(emitEvent&&nodeId)selectPiece(null);
+    if(spaceSelection){scene.remove(spaceSelection);spaceSelection.traverse(function(item){if(item.geometry)item.geometry.dispose();if(item.material)disposeMaterial(item.material);});spaceSelection=null;}
+    selectedSpaceId=nodeId||null;var hit=spaceMeshes.filter(function(item){return item.userData.spaceId===selectedSpaceId;})[0];
+    var badge=byId('view_space_badge'),badgeText=byId('view_space_text');
+    if(hit){var node=hit.userData.spaceNode,b=node.box,group=new THREE.Group();var fill=new THREE.Mesh(new THREE.BoxGeometry(b.w,b.h,b.d),new THREE.MeshBasicMaterial({color:0xff5a16,transparent:true,opacity:0.16,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));var edge=new THREE.LineSegments(new THREE.EdgesGeometry(fill.geometry),new THREE.LineBasicMaterial({color:0xff4b00,depthTest:false,transparent:true,opacity:1}));fill.position.copy(hit.position);edge.position.copy(hit.position);fill.renderOrder=995;edge.renderOrder=996;group.add(fill,edge);scene.add(group);spaceSelection=group;if(badge)badge.classList.add('show');if(badgeText)badgeText.textContent=(node.display_name||node.name||node.id)+' · '+Math.round(b.w)+' × '+Math.round(b.h)+' × '+Math.round(b.d)+' mm';}
+    else if(badge)badge.classList.remove('show');
+    if(emitEvent&&selectedSpaceId)window.dispatchEvent(new CustomEvent('modular3d:spaceSelected3D',{detail:{id:selectedSpaceId}}));requestRender();
+  }
+
+  function setSelectionMode(mode) {
+    selectionMode=mode==='piece'?'piece':'space';
+    if(byId('view_mode_space'))byId('view_mode_space').classList.toggle('active',selectionMode==='space');
+    if(byId('view_mode_piece'))byId('view_mode_piece').classList.toggle('active',selectionMode==='piece');
+    renderer&&renderer.domElement&&renderer.domElement.setAttribute('data-selection-mode',selectionMode);
+  }
+
+  function material(color, glass) {
+    var result = new THREE.MeshStandardMaterial({
+      color: color,
+      roughness: glass ? 0.16 : 0.58,
+      metalness: glass ? 0.04 : 0.01,
+      transparent: glass || transparent,
+      opacity: glass ? 0.38 : (transparent ? 0.42 : 1),
+      side: THREE.DoubleSide
+    });
+    result.userData.baseOpacity = glass ? 0.38 : 1;
+    return result;
+  }
+  function applyTexture(target, source, scale, rotation){
+    if(!source||!target)return;
+    var configure=function(baseTexture){var texture=baseTexture.clone();texture.needsUpdate=true;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(Math.max(.1,600/(Number(scale)||600)),Math.max(.1,600/(Number(scale)||600)));texture.center.set(.5,.5);texture.rotation=(Number(rotation)||0)*Math.PI/180;texture.anisotropy=renderer&&renderer.capabilities?Math.min(8,renderer.capabilities.getMaxAnisotropy()):1;target.map=texture;target.needsUpdate=true;requestRender();};
+    if(textureCache[source]){configure(textureCache[source]);return;}
+    var loader=new THREE.TextureLoader();loader.setCrossOrigin('anonymous');loader.load(source,function(texture){textureCache[source]=texture;configure(texture);},undefined,function(){/* URL sin CORS: conserva el color configurado. */});
+  }
+
+  function addPiece(name, width, height, depth, x, y, z, color, category, glass, metadata) {
+    if (width <= 0 || height <= 0 || depth <= 0) return null;
+    metadata=metadata||{};
+    var generatedId=metadata.pieceId||('piece_' + (meshes.length + 1)),materialKey=metadata.materialKey||generatedId,style=resolvedPieceStyle(category,metadata.role||category,generatedId,materialKey,color);
+    var geometry = new THREE.BoxGeometry(width, height, depth);
+    var pieceMaterial=material(style.color, glass);applyTexture(pieceMaterial,style.texture,style.scale,style.rotation);var piece = new THREE.Mesh(geometry, pieceMaterial);
+    // Modelo: X=derecha, Y=fondo, Z=arriba. Three.js usa Z=-fondo.
+    piece.position.set(x + width / 2, y + height / 2, -(z + depth / 2));
+    piece.castShadow = shadows;
+    piece.receiveShadow = shadows;
+    piece.userData = {
+      selectable: true, name: name, category: category,
+      dimensions: { length: Math.max(width, height, depth), width: [width, height, depth].sort(function(a,b){return b-a;})[1], thickness: Math.min(width, height, depth) },
+      size: { x: width, y: height, z: depth }, original: piece.position.clone(), glass: !!glass,
+      pieceId: generatedId, materialKey:materialKey, materialGroup:style.group, materialName:style.name, materialColor:'#'+style.color.toString(16).padStart(6,'0'), materialCustom:style.custom, edgeType:style.edge, edgeColor:style.edgeColor,
+      role: metadata.role || category,
+      ownerSpaceId: metadata.ownerSpaceId || null,
+      parentSpaceId: metadata.parentSpaceId || null,
+      sourceField: metadata.sourceField || null
+    };
+    var edge = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geometry),
+      new THREE.LineBasicMaterial({ color: 0x58483d, transparent: true, opacity: 0.48 })
+    );
+    edge.name = '__edges';
+    edge.visible = edgesVisible;
+    piece.add(edge);
+    model.add(piece);
+    meshes.push(piece);
+    return piece;
+  }
+
+  function stationSizes(expression, total, separator) {
+    var tokens = String(expression || '').split(':').map(function(v){ return v.trim(); }).filter(Boolean);
+    if (!tokens.length) return null;
+    var usable = total - Math.max(0, tokens.length - 1) * separator;
+    if (usable <= 0) return null;
+    var fixed = 0, flexible = 0;
+    var items = tokens.map(function(token) {
+      var match = token.match(/^(\d+(?:\.\d+)?)\s*(mm|cm|m)$/i);
+      if (match) {
+        var raw = Number(match[1]), unit = match[2].toLowerCase();
+        var mm = unit === 'mm' ? raw : (unit === 'cm' ? raw * 10 : raw * 1000);
+        fixed += mm; return ['fixed', mm];
+      }
+      match = token.match(/^(\d+(?:\.\d+)?)%$/);
+      if (match) { var percent = usable * Number(match[1]) / 100; fixed += percent; return ['fixed', percent]; }
+      if (/^auto$/i.test(token)) { flexible += 1; return ['flex', 1]; }
+      match = token.match(/^(\d+(?:\.\d+)?)$/);
+      if (match && Number(match[1]) > 0) { flexible += Number(match[1]); return ['flex', Number(match[1])]; }
+      return ['invalid', 0];
+    });
+    if (items.some(function(item){ return item[0] === 'invalid'; }) || fixed > usable) return null;
+    var remaining = usable - fixed;
+    if (remaining > 0.01 && flexible <= 0) return null;
+    return items.map(function(item){ return item[0] === 'fixed' ? item[1] : remaining * item[1] / flexible; });
+  }
+
+  function cumulative(sizes, start, separator) {
+    var result = [], cursor = start;
+    sizes.forEach(function(size) { result.push(cursor); cursor += size + separator; });
+    return result;
+  }
+
+  var selectedPieceKey = null;
+  var textureCache = {};
+  function build(data) {
+    currentData = data || {};
+    var hadModel=meshes.length>0,priorPosition=camera&&camera.position?camera.position.clone():null,priorTarget=controls&&controls.target?controls.target.clone():null,priorPieceKey=selectedPieceKey;
+    clearModel();
+    var width = number(data, 'ancho_total', 600), height = number(data, 'alto_total', 760), depth = number(data, 'prof_total', 580);
+    var general = number(data, 'espesor', 15), leftT = number(data, 'grosor_izq', general), rightT = number(data, 'grosor_der', general);
+    var topT = number(data, 'grosor_superior', general), bottomT = number(data, 'grosor_inferior', general);
+    var innerW = Math.max(1, width - leftT - rightT), innerH = Math.max(1, height - topT - bottomT);
+    var interiorSetback = number(data, 'retranqueo_interior', 38), interiorDepth = Math.max(1, depth - interiorSetback);
+    var hierarchyGeometry = null;
+    try { hierarchyGeometry = JSON.parse(data.hierarchy_geometry_json || 'null'); } catch (_hierarchyError) { hierarchyGeometry = null; }
+    var hasHierarchy = !!(hierarchyGeometry && Array.isArray(hierarchyGeometry.nodes));
+    var frontScope = String(data.external_front_scope || 'BY_SPACE').toUpperCase();
+    var physicalX = String(data.param_x_type || 'FISICA') !== 'VIRTUAL';
+    var physicalZ = String(data.param_z_type || 'FISICA') !== 'VIRTUAL';
+    var colSizes = stationSizes(data.param_x_expr, innerW, physicalX ? general : 0);
+    var rowSizes = stationSizes(data.param_z_expr, innerH, physicalZ ? general : 0);
+    var divisions = Math.max(0, parseInt(data.num_divisiones, 10) || 0), shelves = Math.max(0, parseInt(data.num_repisas, 10) || 0);
+    if (!colSizes) colSizes = Array(divisions + 1).fill((innerW - divisions * general) / (divisions + 1));
+    if (!rowSizes) rowSizes = Array(shelves + 1).fill((innerH - shelves * general) / (shelves + 1));
+    var colSeparator = physicalX ? general : 0, rowSeparator = physicalZ ? general : 0;
+    var colStarts = cumulative(colSizes, leftT, colSeparator), rowStarts = cumulative(rowSizes, bottomT, rowSeparator);
+
+    addPiece('Lateral izquierdo', leftT, height, depth, 0, 0, 0, COLORS.lateral, 'lateral', false, {pieceId:'shell-left',materialKey:'LAT_IZQ',role:'shell-left',sourceField:'grosor_izq'});
+    addPiece('Lateral derecho', rightT, height, depth, width - rightT, 0, 0, COLORS.lateral, 'lateral', false, {pieceId:'shell-right',materialKey:'LAT_DER',role:'shell-right',sourceField:'grosor_der'});
+    addPiece('Panel inferior', innerW, bottomT, depth, leftT, 0, 0, COLORS.horizontal, 'horizontal', false, {pieceId:'shell-bottom',materialKey:'BASE',role:'shell-bottom',sourceField:'grosor_inferior'});
+    addPiece('Panel superior', innerW, topT, depth, leftT, height - topT, 0, COLORS.horizontal, 'top', false, {pieceId:'shell-top',materialKey:'TECHO',role:'shell-top',sourceField:'grosor_superior'});
+
+    if (!hasHierarchy && physicalX) for (var c = 0; c < colSizes.length - 1; c += 1) {
+      addPiece('División vertical ' + (c + 1), general, innerH, interiorDepth, colStarts[c] + colSizes[c], bottomT, interiorSetback, COLORS.interior, 'interior');
+    }
+    if (!hasHierarchy && physicalZ) for (var r = 0; r < rowSizes.length - 1; r += 1) {
+      addPiece('Repisa ' + (r + 1), innerW, general, interiorDepth, leftT, rowStarts[r] + rowSizes[r], interiorSetback, COLORS.interior, 'interior');
+    }
+
+    if (data.lleva_respaldo !== 'NO') {
+      var backT = number(data, 'grosor_resp', 6), adjustmentT=number(data,'grosor_ajuste',general), rearOffset=number(data,'distancia_plano_posterior',0), rearGap=number(data,'separacion_ajuste_respaldo',2);
+      var structuralBack=backT>=15, adjustmentCount=String(data.cantidad_ajustes||'AUTO').toUpperCase()==='AUTO'?(height>760?2:1):Math.max(0,parseInt(data.cantidad_ajustes,10)||0);
+      if(structuralBack)adjustmentCount=0;
+      var adjustmentY=Math.max(0,depth-rearOffset-adjustmentT), backY=structuralBack?Math.max(0,depth-rearOffset-backT):Math.max(0,adjustmentY-rearGap-backT);
+      addPiece('Respaldo', innerW, innerH, backT, leftT, bottomT, backY, COLORS.back, 'back', false, {pieceId:'back',materialKey:'RESPALDO',role:'back',sourceField:'grosor_resp'});
+      var adjustmentH=number(data,'alto_ajuste',60);
+      for(var ai=0;ai<adjustmentCount;ai+=1){var az=bottomT+(innerH-adjustmentH)*(adjustmentCount===1?1:(ai/(adjustmentCount-1)));addPiece('Ajuste posterior '+(ai+1),innerW,adjustmentH,adjustmentT,leftT,az,adjustmentY,COLORS.handle,'adjustment',false,{role:'rear-adjustment',sourceField:'grosor_ajuste'});}
+    }
+
+    /* Configuración jerárquica: la geometría resuelta alimenta directamente al visor. */
+    if (hierarchyGeometry && Array.isArray(hierarchyGeometry.separators)) {
+      (hierarchyGeometry.nodes || []).forEach(addSpaceHit);
+      hierarchyGeometry.separators.forEach(function(separator, index) {
+        addPiece(
+          (separator.axis === 'X' ? 'Divisor vertical ' : (separator.axis === 'Z' ? 'Repisa ' : 'Separador de profundidad ')) + (index + 1),
+          separator.w, separator.h, separator.d, separator.x, separator.z, separator.y,
+          COLORS.interior, 'interior', false, {pieceId:'separator_'+index,materialKey:(separator.axis==='X'?'H_DIV_X_':(separator.axis==='Z'?'H_REP_Z_':'H_DIV_Y_'))+(index+1),role:'separator-'+String(separator.axis||'').toLowerCase(),ownerSpaceId:separator.parent,parentSpaceId:separator.parent,sourceField:'hierarchy_expr'}
+        );
+      });
+      (hierarchyGeometry.nodes || []).forEach(function(node,nodeIndex) {
+        var b = node.box, nodeLabel=node.display_name||node.name||node.id, content = String(node.content || 'VACIO'), gap = Number(node.gap == null ? 3 : node.gap), drawerCount = Math.max(0, parseInt(node.drawers, 10) || 0);
+        var isLeaf = !(node.children || []).length, enclosure = node.enclosure || {};
+        var localMeta=function(role,field,suffix){var prefixes={'local-left':'H_CIERRE_IZQ_','local-right':'H_CIERRE_DER_','local-bottom':'H_BASE_','local-top':'H_TECHO_','local-back':'H_RESP_','local-shelf':'H_REP_LOCAL_','door':'H_PUERTA_','drawer-front':'H_CJ_'};return{pieceId:role+'_'+node.id+(suffix||''),materialKey:(prefixes[role]||('H_'+role.toUpperCase().replace(/-/g,'_')+'_'))+(nodeIndex+1)+(suffix||''),role:role,ownerSpaceId:node.id,parentSpaceId:node.id,sourceField:field};};
+        if (enclosure.left) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-left','h_left'));
+        if (enclosure.right) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x+b.w-general,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-right','h_right'));
+        if (enclosure.bottom) addPiece('Base local · '+nodeLabel,b.w,general,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
+        if (enclosure.top) addPiece('Techo local · '+nodeLabel,b.w,general,b.d,b.x,b.z+b.h-general,b.y,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
+        if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));
+        var shelfCount = isLeaf && content === 'REPISAS' ? Math.max(1, parseInt(node.shelves, 10) || 1) : 0;
+        for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, b.d, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));
+        if (isLeaf && content.indexOf('CAJONES') === 0) {
+          drawerCount = Math.max(1, drawerCount || 3); var drawerHeight = Math.max(20, (b.h - gap * (drawerCount + 1)) / drawerCount);
+          for (var hd = 0; hd < drawerCount; hd += 1) {
+            var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL';
+            addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+gap+hd*(drawerHeight+gap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
+          }
+        }
+        var front = String(node.front || (content === 'CAJONES_PUERTA' ? 'PUERTA_UNICA' : 'NINGUNO')).replace(/_VIDRIO/g,'').replace(/VIDRIO/g,'UNICA');
+        if (front !== 'NINGUNO') {
+          var internalFront=front.indexOf('INTERNA')>=0,fb=internalFront?b:(node.front_box||((node.id==='root')?{x:1.5,z:1.5,w:width-3,h:height-3,y:0}:b));
+          if (!internalFront && frontScope !== 'BY_SPACE') return;
+          var requestedCount=String(node.frontCount||'AUTO').toUpperCase();
+          var frontCount=requestedCount==='AUTO'?Math.max(1,Math.min(8,Math.ceil(fb.w/600))):Math.max(1,Math.min(8,parseInt(requestedCount,10)||1));
+          var gapCenter=Math.max(0.5,Number(node.gapCenter==null?gap:node.gapCenter));
+          var frontW = Math.max(1,(fb.w-(internalFront?gap*2:0)-gapCenter*(frontCount-1))/frontCount), frontH = Math.max(1,fb.h-(internalFront?gap*2:0)), frontT = number(data,'puerta_grosor',general);
+          for (var hf=0;hf<frontCount;hf+=1) {
+            var doorMeta=localMeta('door','h_front','_'+(hf+1));
+            doorMeta.materialKey='H_PUERTA_'+(internalFront?'INT':'EXT')+'_'+(nodeIndex+1)+'_'+(hf+1);
+            addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:-frontT,COLORS.front,'front',false,doorMeta);
+          }
+        }
+      });
+      if(frontScope==='GLOBAL'){
+        var globalMode=String(data.global_front_count_mode||'AUTO').toUpperCase();
+        var autoWidth=Math.max(100,number(data,'global_front_auto_width',600));
+        var globalCount=globalMode==='MANUAL'?Math.max(1,Math.min(8,parseInt(data.global_front_count,10)||1)):Math.max(1,Math.min(8,Math.ceil(width/autoWidth)));
+        var gl=Math.max(0,number(data,'global_front_gap_left',3)),gr=Math.max(0,number(data,'global_front_gap_right',3));
+        var gt=Math.max(0,number(data,'global_front_gap_top',3)),gb=Math.max(0,number(data,'global_front_gap_bottom',3)),gc=Math.max(0,number(data,'global_front_gap_center',3));
+        var globalT=number(data,'puerta_grosor',general),globalW=Math.max(1,(width-gl-gr-gc*(globalCount-1))/globalCount),globalH=Math.max(1,height-gt-gb);
+        for(var gf=0;gf<globalCount;gf+=1)addPiece('Puerta exterior global '+(gf+1),globalW,globalH,globalT,gl+gf*(globalW+gc),gb,-globalT,COLORS.front,'front',false,{pieceId:'global_front_'+(gf+1),materialKey:'G_PUERTA_EXT_'+(gf+1),role:'door',ownerSpaceId:'root',parentSpaceId:'root',sourceField:'global_front_count'});
+      }
+    }
+
+    var spaces = [];
+    try { spaces = JSON.parse(data.spaces_json || '[]'); } catch (_error) { spaces = []; }
+    if (!Array.isArray(spaces)) spaces = [];
+    if (!hasHierarchy) spaces.forEach(function(space) {
+      var col = Math.max(0, Math.min(colSizes.length - 1, parseInt(space.column, 10) || 0));
+      var row = Math.max(0, Math.min(rowSizes.length - 1, parseInt(space.niche, 10) || 0));
+      var x = colStarts[col], y = rowStarts[row], cellW = colSizes[col], cellH = rowSizes[row];
+      var content = String(space.content || 'VACIO'), gap = Number(space.gap == null ? 2 : space.gap);
+      if (content === 'REPISAS') {
+        var countShelves = Math.max(1, parseInt(space.shelves, 10) || 1);
+        for (var localShelf = 1; localShelf <= countShelves; localShelf += 1) {
+          addPiece('Repisa local ' + (localShelf), cellW, general, interiorDepth, x, y + cellH * localShelf / (countShelves + 1) - general / 2, interiorSetback, COLORS.interior, 'interior');
+        }
+      }
+      if (content === 'CAJONERA') {
+        var drawers = Math.max(1, parseInt(space.drawers, 10) || 3), drawerH = Math.max(20, (cellH - gap * (drawers + 1)) / drawers);
+        for (var drawer = 0; drawer < drawers; drawer += 1) {
+          var drawerY = y + gap + drawer * (drawerH + gap), external = space.front_type !== 'INTERNO';
+          addPiece((external ? 'Frente cajón ' : 'Cajón interno ') + (drawer + 1), Math.max(1, cellW - gap * 2), drawerH, general, x + gap, drawerY, external ? -general - 3 : interiorSetback + 12, COLORS.drawer, external ? 'front' : 'drawer');
+        }
+      }
+      if (content.indexOf('PUERTA') === 0) {
+        var doubleDoor = content.indexOf('DOBLE') >= 0, glass = content.indexOf('VIDRIO') >= 0, doors = doubleDoor ? 2 : 1;
+        var doorW = Math.max(1, (cellW - gap * (doors + 1)) / doors), doorH = Math.max(1, cellH - gap * 2), doorT = number(data, 'puerta_grosor', general);
+        for (var door = 0; door < doors; door += 1) addPiece('Puerta ' + (door + 1), doorW, doorH, doorT, x + gap + door * (doorW + gap), y + gap, -doorT - 3, glass ? COLORS.glass : COLORS.front, 'front', glass);
+      }
+    });
+
+    if (!hasHierarchy && !spaces.length && data.crear_puerta === 'SI') {
+      var gapDoor = number(data, 'juego_general', 2), doorThickness = number(data, 'puerta_grosor', general);
+      var isDouble = data.tipo_puerta === 'DOBLE' || data.tipo_puerta === 'DOBLE_VIDRIO' || (data.tipo_puerta === 'AUTO' && width > 619);
+      var isGlass = String(data.tipo_puerta).indexOf('VIDRIO') >= 0, legacyDoors = isDouble ? 2 : 1;
+      var legacyDoorW = (width - gapDoor * (legacyDoors + 1)) / legacyDoors;
+      for (var ld = 0; ld < legacyDoors; ld += 1) addPiece('Puerta ' + (ld + 1), legacyDoorW, height - gapDoor * 2, doorThickness, gapDoor + ld * (legacyDoorW + gapDoor), gapDoor, -doorThickness - 3, isGlass ? COLORS.glass : COLORS.front, 'front', isGlass);
+    }
+
+    var box = new THREE.Box3().setFromObject(model);
+    originalCenter = box.getCenter(new THREE.Vector3());
+    originalSize = box.getSize(new THREE.Vector3());
+    meshes.forEach(function(mesh){ mesh.userData.original.copy(mesh.position); });
+    applyVisualState();
+    if(hadModel&&priorPosition&&priorTarget){camera.position.copy(priorPosition);controls.target.copy(priorTarget);camera.lookAt(priorTarget);controls.update();}else frameModel();
+    buildTree();
+    updateModuleInfo(width, height, depth);
+    selectPiece(null, true);
+    var restoredPiece=priorPieceKey&&meshes.filter(function(item){return item.userData.materialKey===priorPieceKey||item.userData.pieceId===priorPieceKey;})[0];
+    if(restoredPiece)selectPiece(restoredPiece,false,true);else selectSpace(data.selected_space_id || selectedSpaceId, false);
+    requestRender();
+  }
+
+  function applyVisualState() {
+    meshes.forEach(function(mesh) {
+      var base = mesh.material.userData.baseOpacity || 1;
+      mesh.material.opacity = mesh.userData.glass ? base : (transparent ? 0.38 : 1);
+      mesh.material.transparent = mesh.userData.glass || transparent;
+      mesh.material.depthWrite = !(mesh.userData.glass || transparent);
+      mesh.castShadow = shadows;
+      mesh.receiveShadow = shadows;
+      var direction = mesh.userData.original.clone().sub(originalCenter).normalize();
+      mesh.position.copy(mesh.userData.original).add(direction.multiplyScalar(exploded));
+      var edge = mesh.getObjectByName('__edges'); if (edge) edge.visible = edgesVisible;
+    });
+    requestRender();
+  }
+
+  function updateModuleInfo(width, height, depth) {
+    if (byId('view_module_width')) byId('view_module_width').textContent = Math.round(width) + ' mm';
+    if (byId('view_module_height')) byId('view_module_height').textContent = Math.round(height) + ' mm';
+    if (byId('view_module_depth')) byId('view_module_depth').textContent = Math.round(depth) + ' mm';
+    if (byId('view_health')) byId('view_health').textContent = meshes.length + ' piezas · render local';
+  }
+
+  function buildTree(filter) {
+    var host = byId('view_tree'); if (!host) return;
+    var term = String(filter || '').toLowerCase();
+    host.innerHTML = '';
+    meshes.filter(function(mesh){ return !term || mesh.userData.name.toLowerCase().indexOf(term) >= 0; }).forEach(function(mesh, index) {
+      var button = document.createElement('button');
+      button.type = 'button'; button.className = 'm3dv-tree-item' + (mesh === selected ? ' active' : '');
+      button.textContent = mesh.userData.name;
+      button.addEventListener('click', function(){ selectPiece(mesh); });
+      host.appendChild(button);
+    });
+  }
+
+  function selectPiece(mesh, preserveKey, silent) {
+    var previousKey=selected&&selected.userData?(selected.userData.materialKey||selected.userData.pieceId):null;
+    if(mesh&&spaceSelection)selectSpace(null,false);
+    if (selectionBox) disposeObject(selectionBox);
+    selected = mesh || null; selectionBox = null;
+    if(selected)selectedPieceKey=selected.userData.materialKey||selected.userData.pieceId;
+    else if(!preserveKey)selectedPieceKey=null;
+    if (selected) {
+      selectionBox = new THREE.Group();
+      var pieceBounds=new THREE.Box3().setFromObject(selected),pieceSize=pieceBounds.getSize(new THREE.Vector3()),pieceCenter=pieceBounds.getCenter(new THREE.Vector3());
+      var pieceFill=new THREE.Mesh(new THREE.BoxGeometry(pieceSize.x,pieceSize.y,pieceSize.z),new THREE.MeshBasicMaterial({color:0x66c9f3,transparent:true,opacity:.18,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));
+      var pieceEdge=new THREE.LineSegments(new THREE.EdgesGeometry(pieceFill.geometry),new THREE.LineBasicMaterial({color:0x45b9e8,transparent:true,opacity:1,depthTest:false}));
+      pieceFill.position.copy(pieceCenter);pieceEdge.position.copy(pieceCenter);pieceFill.renderOrder=997;pieceEdge.renderOrder=998;selectionBox.add(pieceFill,pieceEdge);
+      scene.add(selectionBox);
+      var d = selected.userData.dimensions;
+      byId('view_piece_name').textContent = selected.userData.name;
+      byId('view_piece_length').textContent = Math.round(d.length) + ' mm';
+      byId('view_piece_width').textContent = Math.round(d.width) + ' mm';
+      byId('view_piece_thickness').textContent = Math.round(d.thickness) + ' mm';
+      byId('view_piece_category').textContent = selected.userData.category;
+      if(byId('view_piece_edge'))byId('view_piece_edge').textContent=selected.userData.edgeType==='HARD'?'Canto duro':(selected.userData.edgeType==='NONE'?'Sin canto':'PVC');
+      if(byId('view_piece_edge_color'))byId('view_piece_edge_color').textContent=selected.userData.edgeColor;
+      if(byId('view_piece_owner'))byId('view_piece_owner').textContent=selected.userData.ownerSpaceId?'Pertenece a '+selected.userData.ownerSpaceId:'Pieza general del casco';
+      byId('view_piece_panel').hidden = false;
+      if(!silent&&previousKey!==selectedPieceKey)window.dispatchEvent(new CustomEvent('modular3d:pieceSelected', { detail: { pieceId:selected.userData.pieceId,materialKey:selected.userData.materialKey,materialGroup:selected.userData.materialGroup,materialName:selected.userData.materialName,materialColor:selected.userData.materialColor,edgeType:selected.userData.edgeType,edgeColor:selected.userData.edgeColor,name: selected.userData.name, category: selected.userData.category,role:selected.userData.role,ownerSpaceId:selected.userData.ownerSpaceId,sourceField:selected.userData.sourceField } }));
+    } else if (byId('view_piece_panel')) byId('view_piece_panel').hidden = true;
+    buildTree(byId('view_search') ? byId('view_search').value : '');
+    requestRender();
+  }
+
+  function hitPiece(event) {
+    if(pointerStart&&Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>5){pointerStart=null;return;}pointerStart=null;
+    var rect = renderer.domElement.getBoundingClientRect();
+    pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    if(selectionMode==='piece'){
+      var pieceHit=raycaster.intersectObjects(meshes,false)[0];selectPiece(pieceHit?pieceHit.object:null);return;
+    }
+    var spaceHits=raycaster.intersectObjects(spaceMeshes,false);
+    if(spaceHits.length){spaceHits.sort(function(a,b){return a.object.userData.spaceVolume-b.object.userData.spaceVolume;});selectSpace(spaceHits[0].object.userData.spaceId,true);return;}
+    var hit = raycaster.intersectObjects(meshes, false)[0];selectPiece(hit ? hit.object : null);
+  }
+
+  function modelMaxSize() { return Math.max(originalSize.x, originalSize.y, originalSize.z, 1); }
+  function switchProjection(useOrtho) {
+    if (!renderer || orthographic === useOrtho) return;
+    orthographic = useOrtho;
+    var stage = byId('view_stage'), aspect = stage.clientWidth / stage.clientHeight;
+    var position = camera.position.clone(), target = controls.target.clone(), up = camera.up.clone(), max = modelMaxSize();
+    camera = useOrtho ? new THREE.OrthographicCamera(-max * aspect, max * aspect, max, -max, 0.1, max * 100) : new THREE.PerspectiveCamera(38, aspect, 0.1, max * 100);
+    camera.position.copy(position); camera.up.copy(up); camera.lookAt(target);
+    controls.object = camera; controls.target.copy(target); controls.update();
+    var button = byId('view_projection');
+    if (button) { button.textContent = useOrtho ? 'Ortogonal' : 'Perspectiva'; button.classList.toggle('active', useOrtho); }
+    requestRender();
+  }
+
+  function setView(name) {
+    if (!camera || !controls) return;
+    var max = modelMaxSize(), center = originalCenter.clone(), direction;
+    if (name === 'front') direction = new THREE.Vector3(0, 0, 1);
+    else if (name === 'back') direction = new THREE.Vector3(0, 0, -1);
+    else if (name === 'left') direction = new THREE.Vector3(-1, 0, 0);
+    else if (name === 'right') direction = new THREE.Vector3(1, 0, 0);
+    else if (name === 'top') direction = new THREE.Vector3(0, 1, 0);
+    else if (name === 'bottom') direction = new THREE.Vector3(0, -1, 0);
+    else direction = new THREE.Vector3(1, 0.72, 1);
+    switchProjection(name !== 'iso');
+    camera.up.set(0, name === 'top' || name === 'bottom' ? 0 : 1, name === 'top' ? -1 : (name === 'bottom' ? 1 : 0));
+    camera.position.copy(center).add(direction.normalize().multiplyScalar(max * 3.25));
+    controls.target.copy(center); camera.lookAt(center); controls.update();
+    if (orthographic) { camera.left = -max * 1.05; camera.right = max * 1.05; camera.top = max * 1.05; camera.bottom = -max * 1.05; camera.updateProjectionMatrix(); }
+    requestRender();
+  }
+
+  function setViewVector(value) {
+    if (!camera || !controls) return;
+    var parts = String(value || '').split(',').map(Number);
+    if (parts.length !== 3 || parts.some(function(n){ return !isFinite(n); })) return;
+    var direction = new THREE.Vector3(parts[0], parts[1], parts[2]);
+    if (!direction.lengthSq()) return;
+    switchProjection(false);
+    var center = originalCenter.clone(), max = modelMaxSize();
+    camera.up.set(0, 1, 0);
+    camera.position.copy(center).add(direction.normalize().multiplyScalar(max * 3.25));
+    controls.target.copy(center); camera.lookAt(center); controls.update(); syncNavigator(); requestRender();
+  }
+
+  function syncNavigator() {
+    if (!camera || !controls) return;
+    var direction = camera.position.clone().sub(controls.target).normalize(), best = null, bestDot = -2;
+    var mainName,sideName;
+    if(Math.abs(direction.z)>=Math.abs(direction.x)){mainName=direction.z>0?'front':'back';sideName=direction.x>=0?'right':'left';}
+    else{mainName=direction.x>=0?'right':'left';sideName=direction.z>0?'front':'back';}
+    var topName=direction.y>=-0.12?'top':'bottom',labels={front:'FRENTE',back:'ATRÁS',right:'DER.',left:'IZQ.',top:'ARRIBA',bottom:'ABAJO'};
+    [[byId('cube_face_front'),byId('cube_label_front'),mainName],[byId('cube_face_side'),byId('cube_label_side'),sideName],[byId('cube_face_top'),byId('cube_label_top'),topName]].forEach(function(item){if(item[0])item[0].dataset.m3dvView=item[2];if(item[1])item[1].textContent=labels[item[2]];});
+    var opposite={front:'back',back:'front',right:'left',left:'right',top:'bottom',bottom:'top'};
+    function faceVector(name){if(name==='front')return new THREE.Vector3(0,0,1);if(name==='back')return new THREE.Vector3(0,0,-1);if(name==='right')return new THREE.Vector3(1,0,0);if(name==='left')return new THREE.Vector3(-1,0,0);if(name==='top')return new THREE.Vector3(0,1,0);return new THREE.Vector3(0,-1,0);}
+    function setVector(element,names){if(!element)return;var vector=new THREE.Vector3();names.forEach(function(name){vector.add(faceVector(name));});element.dataset.m3dvVector=vector.normalize().toArray().join(',');}
+    var cubeEdges=document.querySelectorAll('.view-cube-pro .cube-edge'),cubeCorners=document.querySelectorAll('.view-cube-pro .cube-corner'),bottomName=opposite[topName],outerName=opposite[sideName];
+    setVector(cubeEdges[0],[topName,mainName]);setVector(cubeEdges[1],[topName,sideName]);setVector(cubeEdges[2],[mainName,outerName]);setVector(cubeEdges[3],[mainName,sideName]);setVector(cubeEdges[4],[bottomName,mainName]);setVector(cubeEdges[5],[bottomName,sideName]);
+    setVector(cubeCorners[0],[topName,mainName,outerName]);setVector(cubeCorners[1],[topName,mainName]);setVector(cubeCorners[2],[topName,mainName,sideName]);setVector(cubeCorners[3],[topName,sideName]);setVector(cubeCorners[4],[bottomName,mainName,outerName]);setVector(cubeCorners[5],[bottomName,mainName]);setVector(cubeCorners[6],[bottomName,mainName,sideName]);
+    document.querySelectorAll('[data-m3dv-vector],[data-m3dv-view]').forEach(function(button) {
+      var vector = null, name = button.dataset.m3dvView;
+      if (button.dataset.m3dvVector) { var p=button.dataset.m3dvVector.split(',').map(Number); vector=new THREE.Vector3(p[0],p[1],p[2]).normalize(); }
+      else if (name === 'front') vector=new THREE.Vector3(0,0,1); else if(name==='back')vector=new THREE.Vector3(0,0,-1); else if(name==='right')vector=new THREE.Vector3(1,0,0); else if(name==='left')vector=new THREE.Vector3(-1,0,0); else if(name==='top')vector=new THREE.Vector3(0,1,0); else if(name==='bottom')vector=new THREE.Vector3(0,-1,0);
+      button.classList.remove('cube-active');if(vector){var dot=vector.dot(direction);if(dot>bestDot){bestDot=dot;best=button;}}
+    });
+    if(best)best.classList.add('cube-active');
+    var cube=document.querySelector('.view-cube-pro');
+    if(cube){var azimuth=Math.atan2(direction.x,direction.z)*180/Math.PI;cube.style.setProperty('--cube-azimuth',azimuth.toFixed(1)+'deg');cube.setAttribute('data-synced','true');}
+  }
+
+  function frameModel() { setView('iso'); }
+  function focusSelected(){if(!selected)return;var box=new THREE.Box3().setFromObject(selected),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),distance=Math.max(size.x,size.y,size.z,20)*2.8,direction=camera.position.clone().sub(controls.target).normalize();controls.target.copy(center);camera.position.copy(center).add(direction.multiplyScalar(distance));camera.lookAt(center);controls.update();requestRender();}
+  function isolateSelected(){isolated=!isolated;meshes.forEach(function(mesh){mesh.visible=!isolated||mesh===selected;});if(byId('view_piece_isolate'))byId('view_piece_isolate').classList.toggle('active',isolated);requestRender();}
+  function toggleSelectedVisibility(){if(!selected)return;selected.visible=!selected.visible;if(selectionBox)selectionBox.visible=selected.visible;requestRender();}
+  function editSelected(){if(!selected)return;window.dispatchEvent(new CustomEvent('modular3d:editPieceSource',{detail:selected.userData}));}
+  function highlight(category) {
+    meshes.forEach(function(mesh){
+      if (!mesh.material.emissive) return;
+      mesh.material.emissive.setHex(mesh.userData.category === category ? 0x6b2206 : 0x000000);
+      mesh.material.emissiveIntensity = mesh.userData.category === category ? 0.28 : 0;
+    });
+    requestRender();
+  }
+
+  function bind(id, action) { var element = byId(id); if (element) element.addEventListener('click', action); }
+  function initialize() {
+    var stage = byId('view_stage'); if (!stage || typeof THREE === 'undefined') return;
+    if (renderer) return;
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x11161b);
+    camera = new THREE.PerspectiveCamera(38, stage.clientWidth / stage.clientHeight, 0.1, 100000);
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setSize(stage.clientWidth, stage.clientHeight, false);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.localClippingEnabled = true;
+    stage.appendChild(renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.screenSpacePanning = true; controls.minDistance = 20; controls.maxDistance = 20000;
+    controls.addEventListener('change', function(){ requestRender(); syncNavigator(); });
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x26313b, 1.65));
+    var key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(1200, 1600, 900); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); key.shadow.camera.near = 1; key.shadow.camera.far = 5000;
+    key.shadow.camera.left = -2200; key.shadow.camera.right = 2200; key.shadow.camera.top = 2200; key.shadow.camera.bottom = -2200;
+    var fill = new THREE.DirectionalLight(0xffd8b7, 0.75); fill.position.set(-900, 700, -800);
+    scene.add(key, fill);
+    grid = new THREE.GridHelper(4000, 40, 0x53616d, 0x2b343c); grid.position.y = -1; scene.add(grid);
+    floor = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.22 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -2; floor.receiveShadow = true; scene.add(floor);
+    clearModel();
+    renderer.domElement.addEventListener('pointerdown',function(event){pointerStart={x:event.clientX,y:event.clientY};});
+    renderer.domElement.addEventListener('pointerup', hitPiece);
+    window.addEventListener('resize', function(){
+      var w = stage.clientWidth, h = stage.clientHeight;
+      if (!w || !h) return;
+      if (camera.isPerspectiveCamera) camera.aspect = w / h;
+      else { var span = modelMaxSize() * 0.72; camera.left = -span * w / h; camera.right = span * w / h; camera.top = span; camera.bottom = -span; }
+      camera.updateProjectionMatrix(); renderer.setSize(w, h, false); requestRender();
+    });
+    bind('view_home', frameModel); bind('view_iso', function(){ setView('iso'); });
+    bind('view_mode_space',function(){setSelectionMode('space');});bind('view_mode_piece',function(){setSelectionMode('piece');});
+    bind('view_piece_focus',focusSelected);bind('view_piece_isolate',isolateSelected);bind('view_piece_visibility',toggleSelectedVisibility);bind('view_piece_edit',editSelected);
+    bind('view_front', function(){ setView('front'); }); bind('view_back', function(){ setView('back'); });
+    bind('view_left', function(){ setView('left'); }); bind('view_right', function(){ setView('right'); });
+    bind('view_top', function(){ setView('top'); }); bind('view_bottom', function(){ setView('bottom'); });
+    bind('view_projection', function(){ switchProjection(!orthographic); });
+    bind('view_transparency', function(){ transparent = !transparent; byId('view_transparency').classList.toggle('active', transparent); applyVisualState(); });
+    bind('view_edges', function(){ edgesVisible = !edgesVisible; byId('view_edges').classList.toggle('active', edgesVisible); applyVisualState(); });
+    bind('view_shadows', function(){ shadows = !shadows; renderer.shadowMap.enabled = shadows; byId('view_shadows').classList.toggle('active', shadows); applyVisualState(); });
+    bind('view_grid', function(){ grid.visible = !grid.visible; byId('view_grid').classList.toggle('active', grid.visible); requestRender(); });
+    var explosion = byId('view_explosion'); if (explosion) explosion.addEventListener('input', function(){ exploded = Number(explosion.value) || 0; applyVisualState(); });
+    var search = byId('view_search'); if (search) search.addEventListener('input', function(){ buildTree(search.value); });
+    document.querySelectorAll('[data-m3dv-view]').forEach(function(button){ button.addEventListener('click', function(){ setView(button.dataset.m3dvView); }); });
+    document.querySelectorAll('[data-m3dv-vector]').forEach(function(button){ button.addEventListener('click', function(){ setViewVector(button.dataset.m3dvVector); }); });
+    renderer.setAnimationLoop(function(){
+      if (document.hidden) return;
+      var changed = controls.update();
+      if (!changed && !needsRender) return;
+      renderer.render(scene, camera); needsRender = false;
+    });
+    setSelectionMode('space');setTimeout(function(){ build({}); }, 0);
+  }
+
+  function pieceList(){return meshes.map(function(mesh){return{name:mesh.userData.name,pieceId:mesh.userData.pieceId,materialKey:mesh.userData.materialKey,group:mesh.userData.materialGroup,color:mesh.userData.materialColor,materialName:mesh.userData.materialName,edgeType:mesh.userData.edgeType,edgeColor:mesh.userData.edgeColor,category:mesh.userData.category,role:mesh.userData.role,ownerSpaceId:mesh.userData.ownerSpaceId};});}
+  function selectPieceByKey(key,notify){var mesh=meshes.filter(function(item){return item.userData.materialKey===key||item.userData.pieceId===key;})[0];if(mesh){setSelectionMode('piece');selectPiece(mesh,false,notify!==true);}return !!mesh;}
+  function snapshot(){try{return renderer&&renderer.domElement?renderer.domElement.toDataURL('image/png'):'';}catch(_e){return '';}}
+  function cleanSnapshot(){
+    if(!renderer||!camera||!controls)return '';
+    try{
+      var background=scene.background,gridVisible=grid&&grid.visible,floorVisible=floor&&floor.visible;
+      var selectionVisible=selectionBox&&selectionBox.visible,spaceVisible=spaceSelection&&spaceSelection.visible;
+      var hitVisibility=spaceMeshes.map(function(hit){return hit.visible;});
+      var oldExploded=exploded,oldTransparent=transparent,oldPosition=camera.position.clone(),oldTarget=controls.target.clone();
+      scene.background=new THREE.Color(0xffffff);if(grid)grid.visible=false;if(floor)floor.visible=false;
+      if(selectionBox)selectionBox.visible=false;if(spaceSelection)spaceSelection.visible=false;spaceMeshes.forEach(function(hit){hit.visible=false;});
+      exploded=0;transparent=false;applyVisualState();
+      var direction=oldPosition.clone().sub(oldTarget),distance=direction.length();
+      if(distance>0)camera.position.copy(oldTarget).add(direction.normalize().multiplyScalar(distance*.78));
+      camera.lookAt(oldTarget);controls.update();renderer.render(scene,camera);
+      var result=renderer.domElement.toDataURL('image/png');
+      scene.background=background;if(grid)grid.visible=gridVisible;if(floor)floor.visible=floorVisible;
+      if(selectionBox)selectionBox.visible=selectionVisible;if(spaceSelection)spaceSelection.visible=spaceVisible;spaceMeshes.forEach(function(hit,index){hit.visible=hitVisibility[index];});
+      exploded=oldExploded;transparent=oldTransparent;camera.position.copy(oldPosition);controls.target.copy(oldTarget);camera.lookAt(oldTarget);controls.update();applyVisualState();renderer.render(scene,camera);
+      return result;
+    }catch(_e){return snapshot();}
+  }
+  function cameraState(){if(!camera||!controls)return null;return{position:camera.position.toArray(),target:controls.target.toArray(),up:camera.up.toArray(),orthographic:orthographic};}
+  function restoreCamera(raw){try{var state=typeof raw==='string'?JSON.parse(raw):raw;if(!state||!Array.isArray(state.position)||!Array.isArray(state.target))return false;switchProjection(!!state.orthographic);camera.position.fromArray(state.position);controls.target.fromArray(state.target);if(Array.isArray(state.up))camera.up.fromArray(state.up);camera.lookAt(controls.target);controls.update();syncNavigator();requestRender();return true;}catch(_e){return false;}}
+  window.Modular3DView = { init: initialize, update: build, highlight: highlight, selectSpace: selectSpace, selectMode:setSelectionMode, setView: setView, setViewVector: setViewVector, frame: frameModel, getPieces:pieceList, selectPieceByKey:selectPieceByKey, snapshot:snapshot, cleanSnapshot:cleanSnapshot, cameraState:cameraState, restoreCamera:restoreCamera };
+  window.Modular3DPreview = window.Modular3DView;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
+  else initialize();
+}());

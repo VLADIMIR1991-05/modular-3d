@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modular_3D</title>
+  <style>
+    :root {
+      --brand: #f06424;
+      --brand-dark: #c9470e;
+      --ink: #25313c;
+      --muted: #687784;
+      --line: #dfe5e9;
+      --surface: #ffffff;
+      --canvas: #f4f6f7;
+      --ok: #16845b;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); font: 12px/1.3 "Segoe UI", sans-serif; }
+    header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; color: #fff; background: linear-gradient(110deg, var(--brand-dark), var(--brand)); }
+    .brand { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+    .version { opacity: .85; font-size: 11px; }
+    main { display: grid; grid-template-columns: minmax(600px, 1fr) 390px; gap: 10px; padding: 10px; max-width: 1600px; margin: 0 auto; min-height: 0; }
+    .tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; }
+    .tab { width: auto; padding: 8px 10px; border: 1px solid var(--line); color: var(--ink); background: #fff; box-shadow: none; white-space: nowrap; }
+    .tab.active { color: #fff; border-color: var(--brand); background: var(--brand); }
+    .tab[data-help] { position: relative; }
+    .tab[data-help]::after { content: attr(data-help); position: fixed; z-index: 80; display: none; width: 245px; margin-top: 38px; padding: 9px 11px; border: 1px solid #cad5dc; border-radius: 7px; color: #334754; background: rgba(255,255,255,.98); box-shadow: 0 8px 25px rgba(20,35,45,.18); white-space: normal; font-size: 11px; font-weight: 600; line-height: 1.35; text-align: left; }
+    .tab[data-help]:hover::after, .tab[data-help]:focus-visible::after { display: block; }
+    .page { display: none; }
+    .page.active { display: block; }
+    #frentes, [data-page="frentes"] { display: none !important; }
+    .card { margin-bottom: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 1px 3px rgba(23, 35, 45, .05); }
+    h2, h3 { margin: 0 0 10px; }
+    h2 { font-size: 16px; }
+    h3 { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+    .row { display: grid; grid-template-columns: minmax(130px, 1fr) 125px; align-items: center; gap: 10px; margin: 7px 0; }
+    label { color: #42515d; }
+    input, select { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid #c7d0d6; border-radius: 5px; color: var(--ink); background: #fff; text-align: right; }
+    select { text-align: left; }
+    input:focus, select:focus { outline: 2px solid rgba(240, 100, 36, .2); border-color: var(--brand); }
+    input.invalid { border-color: var(--danger); background: #fff5f4; }
+    .panel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .panel-card { padding: 10px; border: 1px solid var(--line); border-radius: 7px; }
+    .panel-card h3 { color: var(--brand-dark); }
+    .panel-card { cursor: pointer; transition: border-color .15s, background .15s; }
+    .panel-card.piece-card-selected { border-color: #55bfe9; background: #eefaff; box-shadow: 0 0 0 3px rgba(85,191,233,.18); }
+    .editor-focus { border-color: var(--brand) !important; box-shadow: 0 0 0 3px rgba(240, 100, 36, .18); }
+    .row.editor-focus { border-radius: 6px; background: #fff4ee; }
+    aside { position: sticky; top: 62px; align-self: start; }
+    @media (min-width:981px) {
+      body { display:flex; flex-direction:column; overflow:hidden; }
+      header { flex:0 0 auto; }
+      main { flex:1 1 auto; width:100%; height:calc(100vh - 54px); min-height:0; overflow:hidden; align-items:stretch; }
+      .config-pane { height:calc(100vh - 74px); min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
+      aside.m3dv-panel { position:relative; top:auto; height:calc(100vh - 74px); min-height:0; overflow-x:hidden!important; overflow-y:auto!important; overscroll-behavior:contain; scrollbar-gutter:stable; }
+      .step-footer { position: relative; bottom:auto; z-index:5; }
+      .m3dv-head { position: sticky; top: 0; z-index: 24; }
+    }
+    .piece-info { display: none; margin: 7px 0; padding: 7px; border-left: 3px solid var(--brand); background: #fff4ee; font-size: 11px; }
+    .piece-info.show { display: block; }
+    .metric { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+    .metric strong { color: var(--brand-dark); }
+    .message { display: none; margin: 8px 0; padding: 9px; border-radius: 5px; white-space: pre-line; }
+    .message.show { display: block; }
+    .message.error { color: #7a271a; background: #fef3f2; border: 1px solid #fecdca; }
+    .message.warn { color: #7a4d00; background: #fffaeb; border: 1px solid #fedf89; }
+    .designer-layout { display: grid; grid-template-columns: minmax(260px, 1fr) 250px; gap: 10px; align-items: start; }
+    .front-designer { position: relative; min-height: 410px; padding: 20px 24px 26px 34px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(#f9fcfd, #fff); }
+    .module-elevation { position: relative; width: min(100%, 330px); height: 360px; margin: 0 auto; border: 3px solid #6f8fb0; background: #eef7fb; box-shadow: 0 8px 18px rgba(38, 61, 80, .12); }
+    .space-cell { position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px dashed #aac1d1; background: rgba(233, 246, 252, .92); color: #1d6da6; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .space-cell:hover, .space-cell.selected { outline: 2px solid var(--brand); outline-offset: -2px; background: rgba(255, 238, 229, .94); color: var(--brand-dark); }
+    .space-cell.drawer { background: #e7f4ff; }
+    .space-cell.door, .space-cell.double-door { background: #fff1ed; }
+    .space-cell.glass { background: rgba(222, 244, 255, .72); }
+    .space-cell.empty { background: #f5fbfc; }
+    .cell-label { position: relative; z-index: 1; padding: 2px 5px; border-radius: 4px; background: rgba(255,255,255,.76); }
+    .handle-mark { position: absolute; width: 34px; height: 3px; border-radius: 99px; background: #adc2d1; }
+    .handle-v { width: 3px; height: 34px; right: 10px; top: calc(50% - 17px); }
+    .measure-top, .measure-side { position: absolute; color: #1d6da6; font-size: 10px; font-weight: 700; }
+    .measure-top { top: 0; left: 36px; right: 24px; display: flex; gap: 4px; }
+    .measure-top span { flex: 1; padding: 2px; border: 1px solid #c7dfea; border-radius: 3px; text-align: center; background: #edf8fd; }
+    .measure-side { left: 6px; top: 48px; bottom: 32px; writing-mode: vertical-rl; text-align: center; }
+    .property-panel .tool-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
+    .property-panel button, .inline-button { padding: 8px 7px; font-size: 11px; }
+    .property-panel .danger-action { color: var(--danger); border: 1px solid #f0b6b0; background: #fff; }
+    .property-panel .danger-action:hover { color: #fff; background: var(--danger); }
+    .update-badge { position: absolute; z-index: 2; right: 8px; top: 8px; display: none; width: auto; padding: 7px 10px; border-radius: 5px; background: #1769e0; box-shadow: 0 2px 10px rgba(23,105,224,.24); font-size: 11px; }
+    .update-badge.show { display: inline-flex; }
+    .actions-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .step-footer { position: relative; bottom:auto; z-index:4; display: grid; grid-template-columns: 120px minmax(0, 1fr) 120px; gap: 8px; align-items: center; margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background:#fff; box-shadow:0 2px 10px rgba(23,35,45,.06); }
+    .step-footer button { margin: 0; }
+    .step-status { text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .sync-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 8px; padding: 8px; border: 1px solid #e5edf1; border-radius: 7px; background: #f9fcfd; }
+    .sync-row button { width: auto; padding: 7px 9px; }
+    .editing-hint { display: none; margin-top: 7px; padding: 7px; border-left: 3px solid var(--brand); background: #fff4ee; color: #67412e; font-size: 11px; }
+    .editing-hint.show { display: block; }
+    .quick-section { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
+    .quick-section h3 { margin-bottom: 7px; }
+    .quick-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+    .tool-tab { min-height: 30px; padding: 6px 4px; color: var(--brand-dark); border: 1px solid var(--brand); background: #fff; box-shadow: none; font-size: 10px; }
+    .tool-tab.active, .tool-tab:hover { color: #fff; background: var(--brand); }
+    button { width: 100%; padding: 11px; border: 0; border-radius: 6px; color: #fff; background: var(--brand); font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--brand-dark); }
+    button.secondary { margin-bottom: 7px; color: var(--brand-dark); border: 1px solid var(--brand); background: #fff; }
+    .license-overlay { position: fixed; z-index: 1000; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(20,29,36,.88); backdrop-filter: blur(5px); }
+    .license-card { width: min(430px, 100%); overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 15px; background: #fff; box-shadow: 0 24px 70px rgba(0,0,0,.38); }
+    .license-brand { padding: 22px 24px; color: #fff; background: linear-gradient(120deg, #bd3d08, var(--brand)); }
+    .license-brand strong { display: block; font-size: 24px; letter-spacing: .4px; }
+    .license-brand span { opacity: .86; font-size: 11px; }
+    .license-form { padding: 22px 24px 24px; }
+    .license-form h2 { margin-bottom: 5px; }
+    .license-form p { margin: 0 0 17px; color: var(--muted); }
+    .license-field { display: block; margin-bottom: 12px; color: #364652; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
+    .license-field input { margin-top: 5px; padding: 10px; text-align: left; }
+    .license-options { display: flex; align-items: center; gap: 7px; margin: 4px 0 13px; color: var(--muted); font-size: 11px; }
+    .license-options input { width: auto; }
+    .license-message { display: none; margin-bottom: 12px; padding: 9px; border-radius: 5px; color: #7a271a; background: #fef3f2; border: 1px solid #fecdca; font-size: 11px; }
+    .license-message.show { display: block; }
+    .license-session { display: none; align-items: center; gap: 8px; }
+    .license-session.show { display: flex; }
+    .license-session button { width: auto; padding: 4px 7px; border: 1px solid rgba(255,255,255,.45); background: transparent; font-size: 9px; }
+    body.license-locked main, body.license-locked header { pointer-events: none; user-select: none; }
+    small { color: var(--muted); }
+    @media (max-width: 720px) {
+      main { grid-template-columns: 1fr; }
+      aside { position: static; }
+      .panel-grid { grid-template-columns: 1fr; }
+      .designer-layout { grid-template-columns: 1fr; }
+    }
+  
+    .param-result{margin:5px 0 9px;padding:7px 9px;border-radius:6px;background:#eef3f5;color:#40515d;font-size:10px;font-weight:700}
+    .param-result.ok{background:#eaf7ed;color:#27643a}.param-result.bad{background:#fff0ec;color:#9a3d10}
+    .m3dv-panel{padding:0;overflow:hidden;background:#151a1f;border-color:#333d45;color:#eef2f5}
+    .m3dv-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #35404a;background:#20272d}
+    .m3dv-head h2{margin:0;color:#fff;font-size:14px}.m3dv-head span{padding:3px 7px;border-radius:999px;background:rgba(240,100,36,.18);color:#ff8a50;font-size:9px;font-weight:800}
+    .m3dv-stage{position:relative;height:430px;background:#11161b;overflow:hidden}.m3dv-stage canvas{display:block;width:100%;height:100%;cursor:grab}.m3dv-stage canvas:active{cursor:grabbing}
+    .m3dv-dimensions{position:absolute;z-index:3;top:10px;left:10px;display:grid;grid-template-columns:repeat(3,auto);gap:4px 11px;padding:8px 10px;border:1px solid rgba(240,100,36,.6);border-radius:7px;background:rgba(17,22,27,.84);backdrop-filter:blur(6px);font-size:9px}
+    .m3dv-dimensions strong{grid-column:1/-1;color:#ff854c;letter-spacing:.06em}.m3dv-dimensions span{display:grid;color:#9eabb5}.m3dv-dimensions b{color:#fff;font-size:10px}
+    .m3dv-space-badge{position:absolute;z-index:5;left:10px;top:82px;display:none;max-width:185px;padding:6px 8px;border:1px solid var(--brand);border-radius:6px;color:#fff;background:rgba(30,38,44,.9);font-size:9px;font-weight:700}.m3dv-space-badge.show{display:block}.m3dv-space-badge b{display:block;color:#ff854c}
+    .m3dv-navigator{position:absolute;z-index:4;top:10px;right:10px;width:106px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:5px;border-radius:9px;background:rgba(17,22,27,.82);backdrop-filter:blur(7px)}
+    .m3dv-navigator button{min-height:25px;padding:3px;border:1px solid rgba(255,255,255,.18);border-radius:4px;background:#37414a;color:#fff;font-size:8px}.m3dv-navigator button:hover{background:var(--brand)}.m3dv-navigator .m3dv-home{background:var(--brand);color:#161a1d}
+    .m3dv-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:7px;background:#20272d;border-top:1px solid #36414a}
+    .m3dv-toolbar button{min-height:29px;padding:4px 3px;border:1px solid #45515b;background:#303942;color:#f3f5f6;font-size:8px}.m3dv-toolbar button.active,.m3dv-toolbar button:hover{border-color:var(--brand);background:var(--brand);color:#161a1d}
+    .m3dv-explosion{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;padding:7px 10px;background:#20272d;color:#aeb8c0;font-size:9px}.m3dv-explosion input{padding:0;text-align:initial;accent-color:var(--brand)}
+    .m3dv-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px;background:#181e23}.m3dv-card{min-width:0;padding:8px;border:1px solid #35404a;border-radius:7px;background:#20272d}.m3dv-card h3{margin:0 0 6px;color:#ff854c;font-size:9px}
+    .m3dv-search{margin:0 0 6px;padding:6px!important;border-color:#46525c!important;background:#11161b!important;color:#fff!important;text-align:left!important;font-size:9px}
+    .m3dv-tree{display:grid;gap:3px;max-height:150px;overflow:auto}.m3dv-tree-item{padding:6px 7px;text-align:left;border:0;background:#303941;color:#dbe1e5;font-size:10px}.m3dv-tree-item.active{background:#237fc0;color:#fff}
+    .m3dv-select-mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px;background:#1e272e}.m3dv-select-mode button{padding:7px;font-size:10px;background:#35414a}.m3dv-select-mode button.active{background:var(--brand);color:#fff}
+    .m3dv-piece-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:6px}.m3dv-piece-actions button{padding:6px 3px;font-size:9px}
+    .piece-selection-note{color:#7fc8f4;font-size:9px;display:block;margin-top:5px}
+    .m3dv-piece{display:grid;gap:4px;font-size:8px}.m3dv-piece>strong{color:#fff;font-size:10px}.m3dv-piece div{display:flex;justify-content:space-between;gap:6px;color:#9eabb5}.m3dv-piece b{color:#fff}.m3dv-health{padding:4px 10px 8px;background:#20272d;color:#72d492;font-size:8px;text-align:center}
+    .m3dv-actions{padding:0 9px 9px;background:#181e23}.m3dv-actions button{margin-top:6px}.m3dv-actions .secondary{background:#20272d;color:#ff854c}
+    .hierarchy-card{border:2px solid var(--brand);background:linear-gradient(135deg,#fff,#fff8f4)}
+    .hierarchy-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hierarchy-title .compact{width:auto;padding:7px 10px}.hierarchy-title-actions{display:flex;gap:5px}.hierarchy-title-actions button{white-space:nowrap}
+    .hierarchy-layout{display:grid;grid-template-columns:minmax(300px,1fr) 290px;gap:12px;margin-top:12px}
+    .hierarchy-plan-wrap{min-width:0}.hierarchy-plan{position:relative;width:min(100%,460px);height:420px;margin:auto;border:4px solid #5f7890;background:#eef6fa;box-shadow:0 8px 18px rgba(30,50,65,.12)}
+    .hierarchy-node{position:absolute;overflow:hidden;border:1px dashed #8fb0c5;background:rgba(239,248,251,.72);cursor:pointer}.hierarchy-node:hover{background:rgba(255,238,229,.75)}.hierarchy-node.selected{outline:3px solid var(--brand);outline-offset:-3px;background:rgba(255,236,226,.7);z-index:3}.hierarchy-node.piece-owner{outline:3px solid #237fc0;outline-offset:-5px;background:rgba(220,241,255,.74);z-index:4}
+    .hierarchy-node-label{position:absolute;z-index:2;left:7px;top:7px;padding:5px 7px;border-radius:5px;background:rgba(255,255,255,.92);color:#26485f;font-size:12px;line-height:1.25;font-weight:800;white-space:nowrap;box-shadow:0 1px 4px rgba(28,55,72,.12)}
+    .hierarchy-separator{position:absolute;z-index:1;background:#d4b17f;border:1px solid #856b4c;pointer-events:none}.hierarchy-separator.piece-selected{z-index:5;background:#66c9f3;border-color:#168bc0;box-shadow:0 0 0 3px rgba(82,192,240,.3)}.hierarchy-plan.piece-shell-left{border-left-color:#55c7f5}.hierarchy-plan.piece-shell-right{border-right-color:#55c7f5}.hierarchy-plan.piece-shell-top{border-top-color:#55c7f5}.hierarchy-plan.piece-shell-bottom{border-bottom-color:#55c7f5}.hierarchy-front{position:absolute;inset:3px;z-index:1;border:2px solid rgba(240,100,36,.72);background:rgba(240,100,36,.12);pointer-events:none}
+    .hierarchy-parent-front{position:absolute;z-index:4;border:3px solid rgba(240,100,36,.82);background:rgba(240,100,36,.10);cursor:pointer;pointer-events:auto}.hierarchy-parent-front:hover,.hierarchy-parent-front.selected{border-color:#ff4b00;background:rgba(240,100,36,.22);box-shadow:inset 0 0 0 2px #fff}
+    .hierarchy-breadcrumb{min-height:29px;margin-bottom:7px;color:#526674;font-size:10px}.hierarchy-breadcrumb button{width:auto;padding:4px 7px;margin:0 3px 3px 0;color:#b74412;border:1px solid #efb090;background:#fff;font-size:9px}
+    .hierarchy-tree{max-height:150px;overflow:auto;margin:0 0 7px;padding:5px;border:1px solid #dce5ea;border-radius:7px;background:#f8fbfc}.hierarchy-tree-row{display:flex;align-items:center;gap:4px;min-height:28px;padding-left:calc(var(--depth)*16px);border-left:calc(var(--depth)*2px) solid rgba(70,135,175,.18)}.hierarchy-tree-toggle{width:22px!important;height:22px;padding:0!important;color:#435765!important;background:#e8eef2!important}.hierarchy-tree-toggle:disabled{opacity:.3}.hierarchy-tree-select{width:auto!important;flex:1;padding:4px 7px!important;text-align:left;color:#314653!important;border:1px solid transparent!important;background:transparent!important;font-size:12px;font-weight:700}.hierarchy-tree-select:hover,.hierarchy-tree-select.active{color:#fff!important;background:var(--brand)!important}.hierarchy-tree-size{color:#71818d;font-size:9px;white-space:nowrap}
+    .hierarchy-status{margin-top:7px;padding:7px 9px;border-radius:6px;background:#eef3f5;color:#40515d;font-size:10px;font-weight:700}.hierarchy-status.error{color:#8f2f18;background:#fff0ec}
+    .hierarchy-inspector{max-height:none;overflow:visible;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}.hierarchy-inspector>h3{font-size:14px;text-transform:none;color:#334955}.space-summary{padding:7px;margin-bottom:6px;border-left:3px solid var(--brand);background:#fff5ef;font-weight:700}
+    .hierarchy-inspector details{margin:5px 0;border:1px solid var(--line);border-radius:6px;padding:6px}.hierarchy-inspector summary{cursor:pointer;color:#394d5a;font-weight:800}.hierarchy-inspector .row{grid-template-columns:1fr 125px;margin:4px 0}.hierarchy-inspector input,.hierarchy-inspector select{padding:6px}.hierarchy-inspector button{padding:8px}
+    .checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0}.checks-grid label{display:flex;gap:5px;align-items:center}.checks-grid input{width:auto}.hierarchy-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .legacy-space-panel{display:none}.review-hierarchy-layout{display:grid;grid-template-columns:minmax(300px,1fr) 290px;gap:10px;margin-top:9px}.review-plan-wrap{min-width:0}.review-plan{height:500px}
+    .m3dv-stage{height:470px}.m3dv-navigator{width:142px;height:133px;display:block;padding:0;background:rgba(17,22,27,.74);right:5px;top:5px}.view-cube-pro{display:block;width:124px;height:112px;margin:2px auto;overflow:visible}.view-cube-pro .cube-face{fill:#394650;stroke:#9fb0bc;stroke-width:1.5;cursor:pointer;transition:fill .12s}.view-cube-pro .cube-face:hover,.view-cube-pro .cube-active{fill:var(--brand);stroke:#fff}.view-cube-pro text{fill:#fff;font-size:7px;font-weight:800;text-anchor:middle;pointer-events:none}.view-cube-pro .cube-edge{fill:none;stroke:transparent;stroke-width:10;cursor:pointer}.view-cube-pro .cube-edge:hover,.view-cube-pro .cube-edge.cube-active{stroke:rgba(240,100,36,.9)}.view-cube-pro .cube-corner{fill:#95a6b2;stroke:#e8eef2;stroke-width:1;cursor:pointer}.view-cube-pro .cube-corner:hover,.view-cube-pro .cube-corner.cube-active{fill:var(--brand);stroke:#fff;stroke-width:2}
+    .cube-home{position:absolute;right:0;bottom:-9px;width:26px!important;height:26px!important;padding:0!important;border-radius:50%!important;background:var(--brand)!important}.m3dv-toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}.m3dv-toolbar .redundant-view{display:none}
+    .m3dv-navigator{opacity:.72;transition:opacity .18s ease}.m3dv-navigator:hover{opacity:1}
+    .material-unico-box{margin:10px 0;padding:11px;border:1px solid var(--line);border-radius:8px;background:#fff}.material-unico-box>label,.check-line{display:flex;align-items:center;gap:7px;font-weight:700;color:#334955}.check-line{margin-top:10px}
+    .materials-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.material-group{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}.material-group h3{margin-bottom:7px;color:#334955;text-transform:none}.material-swatch-row{display:grid;grid-template-columns:42px 1fr;gap:7px;align-items:center}.material-swatch-row input[type=color]{height:34px;padding:2px}.material-texture-editor{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:9px;background:#f8fafc}.material-texture-preview{min-height:76px;margin:9px 0;border:1px dashed #94a3b8;border-radius:7px;display:grid;place-items:center;color:#64748b;background:#fff center/cover no-repeat}.material-piece-editor{display:grid;grid-template-columns:minmax(190px,1fr) minmax(240px,1.3fr);gap:10px}.material-piece-list{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:5px;background:#f8fbfc}.material-piece-button{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:3px 0;padding:7px 8px!important;text-align:left;color:#334955!important;background:#fff!important;border:1px solid #dbe4e9!important;font-size:10px}.material-piece-button.active{color:#fff!important;background:#2587bd!important}.material-chip{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.2);flex:0 0 auto}.material-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}.material-summary span{padding:7px;border-radius:6px;background:#eef3f5;text-align:center;font-size:10px}.hidden-legacy{display:none!important}
+    @media(max-width:900px){.hierarchy-layout,.review-hierarchy-layout{grid-template-columns:1fr}.hierarchy-plan{height:470px}}
+  </style>
+</head>
+<body class="license-locked">
+  <div id="license_overlay" class="license-overlay">
+    <div class="license-card">
+      <div class="license-brand">
+        <strong>Modular_3D</strong>
+        <span>Acceso seguro - Lenin Vladimir Penafiel</span>
+      </div>
+      <div class="license-form">
+        <h2>Iniciar sesion</h2>
+        <p id="license_intro">Ingresa el correo y la contrasena asignados a tu licencia.</p>
+        <div id="license_message" class="license-message"></div>
+        <label class="license-field">Correo
+          <input type="email" id="license_email" autocomplete="username" placeholder="usuario@empresa.com">
+        </label>
+        <label class="license-field">Contrasena
+          <input type="password" id="license_password" autocomplete="current-password" placeholder="********">
+        </label>
+        <label class="license-options">
+          <input type="checkbox" id="license_transfer"> Trasladar la licencia a esta computadora
+        </label>
+        <button type="button" id="license_login">Entrar a Modular_3D</button>
+      </div>
+    </div>
+  </div>
+  <header>
+    <div class="brand">Modular_3D</div>
+    <div class="license-session" id="license_session">
+      <span id="license_identity"></span>
+      <button type="button" id="license_logout">Cerrar sesion</button>
+    </div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.6.0-beta.1</div>
+  </header>
+
+  <main>
+    <section class="config-pane">
+      <nav class="tabs">
+        <button class="tab active" data-page="inicial" data-help="Define tipo de módulo, nombre, ancho, altura, profundidad, espesores y luces generales.">1 Medidas</button>
+        <button class="tab" data-page="paneles" data-help="Edita tapa, base, laterales, respaldo y ajustes posteriores. Selecciona una pieza en 3D para abrirla.">2 Casco</button>
+        <button class="tab" data-page="interior" data-help="Divide espacios en X, Y o Z; añade piezas, repisas, cajones y puertas internas o externas.">3 Configuración</button>
+        <button class="tab" data-page="diseno" data-help="Asigna materiales por grupo y sobrescribe cualquier pieza individual antes de construir.">4 Materiales</button>
+      </nav>
+
+      <div id="inicial" class="page active">
+        <div class="card">
+          <h2>Configuracion inicial</h2>
+          <div id="edit_source_notice" class="message warn"></div>
+          <div class="row"><label for="tipo_modulo">Tipo de modulo</label><select id="tipo_modulo"><option>BAJO</option><option>ALTO</option><option>CLOSET</option><option>AUXILIAR</option><option>PERSONALIZADO</option></select></div>
+          <div class="row"><label for="modulo_nombre">Nombre</label><input id="modulo_nombre" value="BAJO"></div>
+          <div class="row"><label for="ancho_total">Anchura exterior (mm)</label><input type="number" id="ancho_total" value="600" min="150"></div>
+          <div class="row"><label for="alto_total">Altura exterior (mm)</label><input type="number" id="alto_total" value="760" min="150"></div>
+          <div class="row"><label for="prof_total">Profundidad exterior (mm)</label><input type="number" id="prof_total" value="580" min="100"></div>
+          <div class="row"><label for="espesor">Espesor general (mm)</label><input type="number" id="espesor" value="15" min="3"></div>
+          <div class="row"><label for="juego_general">Juego general de frentes (mm)</label><input type="number" id="juego_general" value="2" min="0" step=".5"></div>
+          <div class="row"><label for="madeval">Descuento de fabricacion</label><select id="madeval"><option value="NO">Sin descuento</option><option value="SI">1 mm</option></select></div>
+          <div class="material-unico-box"><label><input type="checkbox" id="material_unico"> Usar un solo material para todo el módulo</label><div class="material-swatch-row"><input type="color" id="material_global_color" value="#ffffff"><input id="material_global_nombre" value="Blanco" placeholder="Nombre del material general"></div><div class="row"><label for="material_global_source">Acabado general</label><select id="material_global_source"><option value="COLOR">Color sólido</option><option value="FILE">Imagen del equipo</option><option value="URL">Imagen desde enlace</option><option value="LIBRARY">Material guardado</option></select></div><div class="row"><label for="material_global_url">Enlace JPG/PNG/WebP</label><input id="material_global_url" type="url" placeholder="https://sitio.com/material.jpg"></div><div class="row"><label for="material_global_file">Cargar imagen</label><input id="material_global_file" type="file" accept="image/*,.bmp,.gif"></div><div class="material-texture-preview" id="material_global_preview">Color sólido</div><div class="row"><label for="material_global_scale">Escala de textura (mm)</label><input type="number" id="material_global_scale" value="600" min="10"></div><div class="row"><label for="material_global_rotation">Dirección de veta</label><select id="material_global_rotation"><option value="0">0° · horizontal</option><option value="90">90° · vertical</option><option value="180">180°</option><option value="270">270°</option></select></div><small>Admite color, archivo, enlace o material guardado. Las excepciones por grupo o por pieza conservan prioridad.</small></div>
+          <div class="material-unico-box"><strong>Cantos del módulo</strong><div class="row"><label for="edge_mode">Regla predeterminada</label><select id="edge_mode"><option value="MIXED">Puertas canto duro · resto PVC</option><option value="ALL_PVC">Todo PVC</option><option value="ALL_HARD">Todo canto duro</option></select></div><label class="check-line"><input type="checkbox" id="edge_inherit_color" checked> Heredar automáticamente el color de cada pieza</label><small>Después podrás cambiar el tipo y color del canto de cualquier pieza individual en Materiales.</small></div>
+          <label class="check-line"><input type="checkbox" id="sincronizar_ajuste" checked> Sincronizar grosor del ajuste posterior con el espesor del casco</label>
+          <div class="sync-row"><span>El espesor general sincroniza casco, puerta y medidas interiores hasta que edites un campo manualmente.</span><button type="button" class="secondary" id="restore_sync">Restaurar sincronizacion</button></div>
+        </div>
+      </div>
+
+
+      <div id="paneles" class="page">
+        <div class="card">
+          <h2>Casco</h2>
+          <small>Selecciona una pieza en la vista 3D para venir directo a su grosor o retranqueo.</small>
+        </div>
+        <div class="card">
+          <h3>Componentes del casco</h3>
+          <small>Desactiva un panel exterior cuando el módulo va abierto o apoyado contra pared/mueble vecino. La cavidad interior conserva el mismo grosor de referencia aunque el panel no se fabrique.</small>
+          <div class="row"><label for="lleva_lateral_izq">Lateral izquierdo</label><select id="lleva_lateral_izq"><option value="SI">Con panel</option><option value="NO">Sin panel</option></select></div>
+          <div class="row"><label for="lleva_lateral_der">Lateral derecho</label><select id="lleva_lateral_der"><option value="SI">Con panel</option><option value="NO">Sin panel</option></select></div>
+          <div class="row"><label for="lleva_base">Base</label><select id="lleva_base"><option value="SI">Con panel</option><option value="NO">Sin panel</option></select></div>
+          <div class="row"><label for="lleva_techo">Techo</label><select id="lleva_techo"><option value="SI">Con panel</option><option value="NO">Sin panel</option></select></div>
+        </div>
+        <div class="panel-grid" id="panel_grid"></div>
+        <div class="card" data-editor-card="back">
+          <h3>Sistema posterior</h3>
+          <div class="row"><label for="lleva_respaldo">Construccion</label><select id="lleva_respaldo"><option value="SI">Ranurado / embutido</option><option value="INTERNO">Interno sin ranura</option><option value="SOBREPUESTO">Sobrepuesto trasero</option><option value="NO">Sin respaldo</option></select></div>
+          <div class="row"><label for="grosor_resp">Grosor (mm)</label><select id="grosor_resp"><option value="3">3 mm</option><option value="6" selected>6 mm</option><option value="15">15 mm</option><option value="18">18 mm</option></select></div>
+          <div class="row"><label for="profundidad_ranura">Profundidad de ranura (mm)</label><input type="number" id="profundidad_ranura" value="5" min="0"></div>
+        </div>
+        <div class="card" data-editor-card="adjustments">
+          <h3>Ajustes y separaciones</h3>
+          <div class="row"><label for="cantidad_ajustes">Cantidad posterior</label><select id="cantidad_ajustes"><option value="AUTO">Automatica</option><option value="0">Sin ajustes</option><option value="1">1 ajuste</option><option value="2">2 ajustes</option><option value="3">3 ajustes</option><option value="4">4 ajustes</option></select></div>
+          <div class="row"><label for="ajuste_posterior_orientacion">Orientación posterior</label><select id="ajuste_posterior_orientacion"><option value="HORIZONTAL">Rail horizontal (ancho completo)</option><option value="VERTICAL">Escuadras en las esquinas</option></select></div>
+          <div class="row"><label for="grosor_ajuste">Grosor ajuste (mm)</label><input type="number" id="grosor_ajuste" value="15" min="3" max="40" step=".5"></div>
+          <div class="row"><label for="alto_ajuste">Altura ajuste (mm)</label><input type="number" id="alto_ajuste" value="60" min="20"></div>
+          <div class="row"><label for="separacion_ajuste_respaldo">Separación ajuste-respaldo (mm)</label><input type="number" id="separacion_ajuste_respaldo" value="2" min="0" max="50" step=".5"></div>
+          <div class="row"><label for="distancia_plano_posterior">Distancia desde atrás (mm)</label><input type="number" id="distancia_plano_posterior" value="0" min="0" max="100" step=".5"></div>
+          <small id="ajustes_hint">Orden desde atrás: distancia posterior → ajuste → separación → respaldo → espacio útil.</small>
+          <div class="row"><label for="ajuste_frontal_activo">Ajuste frontal</label><select id="ajuste_frontal_activo"><option value="NO">Sin ajuste frontal</option><option value="SI">Con ajuste frontal</option></select></div>
+          <div class="row"><label for="ajuste_frontal_orientacion">Orientación frontal</label><select id="ajuste_frontal_orientacion"><option value="HORIZONTAL">Rail horizontal (ancho completo)</option><option value="VERTICAL">Escuadras en las esquinas</option></select></div>
+          <small>El ajuste frontal usa el mismo grosor y altura que el posterior; da escuadra al frente independientemente del posterior.</small>
+        </div>
+      </div>
+
+      <div id="interior" class="page">
+        <div class="card hierarchy-card">
+          <div class="hierarchy-title"><div><h2>Configuración</h2><small>Selecciona un espacio en el plano. Cada división se crea únicamente dentro de ese espacio.</small></div><div class="hierarchy-title-actions"><button type="button" class="secondary compact" id="hierarchy_undo" onclick="window.Modular3DHierarchyUndo&&window.Modular3DHierarchyUndo()">Deshacer</button><button type="button" class="secondary compact" id="hierarchy_redo" onclick="window.Modular3DHierarchyRedo&&window.Modular3DHierarchyRedo()">Rehacer</button><button type="button" class="secondary compact" id="hierarchy_reset">Restablecer</button></div></div>
+          <details class="material-unico-box" open><summary><strong>Puertas exteriores</strong></summary><div class="row"><label for="external_front_scope">Modo</label><select id="external_front_scope"><option value="BY_SPACE">Configurar por espacios</option><option value="GLOBAL">Global de todo el módulo</option><option value="NONE">Sin puertas exteriores</option></select></div><div id="global_front_controls"><div class="row"><label for="global_front_count_mode">Cantidad</label><select id="global_front_count_mode"><option value="AUTO">Automática según ancho</option><option value="MANUAL">Cantidad manual</option></select></div><div class="row"><label for="global_front_count">Número de puertas</label><input type="number" id="global_front_count" value="2" min="1" max="8"></div><div class="row"><label for="global_front_auto_width">Ancho máximo por puerta (mm)</label><input type="number" id="global_front_auto_width" value="600" min="150"></div><div class="row"><label for="global_front_gap_left">Fuga izquierda (mm)</label><input type="number" id="global_front_gap_left" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_right">Fuga derecha (mm)</label><input type="number" id="global_front_gap_right" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_top">Fuga superior (mm)</label><input type="number" id="global_front_gap_top" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_bottom">Fuga inferior (mm)</label><input type="number" id="global_front_gap_bottom" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_center">Fuga entre puertas (mm)</label><input type="number" id="global_front_gap_center" value="3" min="0" step=".5"></div><div class="row"><label for="global_front_hinge">Apertura</label><select id="global_front_hinge"><option value="ALTERNADA">Alternada desde extremos</option><option value="IZQUIERDA">Todas izquierda</option><option value="DERECHA">Todas derecha</option></select></div></div><small>El modo global cubre el frente exterior completo y sustituye únicamente las puertas externas por espacio; las puertas internas se conservan.</small></details>
+          <div class="hierarchy-layout">
+            <section class="hierarchy-plan-wrap">
+              <div class="hierarchy-breadcrumb" id="hierarchy_breadcrumb"></div>
+              <div class="hierarchy-tree" id="hierarchy_tree"></div>
+              <div class="hierarchy-plan" id="hierarchy_plan"></div>
+              <div class="hierarchy-status" id="hierarchy_status"></div>
+            </section>
+            <section class="hierarchy-inspector">
+              <h3>Espacio seleccionado</h3>
+              <div class="space-summary" id="hierarchy_summary"></div>
+              <details open><summary>Dividir espacio</summary>
+                <div class="row"><label for="hierarchy_axis">Dirección</label><select id="hierarchy_axis"><option value="X">X · divisor vertical</option><option value="Z">Z · repisa horizontal</option><option value="Y">Y · profundidad</option></select></div>
+                <div class="row"><label for="hierarchy_expr">Estaciones</label><input id="hierarchy_expr" value="1:1" placeholder="1:1 · 300mm:AUTO"></div>
+                <div class="row"><label for="hierarchy_physical">Separación</label><select id="hierarchy_physical"><option value="FISICA">Física · crea tablero</option><option value="VIRTUAL">Virtual · solo espacios</option></select></div>
+                <button type="button" id="hierarchy_split">Aplicar división</button>
+                <button type="button" class="secondary" id="hierarchy_unsplit">Eliminar división de este espacio</button>
+              </details>
+              <details open><summary>Componentes del espacio</summary>
+                <div class="checks-grid"><label><input type="checkbox" id="h_left"> Lateral izq.</label><label><input type="checkbox" id="h_right"> Lateral der.</label><label><input type="checkbox" id="h_bottom"> Base</label><label><input type="checkbox" id="h_top"> Techo</label><label><input type="checkbox" id="h_back"> Respaldo</label></div>
+              </details>
+              <details open><summary>Interior y frente</summary>
+                <div class="row"><label for="h_content">Contenido</label><select id="h_content"><option value="VACIO">Vacío</option><option value="REPISAS">Repisas internas</option><option value="CAJONES_INTERNOS">Cajones internos</option><option value="CAJONES_FRENTES">Cajones con frentes</option><option value="CAJONES_PUERTA">Cajones internos + puerta</option></select></div>
+                <div class="row h-shelves"><label for="h_shelves">Cantidad repisas</label><input type="number" id="h_shelves" value="1" min="0" max="20"></div>
+                <div class="row h-drawers"><label for="h_drawers">Cantidad cajones</label><input type="number" id="h_drawers" value="3" min="0" max="12"></div>
+                <div class="row"><label for="h_front">Puerta del espacio</label><select id="h_front"><option value="NINGUNO">Sin puerta</option><option value="PUERTA_AUTO">Automática según ancho</option><option value="PUERTA_UNICA">Externa · una puerta</option><option value="PUERTA_DOBLE">Externa · dos puertas</option><option value="PUERTA_INTERNA">Interna · una puerta</option><option value="PUERTA_DOBLE_INTERNA">Interna · dos puertas</option></select></div>
+                <small>Selecciona el espacio padre para crear una o dos puertas que cubran todos sus espacios hijos.</small>
+                <div class="row"><label for="h_hinge">Apertura</label><select id="h_hinge"><option value="Izquierda">Bisagra izquierda</option><option value="Derecha">Bisagra derecha</option></select></div>
+                <div class="row"><label for="h_front_count">Cantidad externa</label><select id="h_front_count"><option value="AUTO">Automática</option><option value="1">1 puerta</option><option value="2">2 puertas</option><option value="3">3 puertas</option><option value="4">4 puertas</option></select></div>
+                <div class="row"><label for="h_gap">Fuga perimetral (mm)</label><input type="number" id="h_gap" value="3" min="0" step=".5"></div>
+                <div class="row"><label for="h_gap_center">Fuga entre puertas (mm)</label><input type="number" id="h_gap_center" value="3" min="0" step=".5"></div>
+                <div class="row h-external-fit"><label for="h_front_fit">Ajuste de puerta externa</label><select id="h_front_fit"><option value="AUTO">Automático sobre casco</option><option value="CUSTOM">Solape manual</option></select></div>
+                <div class="row h-external-fit"><label for="h_front_joint">Fuga por hoja en uniones (mm)</label><input type="number" id="h_front_joint" value="1.5" min="0" step=".5"></div>
+                <small class="h-external-fit">Con 1,5 mm por cada hoja, la junta visible entre dos puertas es exactamente 3 mm.</small>
+                <div class="h-front-overlays">
+                  <div class="row"><label for="h_overlay_left">Solape izquierdo (mm)</label><input type="number" id="h_overlay_left" value="13.5" min="0" step=".5"></div>
+                  <div class="row"><label for="h_overlay_right">Solape derecho (mm)</label><input type="number" id="h_overlay_right" value="13.5" min="0" step=".5"></div>
+                  <div class="row"><label for="h_overlay_top">Solape superior (mm)</label><input type="number" id="h_overlay_top" value="13.5" min="0" step=".5"></div>
+                  <div class="row"><label for="h_overlay_bottom">Solape inferior (mm)</label><input type="number" id="h_overlay_bottom" value="13.5" min="0" step=".5"></div>
+                </div>
+                <button type="button" id="hierarchy_apply">Guardar en este espacio</button>
+              </details>
+              <div class="hierarchy-actions"><button type="button" class="secondary" id="hierarchy_parent">Seleccionar padre</button><button type="button" class="secondary" id="hierarchy_duplicate">Copiar a hermanos</button></div>
+            </section>
+          </div>
+          <input type="hidden" id="param_x_expr" value=""><select hidden id="param_x_type"><option value="FISICA">Física</option></select><div hidden id="param_x_result"></div>
+          <input type="hidden" id="param_z_expr" value=""><select hidden id="param_z_type"><option value="FISICA">Física</option></select><div hidden id="param_z_result"></div>
+          <input type="hidden" id="num_divisiones" value="0"><input type="hidden" id="num_repisas" value="0"><input type="hidden" id="retranqueo_interior" value="38"><select hidden id="lleva_maletera"><option value="NO">No</option></select><div hidden id="nichos_cajones"></div><input type="hidden" id="prof_input_cj" value="450">
+        </div>
+      </div>
+
+      <div id="diseno" class="page">
+        <div class="card">
+          <h2>Materiales y colores</h2>
+          <small>Configura primero los grupos. Después selecciona cualquier pieza en el modelo o en la lista para darle un acabado individual.</small>
+          <div class="material-unico-box"><label><input type="checkbox" id="material_unico_materiales"> Material único para todo el módulo</label><div class="material-swatch-row"><input type="color" id="material_global_color_materiales" value="#ffffff"><input id="material_global_nombre_materiales" value="Blanco" placeholder="Nombre del material general"></div><div class="material-texture-preview" id="material_global_preview_materiales">Color sólido</div><div class="tool-row"><button type="button" id="material_global_choose_file">Cargar JPG/PNG/imagen</button><button type="button" class="secondary" id="material_global_use_url">Usar enlace</button><button type="button" class="secondary" id="material_global_clear_texture">Solo color</button></div><div class="tool-row"><button type="button" id="material_apply_all">Aplicar a todo el módulo</button><button type="button" class="secondary" id="material_restore_groups">Restaurar materiales por grupo</button><button type="button" class="secondary" id="material_clear_overrides">Eliminar excepciones individuales</button></div></div>
+          <div class="materials-grid">
+            <section class="material-group"><h3>Casco</h3><label class="check-line"><input type="checkbox" id="material_casco_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_casco_color" value="#d5a66e"><input id="material_casco_nombre" value="Casco decorativo" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Interior</h3><label class="check-line"><input type="checkbox" id="material_interior_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_interior_color" value="#e4c393"><input id="material_interior_nombre" value="Interior claro" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Frentes y puertas</h3><label class="check-line"><input type="checkbox" id="material_frentes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_frentes_color" value="#f06424"><input id="material_frentes_nombre" value="Frente decorativo" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Cajones interiores</h3><label class="check-line"><input type="checkbox" id="material_cajones_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_cajones_color" value="#b87543"><input id="material_cajones_nombre" value="Cajón interior" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Respaldo</h3><label class="check-line"><input type="checkbox" id="material_respaldo_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_respaldo_color" value="#cdbda8"><input id="material_respaldo_nombre" value="Respaldo" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Herrajes y ajustes</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
+          </div>
+          <div class="material-texture-editor" id="material_library">
+            <h3>Biblioteca de materiales</h3>
+            <small>Asigna una textura al grupo activo desde tu equipo o mediante una URL directa JPG, PNG o WebP. Los materiales guardados quedan disponibles para otros módulos.</small>
+            <div class="row"><label for="material_texture_group">Grupo</label><select id="material_texture_group"><option value="global">Material general</option><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="herrajes">Herrajes</option></select></div>
+            <div class="row"><label for="material_texture_url">Imagen de Internet</label><input id="material_texture_url" type="url" placeholder="https://sitio.com/textura.jpg"></div>
+            <div class="row"><label for="material_texture_file">Subir imagen</label><input id="material_texture_file" type="file" accept="image/*,.bmp,.gif"></div>
+            <div class="row"><label for="material_texture_scale">Escala (mm)</label><input type="number" id="material_texture_scale" value="600" min="10"></div>
+            <div class="row"><label for="material_texture_rotation">Rotación / veta</label><select id="material_texture_rotation"><option value="0">0°</option><option value="90">90° vertical</option><option value="180">180°</option><option value="270">270°</option></select></div>
+            <div class="material-texture-preview" id="material_texture_preview">Sin textura</div>
+            <div class="tool-row"><button type="button" id="material_texture_apply">Aplicar textura</button><button type="button" class="secondary" id="material_texture_clear">Quitar textura</button></div>
+            <div class="row"><label for="material_library_select">Material guardado</label><select id="material_library_select"><option value="">Seleccionar...</option></select></div>
+            <div class="tool-row"><button type="button" id="material_library_save">Guardar material actual</button><button type="button" class="secondary" id="material_library_use">Usar guardado</button><button type="button" class="secondary" id="material_library_delete">Eliminar guardado</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Editar una pieza individual</h3>
+          <div class="material-piece-editor">
+            <div><input id="material_piece_search" type="search" placeholder="Buscar lateral, repisa, puerta..."><div id="material_piece_list" class="material-piece-list"></div></div>
+            <div>
+              <div class="piece-info show" id="material_piece_info">Selecciona una pieza azul en el visualizador o desde la lista.</div>
+              <div class="row"><label for="material_piece_group">Grupo heredado</label><select id="material_piece_group"><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="herrajes">Herrajes</option></select></div>
+              <div class="row"><label for="material_piece_custom">Acabado individual</label><select id="material_piece_custom"><option value="NO">Heredar del grupo</option><option value="SI">Usar material propio</option></select></div>
+              <div class="row"><label for="material_piece_color">Color individual</label><input type="color" id="material_piece_color" value="#66c9f3"></div>
+              <div class="row"><label for="material_piece_name">Material individual</label><input id="material_piece_name" placeholder="Ej. Roble decorativo"></div>
+              <div class="row"><label for="material_piece_texture_url">Textura individual</label><input id="material_piece_texture_url" type="url" placeholder="Enlace JPG/PNG/WebP"></div>
+              <div class="row"><label for="material_piece_texture_file">Imagen individual</label><input id="material_piece_texture_file" type="file" accept="image/*,.bmp,.gif"></div>
+              <div class="material-texture-preview" id="material_piece_texture_preview">Heredar textura</div>
+              <div class="row"><label for="material_piece_rotation">Dirección de veta</label><select id="material_piece_rotation"><option value="INHERIT">Heredar</option><option value="0">0°</option><option value="90">90° vertical</option><option value="180">180°</option><option value="270">270°</option></select></div>
+              <div class="row"><label for="material_piece_edge">Canto individual</label><select id="material_piece_edge"><option value="INHERIT">Heredar regla general</option><option value="PVC">PVC</option><option value="HARD">Canto duro</option><option value="NONE">Sin canto</option></select></div>
+              <div class="row"><label for="material_piece_edge_color">Color del canto</label><select id="material_piece_edge_color"><option value="INHERIT">Heredar color de la pieza</option><option value="CUSTOM">Color personalizado</option></select></div>
+              <div class="row"><label for="material_piece_edge_custom_color">Color personalizado</label><input type="color" id="material_piece_edge_custom_color" value="#ffffff"></div>
+              <div class="row"><label for="material_piece_oversize_ancho">Sobremedida ancho (mm)</label><input type="number" id="material_piece_oversize_ancho" value="0" step=".5"></div>
+              <div class="row"><label for="material_piece_oversize_prof">Sobremedida profundidad (mm)</label><input type="number" id="material_piece_oversize_prof" value="0" step=".5"></div>
+              <div class="row"><label for="material_piece_oversize_alto">Sobremedida alto (mm)</label><input type="number" id="material_piece_oversize_alto" value="0" step=".5"></div>
+              <small>Ajusta esta pieza puntual por encima o por debajo de la medida calculada (positivo = más grande, negativo = más chica). El resto del módulo no cambia.</small>
+              <button type="button" id="material_piece_apply">Aplicar a esta pieza</button>
+              <button type="button" class="secondary" id="material_piece_clear">Volver a heredar del grupo</button>
+            </div>
+          </div>
+          <div class="material-summary" id="material_summary"><span>0 piezas</span><span>0 personalizadas</span><span>0 puertas</span><span>Sin errores</span></div>
+        </div>
+        <div class="card">
+          <h3>Resumen antes de construir</h3>
+          <div id="material_validation" class="message warn"></div>
+          <div id="material_build_summary"></div>
+        </div>
+        <div class="hidden-legacy" aria-hidden="true">
+          <div id="review_breadcrumb"></div><div id="review_tree"></div><div id="review_plan"></div><div id="review_status"></div><div id="review_inspector_slot"></div>
+          <div class="property-panel legacy-space-panel">
+              <h3>Propiedades del espacio</h3>
+              <div class="row"><label>Espacio activo</label><input id="space_label" readonly value="1"></div>
+              <div class="row"><label for="space_content">Contenido</label><select id="space_content"><option value="VACIO">Vacio</option><option value="REPISAS">Repisas</option><option value="PUERTA_UNICA">Puerta unica</option><option value="PUERTA_DOBLE">Puerta doble</option><option value="CAJONERA">Cajonera</option></select></div>
+              <div class="tool-row">
+                <button type="button" class="inline-button" id="space_vertical">Division vertical</button>
+                <button type="button" class="inline-button" id="space_horizontal">Division horizontal</button>
+                <button type="button" class="inline-button secondary" id="space_vertical_remove">Quitar division</button>
+                <button type="button" class="inline-button secondary" id="space_horizontal_remove">Quitar repisa</button>
+              </div>
+              <div class="row"><label for="space_shelves">Repisas</label><input type="number" id="space_shelves" value="1" min="0" max="30"></div>
+              <div class="row"><label for="space_drawers">Cajones</label><input type="number" id="space_drawers" value="0" min="0" max="12"></div>
+              <div class="row"><label for="space_front_type">Tipo de cajón</label><select id="space_front_type"><option value="FRENTES">Con frente exterior</option><option value="INTERNO">Cajón interno</option></select></div>
+              <div class="row"><label for="space_hinge">Apertura puerta</label><select id="space_hinge"><option value="Izquierda">Bisagra izquierda</option><option value="Derecha">Bisagra derecha</option></select></div>
+              <div class="row"><label for="space_opening">Sistema apertura</label><select id="space_opening"><option value="AUTOMATICO">Automatico</option><option value="TIRADOR">Tirador / manija</option><option value="GOLA">Sistema gola</option><option value="PUSH">Push</option></select></div>
+              <div class="row"><label for="space_gap">Luz entre frentes (mm)</label><input type="number" id="space_gap" value="3" min="0" step=".5"></div>
+              <button type="button" class="secondary" id="space_apply">Aplicar a este espacio</button>
+              <button type="button" class="danger-action" id="space_clear">Limpiar interior</button>
+              <small id="space_rule_hint">El diseno actual sincroniza repisas, divisiones, cajones y puertas del modulo seleccionado.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="frentes" class="page">
+        <div class="card">
+          <h2>Puertas y frentes</h2>
+          <div class="actions-split">
+            <button type="button" class="secondary" id="btn_poner_puertas">Poner puertas</button>
+            <button type="button" class="secondary" id="btn_poner_frentes">Poner frentes</button>
+          </div>
+          <div class="row"><label for="crear_puerta">Crear puerta</label><select id="crear_puerta"><option value="NO">No</option><option value="SI">Si</option></select></div>
+          <div class="row"><label for="tipo_puerta">Tipo de puerta</label><select id="tipo_puerta"><option value="AUTO">Automatico por ancho</option><option value="UNICA">Puerta unica</option><option value="DOBLE">Puerta doble</option></select></div>
+          <div class="row"><label for="puerta_bisagra">Apertura</label><select id="puerta_bisagra"><option value="Izquierda">Izquierda</option><option value="Derecha">Derecha</option></select></div>
+          <div class="row"><label for="puerta_grosor">Grosor (mm)</label><input type="number" id="puerta_grosor" value="15" min="3"></div>
+          <div class="row"><label for="sistema_apertura">Sistema de apertura</label><select id="sistema_apertura"><option value="AUTOMATICO">Automatico</option><option value="TIRADOR">Jalador / manija</option><option value="GOLA">Sistema gola</option><option value="PUSH">Push</option></select></div>
+          <div class="row"><label for="modo_frentes">Frentes de cajon</label><select id="modo_frentes"><option value="POR_NICHO">Segun nicho</option><option value="TODOS">Poner frentes a todos</option><option value="NINGUNO">Cajones internos</option></select></div>
+          <div class="row"><label for="luz_frentes">Luz entre frentes (mm)</label><input type="number" id="luz_frentes" value="3" min="0" step=".5"></div>
+          <div class="row"><label for="ret_cajones">Retiro de cajones (mm)</label><input type="number" id="ret_cajones" value="0" min="0"></div>
+          <div class="row"><label for="sistema_corredera">Sistema de corredera</label><select id="sistema_corredera"><option>Telescopica estandar</option><option>Oculta</option><option>Automatico maximo</option></select></div>
+          <div class="row"><label for="reforzar_piso">Reforzar piso cajon</label><select id="reforzar_piso"><option value="NO">No</option><option value="SI">Si</option></select></div>
+        </div>
+        <div class="card">
+          <h3>Ajustes avanzados</h3>
+          <div class="row"><label for="luz_sup_frente">Luz superior frente (mm)</label><input type="number" id="luz_sup_frente" value="2" min="0" step=".5"></div>
+          <div class="row"><label for="luz_perimetral">Luz perimetral embutido (mm)</label><input type="number" id="luz_perimetral" value="3" min="0" step=".5"></div>
+          <div class="row"><label for="luz_solape">Luz frentes solapados (mm)</label><input type="number" id="luz_solape" value="1.5" min="0" step=".5"></div>
+          <div class="row"><label for="alto_jalador">Altura jalador aluminio (mm)</label><input type="number" id="alto_jalador" value="30" min="0"></div>
+          <div class="row"><label for="alto_perfil_gola">Altura perfil gola (mm)</label><input type="number" id="alto_perfil_gola" value="47" min="0"></div>
+          <div class="row"><label for="prof_gola">Profundidad gola melamina (mm)</label><input type="number" id="prof_gola" value="50" min="0"></div>
+        </div>
+      </div>
+
+      <div id="resultado" class="page">
+        <div class="card">
+          <h2>Comprobacion previa</h2>
+          <div id="errores" class="message error"></div>
+          <div id="avisos" class="message warn"></div>
+          <div id="lista_piezas"></div>
+        </div>
+      </div>
+      <div class="step-footer">
+        <button type="button" class="secondary" id="step_prev">Anterior</button>
+        <div class="step-status" id="step_status">Paso 1 de 4</div>
+        <button type="button" id="step_next">Siguiente</button>
+      </div>
+
+    </section>
+
+    <aside class="card m3dv-panel">
+      <div class="m3dv-head"><h2>MODULAR-3D VIEW</h2><span>INTEGRADO</span></div>
+      <div class="m3dv-stage" id="view_stage">
+        <button type="button" class="update-badge" id="btn_actualizar_modulo">Actualizar módulo</button>
+        <div class="m3dv-dimensions">
+          <strong>DIMENSIONES DEL MÓDULO</strong>
+          <span>Ancho<b id="view_module_width">600 mm</b></span>
+          <span>Alto<b id="view_module_height">760 mm</b></span>
+          <span>Fondo<b id="view_module_depth">580 mm</b></span>
+        </div>
+        <div class="m3dv-space-badge" id="view_space_badge"><b>ESPACIO ACTIVO</b><span id="view_space_text"></span></div>
+        <div class="m3dv-navigator" aria-label="Cubo profesional de navegación">
+          <svg class="view-cube-pro" viewBox="0 0 128 116" role="img" aria-label="Cubo de vistas con caras, aristas y esquinas">
+            <polygon id="cube_face_top" class="cube-face" points="15,35 62,8 113,31 64,58" data-m3dv-view="top"></polygon>
+            <polygon id="cube_face_front" class="cube-face" points="15,35 64,58 64,106 15,80" data-m3dv-view="front"></polygon>
+            <polygon id="cube_face_side" class="cube-face" points="64,58 113,31 113,78 64,106" data-m3dv-view="right"></polygon>
+            <text id="cube_label_top" x="64" y="31">ARRIBA</text><text id="cube_label_front" x="38" y="70">FRENTE</text><text id="cube_label_side" x="89" y="69">DER.</text>
+            <path class="cube-edge" d="M15 35 L62 8" data-m3dv-vector="-1,1,1"></path><path class="cube-edge" d="M62 8 L113 31" data-m3dv-vector="1,1,1"></path>
+            <path class="cube-edge" d="M15 35 L64 58" data-m3dv-vector="-1,0,1"></path><path class="cube-edge" d="M64 58 L113 31" data-m3dv-vector="1,0,1"></path>
+            <path class="cube-edge" d="M15 80 L64 106" data-m3dv-vector="-1,-1,1"></path><path class="cube-edge" d="M64 106 L113 78" data-m3dv-vector="1,-1,1"></path>
+            <circle class="cube-corner" cx="15" cy="35" r="5" data-m3dv-vector="-1,1,1"></circle><circle class="cube-corner" cx="62" cy="8" r="5" data-m3dv-vector="0,1,1"></circle>
+            <circle class="cube-corner" cx="113" cy="31" r="5" data-m3dv-vector="1,1,1"></circle><circle class="cube-corner" cx="64" cy="58" r="5" data-m3dv-vector="1,1,1"></circle>
+            <circle class="cube-corner" cx="15" cy="80" r="5" data-m3dv-vector="-1,-1,1"></circle><circle class="cube-corner" cx="64" cy="106" r="5" data-m3dv-vector="0,-1,1"></circle><circle class="cube-corner" cx="113" cy="78" r="5" data-m3dv-vector="1,-1,1"></circle>
+          </svg>
+          <button type="button" id="view_home" class="cube-home" title="Vista isométrica">⌂</button>
+          <button type="button" id="view_projection" hidden>Perspectiva</button>
+        </div>
+      </div>
+      <div class="m3dv-toolbar">
+        <button type="button" id="view_iso" class="redundant-view">Isométrica</button><button type="button" id="view_front" class="redundant-view">Frontal</button><button type="button" id="view_back" class="redundant-view">Posterior</button><button type="button" id="view_top" class="redundant-view">Superior</button>
+        <button type="button" id="view_left" class="redundant-view">Izquierda</button><button type="button" id="view_right" class="redundant-view">Derecha</button><button type="button" id="view_transparency">Transparencia</button><button type="button" id="view_edges" class="active">Aristas</button>
+        <button type="button" id="view_shadows" class="active">Sombras</button><button type="button" id="view_grid" class="active">Rejilla</button><button type="button" id="view_bottom" class="redundant-view">Inferior</button><button type="button" onclick="window.Modular3DView.frame()">Encuadrar</button>
+      </div>
+      <div class="m3dv-select-mode"><button type="button" id="view_mode_space" class="active">Seleccionar espacios</button><button type="button" id="view_mode_piece">Seleccionar piezas</button></div>
+      <label class="m3dv-explosion">Explosión <input id="view_explosion" type="range" min="0" max="350" value="0" step="5"></label>
+      <div class="m3dv-body">
+        <div class="m3dv-card"><h3>Árbol de piezas</h3><input id="view_search" class="m3dv-search" type="search" placeholder="Buscar pieza"><div id="view_tree" class="m3dv-tree"></div></div>
+        <div class="m3dv-card"><h3>Propiedades técnicas</h3><div id="view_piece_panel" class="m3dv-piece" hidden><strong id="view_piece_name"></strong><div><span>Largo</span><b id="view_piece_length"></b></div><div><span>Ancho</span><b id="view_piece_width"></b></div><div><span>Espesor</span><b id="view_piece_thickness"></b></div><div><span>Tipo</span><b id="view_piece_category"></b></div><div><span>Canto</span><b id="view_piece_edge"></b></div><div><span>Color canto</span><b id="view_piece_edge_color"></b></div><small id="view_piece_owner" class="piece-selection-note"></small><div class="m3dv-piece-actions"><button type="button" id="view_piece_edit">Editar origen</button><button type="button" id="view_piece_focus">Encuadrar</button><button type="button" id="view_piece_isolate">Aislar</button><button type="button" id="view_piece_visibility">Ocultar/mostrar</button></div></div><small id="editing_hint" class="editing-hint"></small></div>
+      </div>
+      <div id="view_health" class="m3dv-health">Render local</div>
+      <div class="m3dv-actions"><button type="button" class="secondary" id="btn_revisar">Validar módulo</button><button id="btn_construir">Construir módulo</button></div>
+      <span id="m_ancho" hidden></span><span id="m_alto" hidden></span><span id="m_prof" hidden></span><span id="m_piezas" hidden></span><div id="piece_info" hidden></div>
+    </aside>
+  </main>
+
+  <script src="../vendor/three.min.js"></script>
+  <script src="../vendor/OrbitControls.js"></script>
+  <script src="modular3d_view.js"></script>
+  <script>
+    window.Modular3DLicense = {
+      busy: false,
+      receive: function(result) {
+        result = result || {};
+        this.busy = false;
+        var button = document.getElementById('license_login');
+        var message = document.getElementById('license_message');
+        button.disabled = false;
+        button.textContent = 'Entrar a Modular_3D';
+
+        if (result.ok) {
+          document.body.classList.remove('license-locked');
+          document.getElementById('license_overlay').style.display = 'none';
+          document.getElementById('license_session').classList.add('show');
+          document.getElementById('license_identity').textContent = result.email || document.getElementById('license_email').value || 'Licencia activa';
+          message.classList.remove('show');
+          return;
+        }
+
+        var messages = {
+          LOGIN_REQUIRED: 'Ingresa tus datos para activar Modular_3D.',
+          INVALID_CREDENTIALS: 'Correo o contrasena incorrectos.',
+          LICENSE_EXPIRED: 'La suscripcion esta vencida. Solicita una renovacion.',
+          LICENSE_BLOCKED: 'La licencia fue bloqueada por el administrador.',
+          DEVICE_CONFLICT: 'Esta licencia ya esta vinculada a otra computadora.',
+          SERVER_UNAVAILABLE: 'No se pudo conectar al servidor de licencias. Verifica tu conexion a Internet.',
+          TOKEN_EXPIRED: 'La sesion vencio. Inicia sesion nuevamente.'
+        };
+        document.body.classList.add('license-locked');
+        document.getElementById('license_overlay').style.display = 'flex';
+        document.getElementById('license_session').classList.remove('show');
+        message.textContent = result.message || messages[result.code] || 'No se pudo validar la licencia.';
+        message.classList.add('show');
+      },
+      login: function() {
+        if (this.busy) return;
+        var email = document.getElementById('license_email').value.trim();
+        var password = document.getElementById('license_password').value;
+        if (!email || !password) {
+          this.receive({ ok: false, message: 'Completa el correo y la contrasena.' });
+          return;
+        }
+        this.busy = true;
+        var button = document.getElementById('license_login');
+        button.disabled = true;
+        button.textContent = 'Validando...';
+        if (window.sketchup && sketchup.licenciaLogin) {
+          sketchup.licenciaLogin(email, password, document.getElementById('license_transfer').checked);
+        } else {
+          this.receive({ ok: false, message: 'Esta validacion debe abrirse dentro de SketchUp.' });
+        }
+      },
+      check: function() {
+        if (window.sketchup && sketchup.licenciaEstado) sketchup.licenciaEstado();
+      }
+    };
+
+    var presets = {
+      BAJO: [600, 760, 580, 15, 1, 'NO'],
+      ALTO: [600, 760, 320, 15, 1, 'NO'],
+      CLOSET: [1200, 2120, 580, 15, 4, 'SI'],
+      AUXILIAR: [600, 2120, 580, 15, 4, 'NO']
+    };
+    var paneles = [
+      ['superior', 'Tapa superior'],
+      ['inferior', 'Base inferior'],
+      ['izq', 'Lateral izquierdo'],
+      ['der', 'Lateral derecho']
+    ];
+    var selectedSpace = 0;
+    // Estado independiente por celda. La clave usa el nicho contado desde abajo
+    // y la columna desde la izquierda: "nicho:columna".
+    var spaceState = {};
+    var editMode = false;
+    var syncingFields = false;
+    var linkedThickness = {
+      grosor_superior: true,
+      grosor_inferior: true,
+      grosor_izq: true,
+      grosor_der: true,
+      puerta_grosor: true,
+      grosor_ajuste: true
+    };
+    var stepPages = ['inicial', 'paneles', 'interior', 'diseno'];
+    var fieldCategories = {
+      num_repisas: 'interior', num_divisiones: 'interior', retranqueo_interior: 'interior',
+      lleva_respaldo: 'back', grosor_resp: 'back', profundidad_ranura: 'back', cantidad_ajustes: 'back', alto_ajuste: 'back',
+      crear_puerta: 'front', tipo_puerta: 'front', puerta_grosor: 'front', puerta_bisagra: 'front',
+      modo_frentes: 'front', luz_frentes: 'front', ret_cajones: 'front', space_drawers: 'front',
+      grosor_superior: 'top', grosor_inferior: 'horizontal', grosor_izq: 'lateral', grosor_der: 'lateral'
+    };
+
+    function el(id) { return document.getElementById(id); }
+    function htmlSeguro(valor) {
+      return String(valor == null ? '' : valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function numero(id, fallback) {
+      var value = parseFloat(el(id).value);
+      return isFinite(value) ? value : (fallback || 0);
+    }
+    function setValue(id, value) {
+      if (el(id)) el(id).value = value;
+    }
+    function syncThicknessFromGeneral(force) {
+      var thickness = Math.max(3, numero('espesor', 15));
+      syncingFields = true;
+      Object.keys(linkedThickness).forEach(function(id) {
+        if (force || linkedThickness[id]) setValue(id, thickness);
+      });
+      syncingFields = false;
+    }
+    function restoreThicknessSync() {
+      Object.keys(linkedThickness).forEach(function(id) { linkedThickness[id] = true; });
+      syncThicknessFromGeneral(true);
+      actualizarVista();
+    }
+    function markManualThickness(id) {
+      if (!syncingFields && linkedThickness.hasOwnProperty(id)) linkedThickness[id] = false;
+    }
+    function crearPaneles() {
+      var thickness = Math.max(3, numero('espesor', 15));
+      el('panel_grid').innerHTML = paneles.map(function(panel) {
+        var category = panel[0] === 'superior' ? 'top' : (panel[0] === 'inferior' ? 'horizontal' : 'lateral');
+        return '<div class="panel-card" data-editor-card="' + panel[0] + '" data-editor-category="' + category + '"><h3>' + panel[1] + '</h3>' +
+          '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + ((panel[0] === 'izq' || panel[0] === 'der') ? ' selected' : '') + '>Sobrepuesto exterior</option></select></div>' +
+          '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
+          '<div class="row"><label>Hueco delantero (mm)</label><input type="number" id="retranqueo_frontal_' + panel[0] + '" value="0" min="0"></div>' +
+          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" min="0"></div></div>';
+      }).join('');
+    }
+    function aplicarPreset() {
+      var tipo = el('tipo_modulo').value;
+      var p = presets[tipo];
+      if (!p) return;
+      el('modulo_nombre').value = tipo;
+      el('ancho_total').value = p[0];
+      el('alto_total').value = p[1];
+      el('prof_total').value = p[2];
+      el('espesor').value = p[3];
+      el('num_repisas').value = p[4];
+      el('lleva_maletera').value = p[5];
+      restoreThicknessSync();
+      actualizarNichos();
+      actualizarVista();
+    }
+    function actualizarNichos() {
+      var cantidad = Math.max(1, parseInt(el('num_repisas').value, 10) + 1 || 1);
+      var anteriores = Array.prototype.map.call(document.querySelectorAll('.cajones-nicho'), function(c) { return c.value; });
+      var tipos = Array.prototype.map.call(document.querySelectorAll('.tipo-cajon-nicho'), function(c) { return c.value; });
+      var html = '';
+      for (var i = 0; i < cantidad; i++) {
+        html += '<div class="row"><label>Nicho ' + (i + 1) + '</label><input class="cajones-nicho" type="number" min="0" value="' + (anteriores[i] || 0) + '"></div>' +
+          '<div class="row"><label>Frente del nicho ' + (i + 1) + '</label><select class="tipo-cajon-nicho"><option value="INTERNO">Cajon interno</option><option value="FRENTES"' + (tipos[i] === 'FRENTES' ? ' selected' : '') + '>Con frente exterior</option></select></div>';
+      }
+      el('nichos_cajones').innerHTML = html;
+      normalizeSpaceState();
+    }
+
+    function nichosActuales() {
+      return Array.prototype.map.call(document.querySelectorAll('.cajones-nicho'), function(c) { return parseInt(c.value, 10) || 0; });
+    }
+    function tiposActuales() {
+      return Array.prototype.map.call(document.querySelectorAll('.tipo-cajon-nicho'), function(c) { return c.value; });
+    }
+    function layoutColumns() { return Math.max(1, (parseInt(el('num_divisiones').value, 10) || 0) + 1); }
+    function layoutRows() { return Math.max(1, (parseInt(el('num_repisas').value, 10) || 0) + 1); }
+    function cellMetrics(d) {
+      var cols = Math.max(1, (parseInt(d.num_divisiones, 10) || 0) + 1);
+      var rows = Math.max(1, (parseInt(d.num_repisas, 10) || 0) + 1);
+      return {
+        cols: cols,
+        rows: rows,
+        width: (d.ancho_total - d.grosor_izq - d.grosor_der - ((cols - 1) * d.espesor)) / cols,
+        height: (d.alto_total - d.grosor_superior - d.grosor_inferior - ((rows - 1) * d.espesor)) / rows
+      };
+    }
+    function normalizeSpaceState() {
+      var cols = layoutColumns();
+      var rows = layoutRows();
+      var clean = {};
+      Object.keys(spaceState).forEach(function(key) {
+        var space = spaceState[key] || {};
+        var niche = Math.max(0, Math.min(rows - 1, parseInt(space.niche, 10) || 0));
+        var column = Math.max(0, Math.min(cols - 1, parseInt(space.column, 10) || 0));
+        space.niche = niche;
+        space.column = column;
+        clean[spaceKey(niche, column)] = space;
+      });
+      spaceState = clean;
+      if (selectedSpace >= cols * rows) selectedSpace = 0;
+    }
+    function syncLegacyFieldsFromSpaces() {
+      normalizeSpaceState();
+      var rows = layoutRows();
+      var drawers = Array(rows).fill(0);
+      var types = Array(rows).fill('INTERNO');
+      var hasDoor = false;
+      var firstDoor = '';
+      Object.keys(spaceState).forEach(function(key) {
+        var space = spaceState[key];
+        var niche = Math.max(0, Math.min(rows - 1, parseInt(space.niche, 10) || 0));
+        if (space.content === 'CAJONERA') {
+          drawers[niche] += Math.max(0, parseInt(space.drawers, 10) || 0);
+          if (space.front_type === 'FRENTES') types[niche] = 'FRENTES';
+        }
+        if (String(space.content || '').indexOf('PUERTA') === 0) {
+          hasDoor = true;
+          if (!firstDoor) firstDoor = String(space.content).replace('PUERTA_', '').replace('UNICA', 'UNICA').replace('DOBLE_VIDRIO', 'DOBLE_VIDRIO').replace('VIDRIO', 'VIDRIO').replace('DOBLE', 'DOBLE');
+        }
+      });
+      if (Object.keys(spaceState).length) {
+        document.querySelectorAll('.cajones-nicho').forEach(function(campo, i) { campo.value = drawers[i] || 0; });
+        document.querySelectorAll('.tipo-cajon-nicho').forEach(function(campo, i) { campo.value = types[i] || 'INTERNO'; });
+        if (hasDoor) {
+          el('crear_puerta').value = 'SI';
+          el('tipo_puerta').value = firstDoor || 'AUTO';
+        } else {
+          el('crear_puerta').value = 'NO';
+          el('tipo_puerta').value = 'AUTO';
+        }
+      }
+    }
+    function changeStructure(kind, delta) {
+      if (kind === 'column') el('num_divisiones').value = Math.max(0, Math.min(20, numero('num_divisiones') + delta));
+      if (kind === 'row') {
+        el('num_repisas').value = Math.max(0, Math.min(30, numero('num_repisas') + delta));
+        actualizarNichos();
+      }
+      normalizeSpaceState();
+      actualizarVista();
+    }
+    function cantidadAjustes(d) {
+      var grosor = parseFloat(d.grosor_resp) || 6;
+      if (d.lleva_respaldo === 'NO' || grosor >= 15) return 0;
+      if (String(d.cantidad_ajustes || 'AUTO') !== 'AUTO') return Math.max(0, parseInt(d.cantidad_ajustes, 10) || 0);
+      return (parseFloat(d.alto_total) || 0) > 760 ? 2 : 1;
+    }
+    function sincronizarReglasRespaldo() {
+      var grosor = numero('grosor_resp', 6);
+      var cantidad = cantidadAjustes(datosFormulario());
+      var hint = el('ajustes_hint');
+      if (hint) hint.textContent = grosor >= 15 ? 'Respaldo estructural de ' + grosor + ' mm: ajustes posteriores apagados automáticamente.' : 'Desde atrás: ' + numero('distancia_plano_posterior',0) + ' mm libres + ajuste ' + numero('grosor_ajuste',15) + ' mm + separación ' + numero('separacion_ajuste_respaldo',2) + ' mm + respaldo ' + grosor + ' mm. Ajustes activos: ' + cantidad + '.';
+    }
+    function setCajonesNichos(valores, tipos) {
+      actualizarNichos();
+      document.querySelectorAll('.cajones-nicho').forEach(function(campo, i) { campo.value = valores[i] || 0; });
+      document.querySelectorAll('.tipo-cajon-nicho').forEach(function(campo, i) { campo.value = (tipos && tipos[i]) || campo.value || 'INTERNO'; });
+    }
+    function iluminarCategoria(categoria, mensaje) {
+      if (window.Modular3DPreview && window.Modular3DPreview.highlight) window.Modular3DPreview.highlight(categoria);
+      var hint = el('editing_hint');
+      if (!hint) return;
+      hint.textContent = mensaje || ('Editando: ' + categoria);
+      hint.className = 'editing-hint show';
+    }
+    function campoParaPieza(detail) {
+      var name = String(detail.name || '').toLowerCase();
+      var category = detail.category || '';
+      if (category === 'front' || category === 'handle' || category === 'drawer') return { page: 'frentes', field: category === 'drawer' ? 'luz_frentes' : 'puerta_grosor', label: 'frentes' };
+      if (name.indexOf('ajuste') >= 0) return { page: 'paneles', field: 'cantidad_ajustes', label: 'ajustes posteriores' };
+      if (category === 'back') return { page: 'paneles', field: 'grosor_resp', label: 'respaldo' };
+      if (category === 'interior') return { page: 'interior', field: name.indexOf('division') >= 0 ? 'num_divisiones' : 'num_repisas', label: 'interior' };
+      if (category === 'top' || name.indexOf('superior') >= 0) return { page: 'paneles', field: 'grosor_superior', label: 'tapa superior' };
+      if (category === 'horizontal' || name.indexOf('inferior') >= 0) return { page: 'paneles', field: 'grosor_inferior', label: 'base inferior' };
+      if (name.indexOf('derecho') >= 0 || name.indexOf('derecha') >= 0) return { page: 'paneles', field: 'grosor_der', label: 'lateral derecho' };
+      if (name.indexOf('izquierdo') >= 0 || name.indexOf('izquierda') >= 0) return { page: 'paneles', field: 'grosor_izq', label: 'lateral izquierdo' };
+      return { page: 'paneles', field: 'grosor_izq', label: 'laterales' };
+    }
+    function enfocarEditor(fieldId) {
+      document.querySelectorAll('.editor-focus').forEach(function(node) { node.classList.remove('editor-focus'); });
+      var field = el(fieldId);
+      if (!field) return;
+      var row = field.closest ? field.closest('.row') : null;
+      var card = field.closest ? field.closest('.panel-card, .card') : null;
+      if (row) row.classList.add('editor-focus');
+      if (card) card.classList.add('editor-focus');
+      field.focus({ preventScroll: true });
+      if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(function() {
+        if (row) row.classList.remove('editor-focus');
+        if (card) card.classList.remove('editor-focus');
+      }, 2600);
+    }
+    function categoriaPorCampo(id) {
+      if (fieldCategories[id]) return fieldCategories[id];
+      if (id.indexOf('grosor_') === 0 || id.indexOf('montaje_') === 0 || id.indexOf('retranqueo_') === 0) return 'lateral';
+      if (id.indexOf('space_') === 0) return 'front';
+      return '';
+    }
+    window.addEventListener('modular3d:pieceSelected', function(event) {
+      var detail = event.detail || {};
+      var target = campoParaPieza(detail);
+      var activePage=document.querySelector('.page.active');
+      if(!activePage||activePage.id!=='diseno')mostrarPagina(target.page==='frentes'?'interior':target.page);
+      document.querySelectorAll('.panel-card').forEach(function(card){card.classList.remove('piece-card-selected');});
+      var roleMap={'shell-left':'izq','shell-right':'der','shell-bottom':'inferior','shell-top':'superior'},cardKey=roleMap[String(detail.role||'')];
+      if(cardKey){var selectedCard=document.querySelector('.panel-card[data-editor-card="'+cardKey+'"]');if(selectedCard)selectedCard.classList.add('piece-card-selected');}
+      iluminarCategoria(detail.category, 'Seleccionado en 3D: ' + (detail.name || detail.category) + '. Edita aqui las dimensiones y grosores de ' + target.label + '.');
+      if(!activePage||activePage.id!=='diseno')window.setTimeout(function() { enfocarEditor(target.field); }, 60);
+    });
+    window.Modular3DLoadInitial = function(datos) {
+      if (!datos) return;
+      editMode = datos.__edit_mode === 'SI';
+      var sourceNotice=el('edit_source_notice');
+      if(sourceNotice){
+        if(datos.__modified_outside==='SI'){sourceNotice.textContent='Este módulo fue modificado fuera de Modular_3D. Al actualizar se reconstruirá desde su manifiesto paramétrico guardado.';sourceNotice.className='message warn show';}
+        else if(datos.__manifest_source==='IMPORTED'||datos.conversion_requires_review==='SI'){sourceNotice.textContent='Módulo importado: revisa medidas, clasificación y los cuatro pasos antes de reemplazar la geometría original.';sourceNotice.className='message warn show';}
+        else if(editMode){sourceNotice.textContent='Edición paramétrica activa. Se conservarán nombre, posición, rotación, jerarquía y materiales del módulo.';sourceNotice.className='message warn show';}
+        else sourceNotice.className='message warn';
+      }
+      Object.keys(datos).forEach(function(id) {
+        if (el(id)) {
+          if (el(id).type === 'checkbox') el(id).checked = datos[id] === 'SI' || datos[id] === true;
+          else el(id).value = datos[id];
+        }
+      });
+      el('btn_actualizar_modulo').classList.toggle('show', editMode);
+      actualizarNichos();
+      if (datos.cajones_por_nicho) setCajonesNichos(String(datos.cajones_por_nicho).split(',').map(function(v) { return parseInt(v, 10) || 0; }), datos.tipos_cajon_por_nicho ? String(datos.tipos_cajon_por_nicho).split(',') : null);
+      spaceState = {};
+      try {
+        var savedSpaces = typeof datos.spaces_json === 'string' ? JSON.parse(datos.spaces_json || '[]') : (datos.spaces_json || []);
+        savedSpaces.forEach(function(space) {
+          spaceState[String(space.niche) + ':' + String(space.column)] = space;
+        });
+      } catch (e) { spaceState = {}; }
+      mostrarPagina('inicial');
+      actualizarVista();
+      if(datos.view_camera_json&&window.Modular3DView&&window.Modular3DView.restoreCamera)window.setTimeout(function(){window.Modular3DView.restoreCamera(datos.view_camera_json);},60);
+    };
+    function spaceKey(niche, column) { return String(niche) + ':' + String(column); }
+    function legacySpace(d, niche, column) {
+      var cajones = nichosActuales();
+      var tipos = tiposActuales();
+      var drawers = column === 0 ? (cajones[niche] || 0) : 0;
+      var content = 'VACIO';
+      if (drawers > 0) content = 'CAJONERA';
+      else if (d.crear_puerta === 'SI' && column === 0) {
+        content = d.tipo_puerta === 'DOBLE_VIDRIO' ? 'PUERTA_DOBLE_VIDRIO' :
+          d.tipo_puerta === 'VIDRIO' ? 'PUERTA_VIDRIO' :
+          d.tipo_puerta === 'DOBLE' ? 'PUERTA_DOBLE' : 'PUERTA_UNICA';
+      }
+      return { niche: niche, column: column, content: content, drawers: drawers,
+        front_type: tipos[niche] || 'INTERNO', gap: numero('luz_frentes', 1.5),
+        opening: el('sistema_apertura').value || 'AUTOMATICO' };
+    }
+
+    function espaciosDiseno() {
+      var d = datosFormulario();
+      var cols = Math.max(1, (parseInt(d.num_divisiones, 10) || 0) + 1);
+      var rows = Math.max(1, (parseInt(d.num_repisas, 10) || 0) + 1);
+      var total = cols * rows;
+      if (selectedSpace >= total) selectedSpace = 0;
+      var spaces = [];
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          var idx = r * cols + c;
+          var nicheFromBottom = rows - 1 - r;
+          var state = spaceState[spaceKey(nicheFromBottom, c)] || legacySpace(d, nicheFromBottom, c);
+          var drawers = parseInt(state.drawers, 10) || 0;
+          var type = 'empty';
+          var label = Math.round((d.alto_total - d.grosor_superior - d.grosor_inferior) / rows);
+          if (state.content === 'CAJONERA' && drawers > 0) { type = 'drawer'; label = drawers + ' cajon(es)'; }
+          if (String(state.content).indexOf('PUERTA') === 0) {
+            type = String(state.content).indexOf('VIDRIO') >= 0 ? 'glass' : (String(state.content).indexOf('DOBLE') >= 0 ? 'double-door' : 'door');
+            label = type === 'glass' ? 'vidrio' : 'puerta';
+          }
+          if (state.front_type === 'FRENTES' && drawers > 0) label = drawers + ' frente(s)';
+          spaces.push({ idx: idx, row: r, col: c, type: type, label: label, drawers: drawers, niche: nicheFromBottom, state: state });
+        }
+      }
+      return { cols: cols, rows: rows, spaces: spaces };
+    }
+    function renderDiseno() {
+      var d = datosFormulario();
+      var layout = espaciosDiseno();
+      var elevation = el('module_elevation');
+      if (!elevation) return;
+      var cellW = 100 / layout.cols;
+      var cellH = 100 / layout.rows;
+      elevation.innerHTML = layout.spaces.map(function(space) {
+        var selected = space.idx === selectedSpace ? ' selected' : '';
+        var handle = space.type === 'drawer' ? '<span class="handle-mark"></span>' : (space.type === 'door' || space.type === 'double-door' ? '<span class="handle-mark handle-v"></span>' : '');
+        return '<div class="space-cell ' + space.type + selected + '" data-space="' + space.idx + '" style="left:' + (space.col * cellW) + '%;top:' + (space.row * cellH) + '%;width:' + cellW + '%;height:' + cellH + '%;">' + handle + '<span class="cell-label">' + space.label + '</span></div>';
+      }).join('');
+      el('designer_widths').innerHTML = Array(layout.cols).fill(0).map(function() { return '<span>' + Math.round((d.ancho_total - d.grosor_izq - d.grosor_der) / layout.cols) + '</span>'; }).join('');
+      el('designer_height').textContent = Math.round(d.alto_total - d.grosor_superior - d.grosor_inferior) + ' mm alto libre';
+      var current = layout.spaces.filter(function(space) { return space.idx === selectedSpace; })[0] || layout.spaces[0];
+      if (current) {
+        if (el('space_label')) el('space_label').value = 'Columna ' + (current.col + 1) + ' / Nivel ' + (current.row + 1);
+        el('space_drawers').value = current.drawers || 0;
+        el('space_shelves').value = current.state.shelves || (current.state.content === 'REPISAS' ? 1 : 0);
+        el('space_content').value = current.state.content || 'VACIO';
+        el('space_gap').value = current.state.gap == null ? d.luz_frentes : current.state.gap;
+        el('space_opening').value = current.state.opening || d.sistema_apertura || 'AUTOMATICO';
+        el('space_front_type').value = current.state.front_type || 'FRENTES';
+        el('space_hinge').value = current.state.hinge || 'Izquierda';
+      }
+    }
+    function aplicarPropiedadesEspacio() {
+      var layout = espaciosDiseno();
+      var current = layout.spaces.filter(function(space) { return space.idx === selectedSpace; })[0] || layout.spaces[0];
+      if (!current) return;
+      var contenido = el('space_content').value;
+      var drawers = Math.max(0, parseInt(el('space_drawers').value, 10) || 0);
+      if (contenido === 'CAJONERA' && drawers <= 0) drawers = 3;
+      if (contenido !== 'CAJONERA') drawers = 0;
+      var shelves = contenido === 'REPISAS' ? Math.max(1, parseInt(el('space_shelves').value, 10) || 0) : 0;
+      var frontType = contenido === 'CAJONERA' && drawers > 0 ? el('space_front_type').value : 'INTERNO';
+      spaceState[spaceKey(current.niche, current.col)] = {
+        niche: current.niche,
+        column: current.col,
+        content: contenido,
+        drawers: drawers,
+        shelves: shelves,
+        front_type: frontType,
+        gap: numero('space_gap', 1.5),
+        opening: el('space_opening').value,
+        hinge: el('space_hinge').value
+      };
+      syncLegacyFieldsFromSpaces();
+      actualizarVista();
+    }
+
+    function solveParametricExpression(expr, total, separator) {
+      var tokens = String(expr || '').split(':').map(function(v){return v.trim();}).filter(Boolean);
+      if (!tokens.length) return [];
+      var usable=total-Math.max(0,tokens.length-1)*(separator||0);
+      if(usable<=0)throw new Error('Los separadores exceden el espacio.');
+      var fixed=0, flex=0;
+      var items=tokens.map(function(t){
+        var m=t.match(/^(\d+(?:\.\d+)?)\s*(mm|cm|m)$/i);
+        if(m){var v=+m[1],u=m[2].toLowerCase(),q=u==='mm'?v:(u==='cm'?v*10:v*1000);fixed+=q;return['f',q];}
+        m=t.match(/^(\d+(?:\.\d+)?)%$/); if(m){var q=usable*(+m[1])/100;fixed+=q;return['f',q];}
+        if(/^auto$/i.test(t)){flex+=1;return['r',1];}
+        m=t.match(/^(\d+(?:\.\d+)?)$/); if(m&&+m[1]>0){flex+=+m[1];return['r',+m[1]];}
+        throw new Error('No entiendo "'+t+'"');
+      });
+      var rem=usable-fixed;if(rem < -0.01)throw new Error('Las medidas fijas exceden el espacio.');
+      if(rem>0.01 && flex<=0)throw new Error('Queda espacio sin repartir: añade AUTO o proporción.');
+      return items.map(function(i){return i[0]==='f'?i[1]:rem*i[1]/flex;});
+    }
+    function updateParametricFeedback(){
+      [['param_x_expr','param_x_result','X'],['param_z_expr','param_z_result','Z']].forEach(function(cfg){
+        var input=el(cfg[0]),out=el(cfg[1]); if(!input||!out)return;
+        if(!input.value.trim()){out.className='param-result';out.textContent='Vacío = conserva la distribución tradicional.';return;}
+        try{
+          var total=cfg[2]==='X' ? Math.max(1,numero('ancho_total')-numero('grosor_izq')-numero('grosor_der')) : Math.max(1,numero('alto_total')-numero('grosor_superior')-numero('grosor_inferior'));
+          var physical=el(cfg[2]==='X'?'param_x_type':'param_z_type').value==='FISICA';
+          var vals=solveParametricExpression(input.value,total,physical?numero('espesor',15):0);
+          out.className='param-result ok';out.textContent=vals.map(function(v,i){return 'E'+(i+1)+' '+v.toFixed(1)+' mm';}).join('  ·  ');
+          if(cfg[2]==='X')el('num_divisiones').value=Math.max(0,vals.length-1);else el('num_repisas').value=Math.max(0,vals.length-1);
+        }catch(e){out.className='param-result bad';out.textContent='⚠ '+e.message;}
+      });
+    }
+
+    function datosFormulario() {
+      var datos = {};
+      document.querySelectorAll('input[id], select[id]').forEach(function(campo) {
+        datos[campo.id] = campo.type === 'checkbox' ? (campo.checked ? 'SI' : 'NO') : (campo.type === 'number' ? parseFloat(campo.value) : campo.value);
+      });
+      /* Algunos valores numéricos viven en select o input hidden. Sin esta
+         normalización JavaScript concatena texto (15 + 2 + "6" = "176") y
+         bloquea erróneamente la construcción. */
+      ['ancho_total','alto_total','prof_total','espesor','grosor_izq','grosor_der','grosor_superior','grosor_inferior','grosor_resp','grosor_ajuste','alto_ajuste','separacion_ajuste_respaldo','distancia_plano_posterior','profundidad_ranura','num_repisas','num_divisiones','retranqueo_interior','prof_input_cj','ret_cajones','puerta_grosor','juego_general'].forEach(function(idNumerico){
+        var valor=parseFloat(datos[idNumerico]);
+        if(isFinite(valor))datos[idNumerico]=valor;
+      });
+      normalizeSpaceState();
+      var hasDesignedSpaces = Object.keys(spaceState).length > 0;
+      if (hasDesignedSpaces) syncLegacyFieldsFromSpaces();
+      datos.crear_puerta = el('crear_puerta').value;
+      datos.tipo_puerta = el('tipo_puerta').value;
+      datos.modo_frentes = el('modo_frentes').value;
+      datos.cajones_por_nicho = Array.prototype.map.call(document.querySelectorAll('.cajones-nicho'), function(c) { return parseInt(c.value, 10) || 0; }).join(',');
+      var tipos = Array.prototype.map.call(document.querySelectorAll('.tipo-cajon-nicho'), function(c) { return c.value; });
+      if (!hasDesignedSpaces) {
+        if (datos.modo_frentes === 'TODOS') tipos = tipos.map(function(_, i) { return (parseInt(datos.cajones_por_nicho.split(',')[i], 10) || 0) > 0 ? 'FRENTES' : 'INTERNO'; });
+        if (datos.modo_frentes === 'NINGUNO') tipos = tipos.map(function() { return 'INTERNO'; });
+      }
+      datos.tipos_cajon_por_nicho = tipos.join(',');
+      updateParametricFeedback();
+      datos.spaces_json = JSON.stringify(Object.keys(spaceState).map(function(key) { return spaceState[key]; }));
+      datos.num_cajones = Object.keys(spaceState).reduce(function(total, key) {
+        return total + (spaceState[key].content === 'CAJONERA' ? (parseInt(spaceState[key].drawers, 10) || 0) : 0);
+      }, 0);
+      if (!datos.num_cajones) datos.num_cajones = datos.cajones_por_nicho.split(',').reduce(function(total, value) { return total + (parseInt(value, 10) || 0); }, 0);
+      return datos;
+    }
+
+    function validar() {
+      var d = datosFormulario();
+      var errores = [];
+      var avisos = [];
+      if (!(d.ancho_total >= 150 && d.ancho_total <= 3000)) errores.push('La anchura debe estar entre 150 y 3000 mm.');
+      if (!(d.alto_total >= 150 && d.alto_total <= 4000)) errores.push('La altura debe estar entre 150 y 4000 mm.');
+      if (!(d.prof_total >= 100 && d.prof_total <= 1500)) errores.push('La profundidad debe estar entre 100 y 1500 mm.');
+      if (d.grosor_izq + d.grosor_der >= d.ancho_total) errores.push('Los laterales ocupan todo el ancho.');
+      if (d.grosor_superior + d.grosor_inferior >= d.alto_total) errores.push('Los paneles horizontales ocupan toda la altura.');
+      if (!(d.grosor_ajuste >= 3 && d.grosor_ajuste <= 40)) errores.push('El grosor del ajuste posterior debe estar entre 3 y 40 mm.');
+      if (d.separacion_ajuste_respaldo < 0 || d.distancia_plano_posterior < 0) errores.push('Las separaciones posteriores no pueden ser negativas.');
+      if (d.lleva_respaldo !== 'NO' && d.grosor_resp < 15 && d.grosor_ajuste + d.separacion_ajuste_respaldo + d.grosor_resp + d.distancia_plano_posterior >= d.prof_total) errores.push('El sistema posterior ocupa toda la profundidad disponible.');
+      var metrics = cellMetrics(d);
+      if (metrics.width <= 30) errores.push('Las divisiones dejan columnas sin ancho util.');
+      if (metrics.height <= 30) errores.push('Las repisas dejan niveles sin altura util.');
+      if (metrics.width > 30 && metrics.width < 180) avisos.push('Columnas menores de 180 mm limitan correderas y bisagras.');
+      if (metrics.height > 30 && metrics.height < 120) avisos.push('Niveles menores de 120 mm limitan cajones y accesorios.');
+      paneles.forEach(function(p) {
+        var profundidad = d.prof_total - d['retranqueo_frontal_' + p[0]] - d['retranqueo_trasero_' + p[0]];
+        if (profundidad <= 30) errores.push(p[1] + ' queda sin profundidad util.');
+      });
+      var spaces = Object.keys(spaceState).map(function(key) { return spaceState[key]; });
+      var seen = {};
+      spaces.forEach(function(space) {
+        var key = spaceKey(space.niche, space.column);
+        if (seen[key]) errores.push('Hay dos configuraciones en la misma celda ' + key + '.');
+        seen[key] = true;
+        if (space.content === 'CAJONERA') {
+          var drawers = parseInt(space.drawers, 10) || 0;
+          if (drawers < 1 || drawers > 12) errores.push('Cada cajonera debe tener entre 1 y 12 cajones.');
+          if (drawers > 0 && metrics.height / drawers < 45) errores.push('Los cajones no caben en la altura del espacio.');
+          if (metrics.width < 170) errores.push('La columna es demasiado angosta para una cajonera con correderas.');
+        }
+        if (String(space.content || '').indexOf('PUERTA') === 0 && String(space.content).indexOf('DOBLE') >= 0 && metrics.width < 500) {
+          errores.push('Una puerta doble necesita al menos 500 mm de ancho por celda.');
+        }
+      });
+      var cajones = spaces.length ? spaces.reduce(function(s, space) { return s + (space.content === 'CAJONERA' ? (parseInt(space.drawers, 10) || 0) : 0); }, 0) : d.cajones_por_nicho.split(',').reduce(function(s, n) { return s + parseInt(n || 0, 10); }, 0);
+      if (cajones && (d.prof_input_cj + d.ret_cajones > d.prof_total - 20)) errores.push('La profundidad del cajon no cabe en el cuerpo.');
+      if (cajones > 8) avisos.push('Mas de 8 cajones puede complicar fabricacion e instalacion.');
+      if (d.num_repisas > 8) avisos.push('Mas de 8 repisas puede producir nichos demasiado pequenos.');
+      if (d.alto_total > 2100) avisos.push('Revisa la direccion de veta antes de optimizar el corte.');
+      if (el('space_rule_hint')) {
+        el('space_rule_hint').textContent = errores.length ? errores[0] : (avisos[0] || 'Diseno 2D coherente: medidas, celdas, cajones y frentes estan sincronizados.');
+      }
+      return { errores: errores, avisos: avisos };
+    }
+    function actualizarVista() {
+      var d = datosFormulario();
+      var ancho = Math.max(0, d.ancho_total - d.grosor_izq - d.grosor_der);
+      var alto = Math.max(0, d.alto_total - d.grosor_superior - d.grosor_inferior);
+      var cajones = d.cajones_por_nicho.split(',').reduce(function(s, n) { return s + parseInt(n || 0, 10); }, 0);
+      var tipoPuerta = d.tipo_puerta || 'AUTO';
+      var puertas = d.crear_puerta === 'SI' ? ((tipoPuerta === 'DOBLE' || tipoPuerta === 'DOBLE_VIDRIO' || (tipoPuerta === 'AUTO' && d.ancho_total > 619)) ? 2 : 1) : 0;
+      var frentesCajon = d.tipos_cajon_por_nicho.split(',').reduce(function(s, tipo, i) {
+        return s + (tipo === 'FRENTES' ? (parseInt(d.cajones_por_nicho.split(',')[i], 10) || 0) : 0);
+      }, 0);
+      var configuredSpaces = Object.keys(spaceState).map(function(key) { return spaceState[key]; });
+      if (configuredSpaces.length) {
+        cajones = configuredSpaces.reduce(function(total, space) { return total + (space.content === 'CAJONERA' ? (parseInt(space.drawers, 10) || 0) : 0); }, 0);
+        frentesCajon = configuredSpaces.reduce(function(total, space) { return total + (space.content === 'CAJONERA' && space.front_type === 'FRENTES' ? (parseInt(space.drawers, 10) || 0) : 0); }, 0);
+        puertas = configuredSpaces.reduce(function(total, space) {
+          if (String(space.content).indexOf('PUERTA') !== 0) return total;
+          return total + (String(space.content).indexOf('DOBLE') >= 0 ? 2 : 1);
+        }, 0);
+      }
+      var ajustes = cantidadAjustes(d);
+      var piezas = 4 + (Number(d.num_repisas)||0) + (Number(d.num_divisiones)||0) + ajustes + (d.lleva_respaldo !== 'NO' ? 1 : 0) + cajones * 5 + puertas + frentesCajon;
+      el('m_ancho').textContent = Math.round(ancho) + ' mm';
+      el('m_alto').textContent = Math.round(alto) + ' mm';
+      el('m_prof').textContent = Math.round(d.prof_total) + ' mm';
+      el('m_piezas').textContent = piezas;
+      var chequeo = validar();
+      el('errores').textContent = chequeo.errores.join('\n');
+      el('errores').className = 'message error' + (chequeo.errores.length ? ' show' : '');
+      el('avisos').textContent = chequeo.avisos.join('\n');
+      el('avisos').className = 'message warn' + (chequeo.avisos.length ? ' show' : '');
+      el('lista_piezas').innerHTML = '<p><strong>Dimensiones interiores:</strong> ' + Math.round(ancho) + ' x ' + Math.round(alto) + ' x ' + Math.round(d.prof_total) + ' mm</p>' +
+        '<p><strong>Estimacion:</strong> ' + piezas + ' piezas, ' + d.num_repisas + ' repisas, ' + d.num_divisiones + ' divisiones, ' + cajones + ' cajones, ' + frentesCajon + ' frentes y ' + puertas + ' puerta(s).</p>' +
+        '<p><strong>Sistema:</strong> ' + (d.sistema_apertura || 'AUTOMATICO') + ' / ' + (d.sistema_corredera || 'Telescopica estandar') + '.</p>';
+      if (window.Modular3DPreview) window.Modular3DPreview.update(d);
+      renderDiseno();
+      return chequeo.errores.length === 0;
+    }
+    function mostrarPagina(id) {
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.toggle('active', p.id === id); });
+      document.querySelectorAll('[data-page]').forEach(function(t) { t.classList.toggle('active', t.dataset.page === id); });
+      actualizarVista();
+      updateStepStatus(id);
+      window.dispatchEvent(new CustomEvent('modular3d:pageShown',{detail:{id:id}}));
+    }
+    function currentStepIndex() {
+      var active = document.querySelector('.page.active');
+      var id = active ? active.id : 'inicial';
+      var index = stepPages.indexOf(id);
+      return index < 0 ? 0 : index;
+    }
+    function updateStepStatus(id) {
+      var prev = el('step_prev');
+      var next = el('step_next');
+      var status = el('step_status');
+      if (!prev || !next || !status) return;
+      if (id === 'resultado') {
+        prev.disabled = false;
+        next.textContent = 'Construir';
+        status.textContent = 'Revision final';
+        return;
+      }
+      var index = stepPages.indexOf(id || 'inicial');
+      if (index < 0) index = currentStepIndex();
+      prev.disabled = index <= 0;
+      next.textContent = index >= stepPages.length - 1 ? 'Construir' : 'Siguiente';
+      status.textContent = 'Paso ' + (index + 1) + ' de ' + stepPages.length + ' - ' + (document.querySelector('[data-page=\"' + stepPages[index] + '\"]') || {}).textContent;
+    }
+    function stepMove(delta) {
+      var active = document.querySelector('.page.active');
+      if (active && active.id === 'resultado') {
+        if (delta < 0) return mostrarPagina(stepPages[stepPages.length - 1]);
+        return construir();
+      }
+      var index = currentStepIndex();
+      if (delta > 0 && index >= stepPages.length - 1) return construir();
+      var next = Math.max(0, Math.min(stepPages.length - 1, index + delta));
+      mostrarPagina(stepPages[next]);
+    }
+    function construir() {
+      if (!actualizarVista()) {
+        mostrarPagina('resultado');
+        return;
+      }
+      var datos = datosFormulario();
+      if(window.Modular3DView){datos.view_snapshot=window.Modular3DView.cleanSnapshot?window.Modular3DView.cleanSnapshot():(window.Modular3DView.snapshot?window.Modular3DView.snapshot():'');datos.view_camera_json=JSON.stringify(window.Modular3DView.cameraState?window.Modular3DView.cameraState():null);}
+      datos.__edit_mode = editMode ? 'SI' : 'NO';
+      if (window.sketchup && sketchup.ejecutarConstruccionMueble) {
+        sketchup.ejecutarConstruccionMueble(datos);
+      } else {
+        el('avisos').textContent = 'Vista web: abre esta interfaz desde SketchUp para construir el modulo.';
+        el('avisos').className = 'message warn show';
+        mostrarPagina('resultado');
+      }
+    }
+    function actualizarModuloExistente() {
+      if (!actualizarVista()) return;
+      var datos = datosFormulario();
+      if(window.Modular3DView){datos.view_snapshot=window.Modular3DView.cleanSnapshot?window.Modular3DView.cleanSnapshot():(window.Modular3DView.snapshot?window.Modular3DView.snapshot():'');datos.view_camera_json=JSON.stringify(window.Modular3DView.cameraState?window.Modular3DView.cameraState():null);}
+      datos.__edit_mode = 'SI';
+      if (window.sketchup && sketchup.ejecutarConstruccionMueble) {
+        sketchup.ejecutarConstruccionMueble(datos);
+      }
+    }
+
+    crearPaneles();
+    actualizarNichos();
+    sincronizarReglasRespaldo();
+    document.addEventListener('input', function(event) {
+      if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
+      markManualThickness(event.target.id || '');
+      var category = categoriaPorCampo(event.target.id || '');
+      if (category) iluminarCategoria(category, 'Estas modificando: ' + (event.target.labels && event.target.labels[0] ? event.target.labels[0].textContent : event.target.id));
+      actualizarVista();
+    });
+    document.addEventListener('change', function(event) {
+      if(event.target.id==='sincronizar_ajuste'){linkedThickness.grosor_ajuste=event.target.checked;if(event.target.checked){setValue('grosor_ajuste',numero('espesor',15));actualizarVista();}}
+      if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
+      markManualThickness(event.target.id || '');
+      if (event.target.id === 'tipo_modulo') aplicarPreset();
+      if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
+      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior') sincronizarReglasRespaldo();
+      if (event.target.id === 'space_content' || event.target.id === 'space_shelves' || event.target.id === 'space_drawers' || event.target.id === 'space_front_type' || event.target.id === 'space_hinge' || event.target.id === 'space_gap' || event.target.id === 'space_opening') aplicarPropiedadesEspacio();
+      actualizarVista();
+    });
+    document.addEventListener('click', function(event) {
+      var space = event.target.closest && event.target.closest('.space-cell');
+      var panelCard = event.target.closest && event.target.closest('.panel-card[data-editor-card]');
+      if (space) {
+        selectedSpace = parseInt(space.getAttribute('data-space'), 10) || 0;
+        renderDiseno();
+      }
+      if (panelCard && !event.target.matches('input,select,option')) {
+        var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO',adjustments:'AJUSTE_SUPERIOR'};
+        if(window.Modular3DView&&map[panelCard.dataset.editorCard])window.Modular3DView.selectPieceByKey(map[panelCard.dataset.editorCard]);
+      }
+    });
+    document.addEventListener('focusin',function(event){
+      var panelCard=event.target.closest&&event.target.closest('.panel-card[data-editor-card]');
+      var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO',adjustments:'AJUSTE_SUPERIOR'};
+      if(panelCard&&window.Modular3DView&&map[panelCard.dataset.editorCard])window.Modular3DView.selectPieceByKey(map[panelCard.dataset.editorCard]);
+    });
+    document.querySelectorAll('[data-page]').forEach(function(t) { t.addEventListener('click', function() { mostrarPagina(t.dataset.page); }); });
+    el('step_prev').addEventListener('click', function() { stepMove(-1); });
+    el('step_next').addEventListener('click', function() { stepMove(1); });
+    el('restore_sync').addEventListener('click', restoreThicknessSync);
+    el('space_vertical').addEventListener('click', function() { changeStructure('column', 1); });
+    el('space_horizontal').addEventListener('click', function() { changeStructure('row', 1); });
+    el('space_vertical_remove').addEventListener('click', function() { changeStructure('column', -1); });
+    el('space_horizontal_remove').addEventListener('click', function() { changeStructure('row', -1); });
+    el('space_apply').addEventListener('click', aplicarPropiedadesEspacio);
+    el('space_clear').addEventListener('click', function() { spaceState = {}; el('num_repisas').value = 0; el('num_divisiones').value = 0; el('crear_puerta').value = 'NO'; actualizarNichos(); actualizarVista(); });
+    el('btn_poner_puertas').addEventListener('click', function() { el('crear_puerta').value = 'SI'; if (el('tipo_puerta').value === 'AUTO') el('tipo_puerta').value = numero('ancho_total') > 619 ? 'DOBLE' : 'UNICA'; mostrarPagina('diseno'); });
+    el('btn_poner_frentes').addEventListener('click', function() { el('modo_frentes').value = 'TODOS'; document.querySelectorAll('.tipo-cajon-nicho').forEach(function(campo, i) { if ((parseInt(document.querySelectorAll('.cajones-nicho')[i].value, 10) || 0) > 0) campo.value = 'FRENTES'; }); Object.keys(spaceState).forEach(function(key) { if (spaceState[key].content === 'CAJONERA') spaceState[key].front_type = 'FRENTES'; }); mostrarPagina('diseno'); });
+    el('btn_revisar').addEventListener('click', function() { mostrarPagina('resultado'); });
+    el('btn_construir').addEventListener('click', construir);
+    el('btn_actualizar_modulo').addEventListener('click', actualizarModuloExistente);
+    el('license_login').addEventListener('click', function() { window.Modular3DLicense.login(); });
+    el('license_password').addEventListener('keydown', function(event) { if (event.key === 'Enter') window.Modular3DLicense.login(); });
+    el('license_logout').addEventListener('click', function() { if (window.sketchup && sketchup.licenciaLogout) sketchup.licenciaLogout(); });
+    if (window.Modular3DPreview) window.Modular3DPreview.init();
+    actualizarVista();
+    updateStepStatus('inicial');
+    if (window.__modular3dInitial) window.Modular3DLoadInitial(window.__modular3dInitial);
+    window.Modular3DLicense.check();
+    window.setInterval(function() {
+      if (!document.body.classList.contains('license-locked') && window.sketchup && sketchup.licenciaHeartbeat) {
+        sketchup.licenciaHeartbeat();
+      }
+    }, 900000);
+  
+    ['param_x_expr','param_z_expr','param_x_type','param_z_type','ancho_total','alto_total','grosor_izq','grosor_der','grosor_superior','grosor_inferior'].forEach(function(id){
+      var node=el(id); if(node) node.addEventListener('input', function(){updateParametricFeedback();actualizarVista();});
+    });
+    updateParametricFeedback();
+</script>
+<script src="hierarchical_config.js"></script>
+<script src="material_config.js"></script>
+</body>
+</html>
