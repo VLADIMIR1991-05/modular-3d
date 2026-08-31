@@ -2029,7 +2029,7 @@ module LPenafiel_GeneradorMueblesExacto
       <button onclick="calcularOptimizacion()">Calcular</button>
     </div>
     <table id="tabla_stock">
-      <thead><tr><th>Material</th><th>Placa</th><th>Largo tablero</th><th>Ancho tablero</th><th>Stock</th><th></th></tr></thead>
+      <thead><tr><th>Material</th><th>Placa</th><th>Largo tablero</th><th>Ancho tablero</th><th>Stock</th><th>Veta</th><th></th></tr></thead>
       <tbody></tbody>
     </table>
     <div id="resultado_optimizacion" class="resultado-opt"></div>
@@ -2112,6 +2112,7 @@ module LPenafiel_GeneradorMueblesExacto
         '<td><input class="opt-input largo-stock" type="number" value="2440"></td>' +
         '<td><input class="opt-input ancho-stock" type="number" value="1830"></td>' +
         '<td><input class="opt-input cantidad-stock" type="number" value="1"></td>' +
+        '<td><label style="display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap"><input type="checkbox" class="veta-stock"> Respetar veta</label></td>' +
         '<td><button onclick="this.closest(\\'tr\\').remove()">Borrar</button></td>';
       tbody.appendChild(tr);
     }
@@ -2141,16 +2142,17 @@ module LPenafiel_GeneradorMueblesExacto
         var largo = numeroCelda(tr.querySelector('.largo-stock').value);
         var ancho = numeroCelda(tr.querySelector('.ancho-stock').value);
         var cantidad = parseInt(tr.querySelector('.cantidad-stock').value, 10) || 0;
+        var sinRotar = !!(tr.querySelector('.veta-stock') && tr.querySelector('.veta-stock').checked);
         if (largo <= 0 || ancho <= 0 || cantidad <= 0) return;
         var clave = claveStock(material, placa);
         if (!stocks[clave]) stocks[clave] = [];
-        stocks[clave].push({ material: material, placa: placa, w: largo, h: ancho, cantidad: cantidad });
+        stocks[clave].push({ material: material, placa: placa, w: largo, h: ancho, cantidad: cantidad, sinRotar: sinRotar });
       });
       return stocks;
     }
 
     function intentarUbicar(tablero, pieza, sierra) {
-      var opciones = [{ w: pieza.w, h: pieza.h, rotada: false }, { w: pieza.h, h: pieza.w, rotada: true }];
+      var opciones = tablero.sinRotar ? [{ w: pieza.w, h: pieza.h, rotada: false }] : [{ w: pieza.w, h: pieza.h, rotada: false }, { w: pieza.h, h: pieza.w, rotada: true }];
       var mejor = null;
       for (var r = 0; r < tablero.libres.length; r++) {
         var libre = tablero.libres[r];
@@ -2238,7 +2240,7 @@ module LPenafiel_GeneradorMueblesExacto
 
       return '<div class="plano-tablero">' +
         '<div class="titulo-tablero">TABLERO ' + (idx + 1) + ' - ' + htmlSeguro(tablero.material) + '</div>' +
-        '<div class="subtitulo-tablero">Formato ' + Math.round(tablero.w) + 'x' + Math.round(tablero.h) + ' mm | Placa ' + htmlSeguro(tablero.placa) + ' | Sierra ' + sierra + ' mm</div>' +
+        '<div class="subtitulo-tablero">Formato ' + Math.round(tablero.w) + 'x' + Math.round(tablero.h) + ' mm | Placa ' + htmlSeguro(tablero.placa) + ' | Sierra ' + sierra + ' mm' + (tablero.sinRotar ? ' | Veta respetada (sin rotar piezas)' : '') + '</div>' +
         svg +
         '<div class="resumen-tablero">Uso: ' + uso + '% | Sobra aprox: ' + Math.round(areaSobra) + ' mm2 (' + sobra + '%) | Piezas: ' + tablero.piezas.length + '</div>' +
         '<h4>Indice de corte tablero ' + (idx + 1) + '</h4>' +
@@ -2271,7 +2273,7 @@ module LPenafiel_GeneradorMueblesExacto
           if (stock) {
             var tablero = {
               clave: clave, material: stock.material, placa: stock.placa,
-              w: stock.w, h: stock.h, area: 0, piezas: [],
+              w: stock.w, h: stock.h, area: 0, piezas: [], sinRotar: !!stock.sinRotar,
               libres: [{ x: 0, y: 0, w: stock.w, h: stock.h }]
             };
             if (intentarUbicar(tablero, pieza, sierra)) {
