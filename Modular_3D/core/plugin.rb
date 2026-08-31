@@ -1397,6 +1397,137 @@ module LPenafiel_GeneradorMueblesExacto
     end
   end
 
+  # --- EDICIÓN POR LOTES (repintado) ---
+  # Alcance deliberadamente acotado: repinta piezas existentes de varios
+  # módulos Modular_3D seleccionados a la vez, sin tocar dimensiones. Un
+  # cambio de medidas por lote implicaría reconstruir la geometría completa
+  # de cada módulo con la misma lógica de ejecutarConstruccionMueble, que
+  # vive dentro del callback del diálogo principal; separarla seguiría
+  # siendo posible más adelante, pero no de forma segura sin poder probarlo
+  # en vivo dentro de SketchUp. El repintado, en cambio, solo reasigna
+  # material a piezas que ya existen y es seguro de principio a fin.
+  def self.recolectar_instancias_piezas(entity, instancias)
+    if entity.respond_to?(:definition) && entity.definition && entity.definition.get_attribute('LPenafiel', 'pieza_original')
+      instancias << entity
+      return
+    end
+    if entity.respond_to?(:entities)
+      entity.entities.each { |hijo| recolectar_instancias_piezas(hijo, instancias) }
+    elsif entity.respond_to?(:definition) && entity.definition
+      entity.definition.entities.each { |hijo| recolectar_instancias_piezas(hijo, instancias) }
+    end
+  end
+
+  def self.repintar_modulos_seleccionados(color_hex, nombre_material)
+    return { ok: false, message: 'Color hexadecimal inválido (usa el formato #RRGGBB).' } unless color_hex.to_s.match?(/\A#[0-9a-fA-F]{6}\z/)
+
+    model = Sketchup.active_model
+    seleccion = model.selection.to_a
+    modulos_afectados = 0
+    piezas_afectadas = 0
+    operacion_iniciada = false
+    begin
+      model.start_operation('Repintar módulos Modular_3D (lote)', true)
+      operacion_iniciada = true
+      seleccion.each do |entity|
+        manifiesto = manifiesto_de_entidad(entity)
+        next unless manifiesto && manifiesto['data'].is_a?(Hash)
+
+        datos_actualizados = manifiesto['data'].dup
+        datos_actualizados['material_unico'] = 'SI'
+        datos_actualizados['material_global_color'] = color_hex
+        datos_actualizados['material_global_nombre'] = nombre_material.to_s.strip.empty? ? 'Color de lote' : nombre_material.to_s.strip
+        @datos_modulo_actual = datos_actualizados
+
+        instancias = []
+        recolectar_instancias_piezas(entity, instancias)
+        instancias.each do |instancia|
+          nombre_original = instancia.definition.get_attribute('LPenafiel', 'pieza_original')
+          next unless nombre_original
+          self.aplicar_material_configurado(instancia, nombre_original)
+          piezas_afectadas += 1
+        end
+
+        manifiesto_nuevo = manifiesto.dup
+        manifiesto_nuevo['data'] = datos_actualizados
+        raw = JSON.generate(manifiesto_nuevo)
+        [entity, (entity.respond_to?(:definition) ? entity.definition : nil)].compact.each do |objeto|
+          objeto.set_attribute('Modular3D', 'manifest', raw)
+        end
+        modulos_afectados += 1
+      end
+      model.commit_operation
+      operacion_iniciada = false
+    rescue StandardError => e
+      model.abort_operation if operacion_iniciada
+      return { ok: false, message: "No se pudo repintar: #{e.message}" }
+    ensure
+      @datos_modulo_actual = nil
+    end
+
+    return { ok: false, message: 'La selección no contiene módulos Modular_3D reconocibles. Selecciona uno o más grupos/componentes creados con Modular_3D.' } if modulos_afectados.zero?
+
+    { ok: true, message: "#{modulos_afectados} módulo(s) y #{piezas_afectadas} pieza(s) repintadas." }
+  end
+
+  def self.mostrar_edicion_lotes
+    return unless acceso_autorizado?
+
+    html = <<-HTML
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; margin: 18px; color: #111827; background: #f8fafc; }
+  h2 { margin: 0 0 4px 0; }
+  p.hint { color: #64748b; font-size: 12px; margin: 0 0 16px 0; }
+  .row { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 10px; margin-bottom: 10px; }
+  input { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 8px; font-size: 13px; }
+  button { border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff; border-radius: 6px; padding: 9px 16px; font-size: 13px; cursor: pointer; }
+  #mensaje { display: none; margin-top: 12px; padding: 8px 10px; border-radius: 6px; font-size: 12px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  #mensaje.error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+</style>
+</head>
+<body>
+  <h2>Edición por lotes</h2>
+  <p class="hint">Repinta todas las piezas de los módulos Modular_3D seleccionados con un mismo color/material. Selecciona primero dos o más módulos en el modelo (Ctrl/Shift + clic) antes de aplicar.</p>
+  <div class="row"><label>Color</label><input id="lote_color" type="color" value="#d5a66e"></div>
+  <div class="row"><label>Nombre del material</label><input id="lote_nombre" placeholder="Ej. Blanco mate"></div>
+  <button onclick="aplicar()">Aplicar a la selección</button>
+  <div id="mensaje"></div>
+  <script>
+    function aplicar() {
+      sketchup.loteRepintar(document.getElementById('lote_color').value, document.getElementById('lote_nombre').value);
+    }
+    window.Modular3DBatchResult = function (resultado) {
+      var el = document.getElementById('mensaje');
+      el.textContent = resultado.message;
+      el.className = resultado.ok ? '' : 'error';
+      el.style.display = 'block';
+    };
+  </script>
+</body>
+</html>
+    HTML
+
+    dialogo = UI::HtmlDialog.new({
+      :dialog_title => "#{Modular3D::PRODUCT_NAME} | Edición por lotes",
+      :preferences_key => 'com.lpenafiel.modular3d.lotes',
+      :scrollable => true,
+      :resizable => true,
+      :width => 420,
+      :height => 320,
+      :style => UI::HtmlDialog::STYLE_WINDOW
+    })
+    dialogo.set_html(html)
+    dialogo.add_action_callback('loteRepintar') do |_action_context, color, nombre|
+      resultado = self.repintar_modulos_seleccionados(color, nombre)
+      dialogo.execute_script("window.Modular3DBatchResult(#{JSON.generate(resultado)})")
+    end
+    dialogo.show
+  end
+
   def self.datos_desde_seleccion_para_editar
     model = Sketchup.active_model
     seleccion = model.selection
