@@ -1,7 +1,11 @@
-# Modular_3D 4.7.2-beta.1 · Inglete lateral-techo/base y ajustes de cubo/materiales
+# Modular_3D 4.7.3-beta.1 · Corrección del cubo de navegación
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.7.2-beta.1  
+**Versión:** 4.7.3-beta.1  
+
+## Cambios 4.7.3-beta.1
+
+- **Corregido el cubo de navegación (mostraba la cara equivocada):** al portar el cubo CSS 3D de MODULAR-3D-VIEW en una versión anterior, se copiaron literalmente sus transformaciones `cube-front`/`cube-back`, pero esa referencia usa una convención de cámara opuesta a la de Modular_3D (en Modular_3D, `setView('front')` ubica la cámara en dirección `[0,0,1]`; en la referencia es al revés). Resultado: al mirar el módulo de frente, el cubo mostraba "ATRÁS" hacia el usuario y viceversa — desorientador. Se intercambiaron únicamente las transformaciones CSS de esas dos caras (`front` pasa a la posición sin rotar, `back` a la rotada 180°); las caras derecha/izquierda/arriba/abajo ya estaban correctamente adaptadas y no se tocaron. Verificado el razonamiento con la propia lógica de `setView`/`syncNavigator` del archivo antes de aplicar el cambio.
 
 ## Cambios 4.7.2-beta.1
 
