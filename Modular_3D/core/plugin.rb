@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.7.1-beta.1
+# Versión: 4.7.2-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -336,7 +336,8 @@ module LPenafiel_GeneradorMueblesExacto
     clave = nombre.to_s.upcase
     return 'frentes' if clave.include?('PUERTA') || clave.include?('FRENTE_EXT') || clave.include?('FRENTE_EXTERIOR')
     return 'respaldo' if clave.include?('RESP')
-    return 'herrajes' if clave.include?('AJUSTE') || clave.include?('GOLA') || clave.include?('JALADOR') || clave.include?('TIRADOR')
+    return 'ajuste' if clave.include?('AJUSTE')
+    return 'herrajes' if clave.include?('GOLA') || clave.include?('JALADOR') || clave.include?('TIRADOR')
     return 'cajones' if clave.start_with?('CJ_') || clave.include?('_CJ_')
     return 'interior' if clave.include?('DIV') || clave.include?('REP') || clave.start_with?('H_CIERRE') || clave.start_with?('H_BASE') || clave.start_with?('H_TECHO')
     'casco'
@@ -471,6 +472,12 @@ module LPenafiel_GeneradorMueblesExacto
   # nombre que dimension_overrides_json/material_overrides_json.
   ESQUINAS_INGLETE = %i[front_left front_right back_right back_left].freeze
 
+  # Inglete horizontal: corta el canto superior o inferior de un lateral donde
+  # se encuentra con el techo o la base (constante en toda la profundidad),
+  # en vez del vertical de arriba (constante en toda la altura). "outer" es el
+  # canto visible hacia afuera del mueble, "inner" el que da hacia el interior.
+  ESQUINAS_INGLETE_HORIZONTAL = %i[bottom_inner bottom_outer top_outer top_inner].freeze
+
   def self.inglete_pieza(nombre)
     datos = @datos_modulo_actual || {}
     overrides = begin
@@ -481,9 +488,11 @@ module LPenafiel_GeneradorMueblesExacto
     end
     individual = overrides[nombre.to_s] || overrides[nombre.to_s.upcase] || {}
     esquina = individual['corner'].to_s.to_sym
-    return [nil, nil] unless ESQUINAS_INGLETE.include?(esquina)
     medida = individual['size'].to_f
-    [medida.positive? ? esquina : nil, medida.positive? ? medida.mm : nil]
+    return [nil, nil, :vertical] unless medida.positive?
+    return [esquina, medida.mm, :vertical] if ESQUINAS_INGLETE.include?(esquina)
+    return [esquina, medida.mm, :horizontal] if ESQUINAS_INGLETE_HORIZONTAL.include?(esquina)
+    [nil, nil, :vertical]
   end
 
   # Devuelve los puntos del footprint (ancho x prof, en el plano Z=0) listos
@@ -525,6 +534,52 @@ module LPenafiel_GeneradorMueblesExacto
     puntos
   end
 
+  # Perfil (ancho x alto, en el plano Y=0) para el inglete horizontal: la
+  # unión de un lateral con el techo o la base. Se extruye a lo largo de la
+  # profundidad (pushpull(-prof) desde crear_pieza), de modo que el corte a
+  # 45° queda constante en todo el fondo de la pieza, igual que el vertical
+  # queda constante en toda su altura. Z=0 es el tope local de la pieza y
+  # Z=-alto su base (coherente con la transformación de crear_pieza, que
+  # coloca el punto z recibido como el borde superior de la pieza). Orden y
+  # sentido de recorrido (bottom_inner -> bottom_outer -> top_outer ->
+  # top_inner) verificado por separado para que la normal resultante sea
+  # siempre -Y y el pushpull(-prof) extruya hacia +Y (0..prof), igual que el
+  # resto de piezas.
+  def self.perfil_biselado_horizontal(ancho, alto, esquina, medida)
+    zb = 0 - alto
+    zt = 0
+    base = {
+      :bottom_inner => Geom::Point3d.new(0, 0, zb),
+      :bottom_outer => Geom::Point3d.new(ancho, 0, zb),
+      :top_outer => Geom::Point3d.new(ancho, 0, zt),
+      :top_inner => Geom::Point3d.new(0, 0, zt)
+    }
+    orden = %i[bottom_inner bottom_outer top_outer top_inner]
+    return orden.map { |clave| base[clave] } unless esquina && medida && medida.to_f.positive?
+
+    s = [medida.to_f, ancho * 0.48, alto * 0.48].min
+    return orden.map { |clave| base[clave] } unless s.positive?
+
+    puntos = []
+    orden.each do |clave|
+      if clave == esquina
+        case clave
+        when :bottom_inner
+          puntos << Geom::Point3d.new(0, 0, zb + s) << Geom::Point3d.new(s, 0, zb)
+        when :bottom_outer
+          puntos << Geom::Point3d.new(ancho - s, 0, zb) << Geom::Point3d.new(ancho, 0, zb + s)
+        when :top_outer
+          puntos << Geom::Point3d.new(ancho, 0, zt - s) << Geom::Point3d.new(ancho - s, 0, zt)
+        when :top_inner
+          puntos << Geom::Point3d.new(s, 0, zt) << Geom::Point3d.new(0, 0, zt - s)
+        end
+      else
+        puntos << base[clave]
+      end
+    end
+    puntos
+  end
+
   # Sobremedida por pieza: un delta en mm (positivo o negativo) que ajusta el
   # tamaño calculado automáticamente para una pieza puntual sin tocar el resto
   # del cálculo paramétrico. Usa el mismo patrón de excepciones por nombre que
@@ -546,11 +601,17 @@ module LPenafiel_GeneradorMueblesExacto
     ancho = [ancho + delta_ancho, 1.mm].max
     prof = [prof + delta_prof, 1.mm].max
     alto = [alto + delta_alto, 1.mm].max
-    esquina_inglete, medida_inglete = inglete_pieza(nombre)
+    esquina_inglete, medida_inglete, eje_inglete = inglete_pieza(nombre)
     grupo = entities.add_group
-    puntos = puntos_footprint_biselado(ancho, prof, esquina_inglete, medida_inglete)
-    face = grupo.entities.add_face(puntos)
-    face.pushpull(-alto)
+    if eje_inglete == :horizontal
+      puntos = perfil_biselado_horizontal(ancho, alto, esquina_inglete, medida_inglete)
+      face = grupo.entities.add_face(puntos)
+      face.pushpull(-prof)
+    else
+      puntos = puntos_footprint_biselado(ancho, prof, esquina_inglete, medida_inglete)
+      face = grupo.entities.add_face(puntos)
+      face.pushpull(-alto)
+    end
 
     instancia = grupo.to_component rescue grupo
     codigo = codigo_pieza(nombre)
@@ -2040,7 +2101,9 @@ module LPenafiel_GeneradorMueblesExacto
 
   ETIQUETAS_ESQUINA_INGLETE = {
     'front_left' => 'Del.Izq 45°', 'front_right' => 'Del.Der 45°',
-    'back_left' => 'Post.Izq 45°', 'back_right' => 'Post.Der 45°'
+    'back_left' => 'Post.Izq 45°', 'back_right' => 'Post.Der 45°',
+    'bottom_outer' => 'Inf.Ext 45° (con base)', 'bottom_inner' => 'Inf.Int 45° (con base)',
+    'top_outer' => 'Sup.Ext 45° (con techo)', 'top_inner' => 'Sup.Int 45° (con techo)'
   }.freeze
 
   def self.etiqueta_inglete(esquina, medida_mm)

@@ -169,7 +169,7 @@
     .checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0}.checks-grid label{display:flex;gap:5px;align-items:center}.checks-grid input{width:auto}.hierarchy-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .legacy-space-panel{display:none}.review-hierarchy-layout{display:grid;grid-template-columns:minmax(300px,1fr) 290px;gap:10px;margin-top:9px}.review-plan-wrap{min-width:0}.review-plan{height:500px}
     .m3dv-stage{height:470px}.m3dv-navigator{width:142px;height:133px;display:block;padding:0;background:rgba(17,22,27,.74);right:5px;top:5px}
-    .view-navigator{--nav-size:124px;--cube-size:62px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:4px auto 0;display:grid;grid-template:16px 1fr 16px/16px 1fr 16px;filter:drop-shadow(0 5px 10px rgba(0,0,0,.38));user-select:none;touch-action:none}
+    .view-navigator{--nav-size:96px;--cube-size:46px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:4px auto 0;display:grid;grid-template:13px 1fr 13px/13px 1fr 13px;filter:drop-shadow(0 5px 10px rgba(0,0,0,.38));user-select:none;touch-action:none}
     .view-navigator button{min-width:0;padding:0;border:0;border-radius:4px;color:#eef2f5;background:rgba(38,45,52,.9);font-size:10px;line-height:1;cursor:pointer;transition:background .12s,transform .12s,color .12s}
     .view-navigator button:hover,.view-navigator button.active{background:var(--brand);color:#161a1d}
     .view-navigator button:active{transform:scale(.92)}
@@ -224,7 +224,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.7.1-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.7.2-beta.1</div>
   </header>
 
   <main>
@@ -360,13 +360,14 @@
             <section class="material-group"><h3>Interior</h3><label class="check-line"><input type="checkbox" id="material_interior_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_interior_color" value="#e4c393"><input id="material_interior_nombre" value="Interior claro" placeholder="Nombre del material"></div></section>
             <section class="material-group"><h3>Frentes y puertas</h3><label class="check-line"><input type="checkbox" id="material_frentes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_frentes_color" value="#f06424"><input id="material_frentes_nombre" value="Frente decorativo" placeholder="Nombre del material"></div></section>
             <section class="material-group"><h3>Cajones interiores</h3><label class="check-line"><input type="checkbox" id="material_cajones_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_cajones_color" value="#b87543"><input id="material_cajones_nombre" value="Cajón interior" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Respaldo</h3><label class="check-line"><input type="checkbox" id="material_respaldo_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_respaldo_color" value="#cdbda8"><input id="material_respaldo_nombre" value="Respaldo" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Herrajes y ajustes</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Respaldo</h3><label class="check-line"><input type="checkbox" id="material_respaldo_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_respaldo_color" value="#d5a66e"><input id="material_respaldo_nombre" value="Respaldo" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio". Su grosor sigue siendo independiente (p. ej. casco 15/18mm, respaldo 6mm embutido).</small></section>
+            <section class="material-group"><h3>Ajuste posterior/frontal</h3><label class="check-line"><input type="checkbox" id="material_ajuste_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_ajuste_color" value="#d5a66e"><input id="material_ajuste_nombre" value="Ajuste" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio".</small></section>
+            <section class="material-group"><h3>Herrajes (jaladores, gola)</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
           </div>
           <div class="material-texture-editor" id="material_library">
             <h3>Biblioteca de materiales</h3>
             <small>Asigna una textura al grupo activo desde tu equipo o mediante una URL directa JPG, PNG o WebP. Los materiales guardados quedan disponibles para otros módulos.</small>
-            <div class="row"><label for="material_texture_group">Grupo</label><select id="material_texture_group"><option value="global">Material general</option><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="herrajes">Herrajes</option></select></div>
+            <div class="row"><label for="material_texture_group">Grupo</label><select id="material_texture_group"><option value="global">Material general</option><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="ajuste">Ajuste posterior/frontal</option><option value="herrajes">Herrajes</option></select></div>
             <div class="row"><label for="material_texture_url">Imagen de Internet</label><input id="material_texture_url" type="url" placeholder="https://sitio.com/textura.jpg"></div>
             <div class="row"><label for="material_texture_file">Subir imagen</label><input id="material_texture_file" type="file" accept="image/*,.bmp,.gif"></div>
             <div class="row"><label for="material_texture_scale">Escala (mm)</label><input type="number" id="material_texture_scale" value="600" min="10"></div>
@@ -383,7 +384,7 @@
             <div><input id="material_piece_search" type="search" placeholder="Buscar lateral, repisa, puerta..."><div id="material_piece_list" class="material-piece-list"></div></div>
             <div>
               <div class="piece-info show" id="material_piece_info">Selecciona una pieza azul en el visualizador o desde la lista.</div>
-              <div class="row"><label for="material_piece_group">Grupo heredado</label><select id="material_piece_group"><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="herrajes">Herrajes</option></select></div>
+              <div class="row"><label for="material_piece_group">Grupo heredado</label><select id="material_piece_group"><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="ajuste">Ajuste posterior/frontal</option><option value="herrajes">Herrajes</option></select></div>
               <div class="row"><label for="material_piece_custom">Acabado individual</label><select id="material_piece_custom"><option value="NO">Heredar del grupo</option><option value="SI">Usar material propio</option></select></div>
               <div class="row"><label for="material_piece_color">Color individual</label><input type="color" id="material_piece_color" value="#66c9f3"></div>
               <div class="row"><label for="material_piece_name">Material individual</label><input id="material_piece_name" placeholder="Ej. Roble decorativo"></div>
@@ -398,8 +399,9 @@
               <div class="row"><label for="material_piece_oversize_prof">Sobremedida profundidad (mm)</label><input type="number" id="material_piece_oversize_prof" value="0" step=".5"></div>
               <div class="row"><label for="material_piece_oversize_alto">Sobremedida alto (mm)</label><input type="number" id="material_piece_oversize_alto" value="0" step=".5"></div>
               <small>Ajusta esta pieza puntual por encima o por debajo de la medida calculada (positivo = más grande, negativo = más chica). El resto del módulo no cambia.</small>
-              <div class="row"><label for="material_piece_miter_corner">Inglete (corte 45°)</label><select id="material_piece_miter_corner"><option value="">Sin inglete</option><option value="front_left">Esquina delantera izquierda</option><option value="front_right">Esquina delantera derecha</option><option value="back_left">Esquina trasera izquierda</option><option value="back_right">Esquina trasera derecha</option></select></div>
+              <div class="row"><label for="material_piece_miter_corner">Inglete (corte 45°)</label><select id="material_piece_miter_corner"><option value="">Sin inglete</option><optgroup label="Vertical: costura entre dos laterales (ej. módulo en L)"><option value="front_left">Esquina delantera izquierda</option><option value="front_right">Esquina delantera derecha</option><option value="back_left">Esquina trasera izquierda</option><option value="back_right">Esquina trasera derecha</option></optgroup><optgroup label="Horizontal: lateral con techo o base"><option value="top_outer">Superior exterior (con techo, canto visible)</option><option value="top_inner">Superior interior (con techo)</option><option value="bottom_outer">Inferior exterior (con base, canto visible)</option><option value="bottom_inner">Inferior interior (con base)</option></optgroup></select></div>
               <div class="row"><label for="material_piece_miter_size">Medida del inglete (mm)</label><input type="number" id="material_piece_miter_size" value="20" min="1" step=".5"></div>
+              <small>Vertical = corte constante en toda la altura (esquina de dos laterales). Horizontal = corte constante en todo el fondo (lateral que se encuentra con el techo o la base a 45°).</small>
               <small>Corta esa esquina vertical de la pieza a 45°, constante en toda su altura. Pensado para uniones visibles entre dos piezas que se encuentran en una arista (por ejemplo, las dos alas de un módulo esquinero). Se ve en tiempo real en el visualizador.</small>
               <button type="button" id="material_piece_apply">Aplicar a esta pieza</button>
               <button type="button" class="secondary" id="material_piece_clear">Volver a heredar del grupo</button>
@@ -659,7 +661,8 @@
           '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + ((panel[0] === 'izq' || panel[0] === 'der') ? ' selected' : '') + '>Sobrepuesto exterior</option></select></div>' +
           '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
           '<div class="row"><label>Hueco delantero (mm)</label><input type="number" id="retranqueo_frontal_' + panel[0] + '" value="0" min="0"></div>' +
-          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" min="0"></div></div>';
+          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" min="0"></div>' +
+          '<small>A mayor hueco, mayor separación visible y menor fondo de este panel (fondo del panel = fondo total − hueco delantero − hueco trasero). No puede ser negativo.</small></div>';
       }).join('');
     }
     function aplicarPreset() {
@@ -1207,6 +1210,10 @@
     sincronizarReglasRespaldo();
     document.addEventListener('input', function(event) {
       if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
+      if (event.target.id === 'material_casco_color') {
+        if (el('material_respaldo_custom') && !el('material_respaldo_custom').checked && el('material_respaldo_color')) el('material_respaldo_color').value = event.target.value;
+        if (el('material_ajuste_custom') && !el('material_ajuste_custom').checked && el('material_ajuste_color')) el('material_ajuste_color').value = event.target.value;
+      }
       markManualThickness(event.target.id || '');
       var category = categoriaPorCampo(event.target.id || '');
       if (category) iluminarCategoria(category, 'Estas modificando: ' + (event.target.labels && event.target.labels[0] ? event.target.labels[0].textContent : event.target.id));
@@ -1214,6 +1221,10 @@
     });
     document.addEventListener('change', function(event) {
       if(event.target.id==='sincronizar_ajuste'){linkedThickness.grosor_ajuste=event.target.checked;if(event.target.checked){setValue('grosor_ajuste',numero('espesor',15));actualizarVista();}}
+      if ((event.target.id === 'material_respaldo_custom' || event.target.id === 'material_ajuste_custom') && !event.target.checked) {
+        var targetColorId = event.target.id === 'material_respaldo_custom' ? 'material_respaldo_color' : 'material_ajuste_color';
+        if (el('material_casco_color') && el(targetColorId)) el(targetColorId).value = el('material_casco_color').value;
+      }
       if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
       markManualThickness(event.target.id || '');
       if (event.target.id === 'tipo_modulo') aplicarPreset();

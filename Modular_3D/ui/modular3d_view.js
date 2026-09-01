@@ -19,7 +19,8 @@
     if (category === 'front') return 'frentes';
     if (category === 'drawer') return 'cajones';
     if (category === 'back') return 'respaldo';
-    if (category === 'handle' || category === 'adjustment') return 'herrajes';
+    if (category === 'adjustment') return 'ajuste';
+    if (category === 'handle') return 'herrajes';
     if (category === 'interior' || String(role || '').indexOf('local-') === 0 || String(role || '').indexOf('separator-') === 0) return 'interior';
     return 'casco';
   }
@@ -122,13 +123,17 @@
   }
 
   var MITER_CORNERS = ['front_left', 'front_right', 'back_right', 'back_left'];
+  var MITER_CORNERS_HORIZONTAL = ['bottom_inner', 'bottom_outer', 'top_outer', 'top_inner'];
   function resolvedMiter(pieceId, materialKey) {
     var overrides = {};
     try { overrides = JSON.parse(currentData.miter_overrides_json || '{}') || {}; } catch (_e) { overrides = {}; }
     var entry = overrides[materialKey] || overrides[pieceId] || null;
-    if (!entry || MITER_CORNERS.indexOf(entry.corner) < 0) return null;
+    if (!entry) return null;
     var size = Number(entry.size) || 0;
-    return size > 0 ? { corner: entry.corner, size: size } : null;
+    if (size <= 0) return null;
+    if (MITER_CORNERS.indexOf(entry.corner) >= 0) return { corner: entry.corner, size: size, axis: 'vertical' };
+    if (MITER_CORNERS_HORIZONTAL.indexOf(entry.corner) >= 0) return { corner: entry.corner, size: size, axis: 'horizontal' };
+    return null;
   }
   /* Prisma con una esquina vertical del footprint (X/Z locales, constante en
      toda la altura Y) cortada a 45°. Replica exactamente puntos_footprint_
@@ -166,12 +171,48 @@
     geometry.computeVertexNormals();
     return geometry;
   }
+  /* Variante horizontal: corta el canto superior/inferior donde un lateral se
+     une al techo o la base (constante en toda la profundidad, no en la
+     altura). Replica perfil_biselado_horizontal + pushpull(-prof) de
+     plugin.rb: el perfil vive en el plano ancho x alto (X/Y locales) y se
+     extruye a lo largo de la profundidad (Z local de la geometría). */
+  function chamferedBoxGeometryHorizontal(width, height, depth, corner, size) {
+    var hw = width / 2, hh = height / 2, hd = depth / 2;
+    var s = Math.min(size, width * 0.48, height * 0.48);
+    if (!(s > 0)) return new THREE.BoxGeometry(width, height, depth);
+    var base = { bottom_inner: [-hw, -hh], bottom_outer: [hw, -hh], top_outer: [hw, hh], top_inner: [-hw, hh] };
+    var order = ['bottom_inner', 'bottom_outer', 'top_outer', 'top_inner'];
+    var poly = [];
+    order.forEach(function (name) {
+      var p = base[name];
+      if (name !== corner) { poly.push(p); return; }
+      if (name === 'bottom_inner') { poly.push([p[0], p[1] + s], [p[0] + s, p[1]]); }
+      else if (name === 'bottom_outer') { poly.push([p[0] - s, p[1]], [p[0], p[1] + s]); }
+      else if (name === 'top_outer') { poly.push([p[0], p[1] - s], [p[0] - s, p[1]]); }
+      else { poly.push([p[0] + s, p[1]], [p[0], p[1] - s]); }
+    });
+    var positions = [];
+    function pushTri(a, b, c) { positions.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); }
+    var front = poly.map(function (p) { return [p[0], p[1], hd]; });
+    var back = poly.map(function (p) { return [p[0], p[1], -hd]; });
+    for (var i = 1; i < front.length - 1; i += 1) pushTri(front[0], front[i], front[i + 1]);
+    for (var j = 1; j < back.length - 1; j += 1) pushTri(back[0], back[j + 1], back[j]);
+    for (var k = 0; k < poly.length; k += 1) {
+      var next = (k + 1) % poly.length;
+      pushTri(back[k], back[next], front[next]);
+      pushTri(back[k], front[next], front[k]);
+    }
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
   function addPiece(name, width, height, depth, x, y, z, color, category, glass, metadata) {
     if (width <= 0 || height <= 0 || depth <= 0) return null;
     metadata=metadata||{};
     var generatedId=metadata.pieceId||('piece_' + (meshes.length + 1)),materialKey=metadata.materialKey||generatedId,style=resolvedPieceStyle(category,metadata.role||category,generatedId,materialKey,color);
     var miter = resolvedMiter(generatedId, materialKey);
-    var geometry = miter ? chamferedBoxGeometry(width, height, depth, miter.corner, miter.size) : new THREE.BoxGeometry(width, height, depth);
+    var geometry = miter ? (miter.axis === 'horizontal' ? chamferedBoxGeometryHorizontal(width, height, depth, miter.corner, miter.size) : chamferedBoxGeometry(width, height, depth, miter.corner, miter.size)) : new THREE.BoxGeometry(width, height, depth);
     var pieceMaterial=material(style.color, glass);applyTexture(pieceMaterial,style.texture,style.scale,style.rotation);var piece = new THREE.Mesh(geometry, pieceMaterial);
     // Modelo: X=derecha, Y=fondo, Z=arriba. Three.js usa Z=-fondo.
     piece.position.set(x + width / 2, y + height / 2, -(z + depth / 2));

@@ -204,7 +204,7 @@ module Modular3D
       casco_activo = %w[lleva_lateral_izq lleva_lateral_der lleva_base lleva_techo].map { |campo| datos[campo].to_s }
       avisos << "El casco no lleva ningun panel exterior activo; revisa que sea intencional." if casco_activo.all? { |valor| valor == 'NO' }
 
-      esquinas_validas = %w[front_left front_right back_left back_right]
+      esquinas_validas = %w[front_left front_right back_left back_right bottom_inner bottom_outer top_outer top_inner]
       begin
         miter_raw = datos['miter_overrides_json']
         miter_overrides = miter_raw.is_a?(Hash) ? miter_raw : JSON.parse(miter_raw.to_s)

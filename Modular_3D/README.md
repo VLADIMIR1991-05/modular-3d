@@ -1,7 +1,14 @@
-# Modular_3D 4.7.1-beta.1 · Migración real de piezas externas y cubo de navegación 3D
+# Modular_3D 4.7.2-beta.1 · Inglete lateral-techo/base y ajustes de cubo/materiales
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.7.1-beta.1  
+**Versión:** 4.7.2-beta.1  
+
+## Cambios 4.7.2-beta.1
+
+- **Inglete horizontal (lateral con techo/base):** el inglete a 45° ahora cubre también el caso clásico de esquina de mueble donde un LATERAL se encuentra con el TECHO o la BASE, distinto del inglete vertical ya existente (costura entre dos laterales, constante en toda la altura). El nuevo corte es constante en todo el fondo de la pieza y se elige por esquina: superior/inferior × exterior/interior (`top_outer`, `top_inner`, `bottom_outer`, `bottom_inner`). Selector de esquina agrupado por tipo (vertical/horizontal) en el editor de pieza individual; geometría verificada por separado con un guion numérico (sentido de recorrido, normal y límites del polígono) antes de integrarla, igual que el inglete vertical original.
+- **Cubo de navegación más chico:** el cubo CSS 3D portado en la versión anterior se redujo de tamaño (`--nav-size`/`--cube-size`) para ocupar menos espacio sobre el visor.
+- **Ajuste posterior/frontal y respaldo heredan el color del casco:** ambos grupos de material arrancan con el mismo color que el casco (solo cambia su grosor, p. ej. casco 15/18 mm vs respaldo 6 mm embutido) y se actualizan en vivo si cambias el color del casco, hasta que marques "Material propio del grupo" para desvincularlos y darles un color independiente.
+- **Revisado de nuevo el reporte de "el hueco funciona al revés":** no se encontró ningún defecto adicional en el código (misma conclusión que en 4.7.1-beta.1, verificada otra vez desde cero). Los campos se llaman literalmente "Hueco delantero/trasero": al aumentarlos, el hueco (separación) efectivamente aumenta y el fondo de ESE panel se reduce en la misma medida (fondo del panel = fondo total − huecos) — es el comportamiento esperado de un retranqueo, no uno invertido. Se agregó un texto explicativo junto a esos campos en el paso de Casco para dejarlo explícito, por si la medida que se estaba comparando en SketchUp era otra (por ejemplo el fondo total del módulo, que no cambia, en vez del fondo de ese panel puntual).
 
 ## Cambios 4.7.1-beta.1
 
