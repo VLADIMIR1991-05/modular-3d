@@ -171,16 +171,22 @@ module Modular3D
         end
       end
 
-      max_retranqueo = profundidad - 30
-      %w[
-        retranqueo_frontal_superior retranqueo_trasero_superior
-        retranqueo_frontal_inferior retranqueo_trasero_inferior
-        retranqueo_frontal_izq retranqueo_trasero_izq
-        retranqueo_frontal_der retranqueo_trasero_der
-      ].each do |clave|
-        valor = numero(datos, clave)
-        errores << "#{clave.tr('_', ' ')} no puede ser negativo." if valor.negative?
-        errores << "#{clave.tr('_', ' ')} deja el panel sin profundidad." if valor >= max_retranqueo
+      # Un hueco negativo hace que el panel sobresalga hacia afuera en vez de
+      # retranquearse (util para zocalos o repisas voladas); se limita a un
+      # maximo razonable para evitar que sobresalga mas que la mitad del
+      # fondo del modulo. La suma frontal+trasero de cada panel se valida en
+      # conjunto para que no se quede sin fondo aunque cada campo por
+      # separado luzca razonable.
+      minimo_retranqueo = -[profundidad * 0.4, 200.0].min
+      %w[superior inferior izq der].each do |panel|
+        frontal_clave = "retranqueo_frontal_#{panel}"
+        trasero_clave = "retranqueo_trasero_#{panel}"
+        frontal = numero(datos, frontal_clave)
+        trasero = numero(datos, trasero_clave)
+        [[frontal_clave, frontal], [trasero_clave, trasero]].each do |clave, valor|
+          errores << "#{clave.tr('_', ' ')} no puede sobresalir mas de #{minimo_retranqueo.abs.round} mm." if valor < minimo_retranqueo
+        end
+        errores << "El hueco frontal + trasero del panel #{panel} deja el panel sin profundidad." if (frontal + trasero) >= (profundidad - 30)
       end
 
       cajones_totales = if spaces.empty?
@@ -225,6 +231,17 @@ module Modular3D
 
       montaje_puerta = datos['montaje_puerta'].to_s
       errores << "Montaje de puerta no reconocido (#{montaje_puerta})." unless montaje_puerta.empty? || %w[SOLAPADA EMBUTIDA].include?(montaje_puerta.upcase)
+
+      hierarchy_json = datos['hierarchy_json'].to_s.strip
+      unless hierarchy_json.empty? || hierarchy_json == '{}'
+        begin
+          hierarchy_geometry = JSON.parse(datos['hierarchy_geometry_json'].to_s)
+          valido = hierarchy_geometry.is_a?(Hash) && hierarchy_geometry['nodes'].is_a?(Array) && !hierarchy_geometry['nodes'].empty?
+        rescue JSON::ParserError
+          valido = false
+        end
+        errores << 'No se pudo leer la configuracion de espacios (jerarquia). No se va a construir una caja vacia: cierra y vuelve a abrir el editor del modulo antes de reintentar.' unless valido
+      end
 
       { errores: errores, avisos: avisos }
     end

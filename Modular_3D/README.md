@@ -1,7 +1,17 @@
-# Modular_3D 4.7.3-beta.1 · Corrección del cubo de navegación
+# Modular_3D 4.8.0-beta.1 · Puertas y cajones interactivos, limpieza a fondo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.7.3-beta.1  
+**Versión:** 4.8.0-beta.1  
+
+## Cambios 4.8.0-beta.1
+
+- **Puertas y cajones interactivos con la mano de Interactuar:** el código de Dynamic Components (`onclick`/`RotZ` con animación) ya existía en el generador de puertas antiguo (`crear_puerta_dinamica`) pero nunca estaba conectado a las puertas que arma la pestaña Configuración (jerarquía), que siempre construía piezas planas sin ningún comportamiento. Ahora toda puerta creada desde la jerarquía es un componente dinámico real: se abre/cierra con un clic usando la herramienta nativa "Interactuar" de SketchUp, respetando la bisagra elegida en "Apertura" del espacio (o abriendo hacia afuera en puertas dobles/triples). Los cajones se agrupan completos (laterales, frente, fondo, trasero y frente exterior) en un único componente con el mismo mecanismo pero deslizando en profundidad, así que el cajón y su frente salen juntos con un clic.
+- **Quitados jaladores, sistema gola y puertas de vidrio:** se eliminó por completo la generación de estas piezas (`agregar_sistema_apertura`, `aplicar_material_vidrio`) y sus campos de configuración, a pedido explícito. Los ajustes de puertas/cajones que sí seguían usándose (grosor de puerta, luces, retiro de cajones, sistema de corredera, refuerzo de piso) se reubicaron dentro de "Configuración", donde antes vivían en una página completa que quedó inalcanzable tras una limpieza de una versión anterior y por lo tanto esos ajustes quedaban congelados en su valor por defecto sin ninguna forma de tocarlos.
+- **Eliminado el resto de la interfaz muerta encontrada en la auditoría**: el panel duplicado de "Propiedades del espacio" (reemplazado hace tiempo por el editor de jerarquía, pero seguía ejecutándose oculto en cada actualización de vista) y sus botones que nunca podían pulsarse.
+- **Huecos/retranqueos: validación en vivo y valores negativos con significado real.** Antes `validar()` en el navegador no revisaba límites de huecos —solo Ruby, y recién al construir—, así que un valor inválido se aceptaba sin aviso hasta el final. Ahora el mismo chequeo corre en vivo en el paso Casco, con un texto que muestra el fondo resultante de cada panel actualizado con cada tecla. Además, un hueco negativo ya no se rechaza: significa que el panel sobresale hacia afuera en lugar de retranquearse hacia adentro (útil para zócalos o repisas voladas), limitado a un máximo razonable para no vaciar el panel de fondo.
+- **Despiece y presupuesto ya no exigen selección:** si no hay nada seleccionado, toman todo el modelo activo. Antes, una pieza de diseño libre correctamente etiquetada podía no aparecer nunca en el despiece simplemente porque el usuario olvidó seleccionarla junto con el resto antes de generar.
+- **Corregidos tres defectos reales en "Editar módulo"** que podían hacer que un módulo reeditado no coincidiera con el original: (1) si la configuración jerárquica llegaba dañada o vacía, la reconstrucción caía en silencio a una caja legada casi vacía en vez de avisar del error — ahora se bloquea la construcción con un mensaje claro; (2) los módulos creados con "Convertir selección en módulo" nunca guardaban su punto de referencia de posición (`module_base_offset`), lo que podía duplicar el desplazamiento al reeditarlos — ahora se calcula y guarda siempre; (3) la transformación de una edición anterior podía quedar arrastrada a una edición distinta si la anterior se canceló sin construir — ahora se limpia explícitamente al iniciar cada edición.
+- **El visor 3D respeta los mismos topes que Ruby** (20 repisas, 12 cajones por espacio) para no mostrar en vivo una cantidad que luego se recorta silenciosamente al construir.
 
 ## Cambios 4.7.3-beta.1
 

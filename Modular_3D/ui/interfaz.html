@@ -31,7 +31,6 @@
     .tab[data-help]:hover::after, .tab[data-help]:focus-visible::after { display: block; }
     .page { display: none; }
     .page.active { display: block; }
-    #frentes, [data-page="frentes"] { display: none !important; }
     .card { margin-bottom: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 1px 3px rgba(23, 35, 45, .05); }
     h2, h3 { margin: 0 0 10px; }
     h2 { font-size: 16px; }
@@ -67,6 +66,9 @@
     .message.show { display: block; }
     .message.error { color: #7a271a; background: #fef3f2; border: 1px solid #fecdca; }
     .message.warn { color: #7a4d00; background: #fffaeb; border: 1px solid #fedf89; }
+    .retranqueo-result { display: block; margin-top: 2px; font-weight: 600; color: #4a5c66; }
+    .retranqueo-result.warn { color: #b54708; }
+    .retranqueo-result.error { color: #b42318; }
     .designer-layout { display: grid; grid-template-columns: minmax(260px, 1fr) 250px; gap: 10px; align-items: start; }
     .front-designer { position: relative; min-height: 410px; padding: 20px 24px 26px 34px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(#f9fcfd, #fff); }
     .module-elevation { position: relative; width: min(100%, 330px); height: 360px; margin: 0 auto; border: 3px solid #6f8fb0; background: #eef7fb; box-shadow: 0 8px 18px rgba(38, 61, 80, .12); }
@@ -167,7 +169,6 @@
     .hierarchy-inspector{max-height:none;overflow:visible;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}.hierarchy-inspector>h3{font-size:14px;text-transform:none;color:#334955}.space-summary{padding:7px;margin-bottom:6px;border-left:3px solid var(--brand);background:#fff5ef;font-weight:700}
     .hierarchy-inspector details{margin:5px 0;border:1px solid var(--line);border-radius:6px;padding:6px}.hierarchy-inspector summary{cursor:pointer;color:#394d5a;font-weight:800}.hierarchy-inspector .row{grid-template-columns:1fr 125px;margin:4px 0}.hierarchy-inspector input,.hierarchy-inspector select{padding:6px}.hierarchy-inspector button{padding:8px}
     .checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0}.checks-grid label{display:flex;gap:5px;align-items:center}.checks-grid input{width:auto}.hierarchy-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .legacy-space-panel{display:none}.review-hierarchy-layout{display:grid;grid-template-columns:minmax(300px,1fr) 290px;gap:10px;margin-top:9px}.review-plan-wrap{min-width:0}.review-plan{height:500px}
     .m3dv-stage{height:470px}.m3dv-navigator{width:142px;height:133px;display:block;padding:0;background:rgba(17,22,27,.74);right:5px;top:5px}
     .view-navigator{--nav-size:96px;--cube-size:46px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:4px auto 0;display:grid;grid-template:13px 1fr 13px/13px 1fr 13px;filter:drop-shadow(0 5px 10px rgba(0,0,0,.38));user-select:none;touch-action:none}
     .view-navigator button{min-width:0;padding:0;border:0;border-radius:4px;color:#eef2f5;background:rgba(38,45,52,.9);font-size:10px;line-height:1;cursor:pointer;transition:background .12s,transform .12s,color .12s}
@@ -190,8 +191,8 @@
     .cube-home{position:absolute;right:0;bottom:-9px;width:26px!important;height:26px!important;padding:0!important;border-radius:50%!important;background:var(--brand)!important}.m3dv-toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}.m3dv-toolbar .redundant-view{display:none}
     .m3dv-navigator{opacity:.72;transition:opacity .18s ease}.m3dv-navigator:hover{opacity:1}
     .material-unico-box{margin:10px 0;padding:11px;border:1px solid var(--line);border-radius:8px;background:#fff}.material-unico-box>label,.check-line{display:flex;align-items:center;gap:7px;font-weight:700;color:#334955}.check-line{margin-top:10px}
-    .materials-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.material-group{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}.material-group h3{margin-bottom:7px;color:#334955;text-transform:none}.material-swatch-row{display:grid;grid-template-columns:42px 1fr;gap:7px;align-items:center}.material-swatch-row input[type=color]{height:34px;padding:2px}.material-texture-editor{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:9px;background:#f8fafc}.material-texture-preview{min-height:76px;margin:9px 0;border:1px dashed #94a3b8;border-radius:7px;display:grid;place-items:center;color:#64748b;background:#fff center/cover no-repeat}.material-piece-editor{display:grid;grid-template-columns:minmax(190px,1fr) minmax(240px,1.3fr);gap:10px}.material-piece-list{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:5px;background:#f8fbfc}.material-piece-button{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:3px 0;padding:7px 8px!important;text-align:left;color:#334955!important;background:#fff!important;border:1px solid #dbe4e9!important;font-size:10px}.material-piece-button.active{color:#fff!important;background:#2587bd!important}.material-chip{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.2);flex:0 0 auto}.material-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}.material-summary span{padding:7px;border-radius:6px;background:#eef3f5;text-align:center;font-size:10px}.hidden-legacy{display:none!important}
-    @media(max-width:900px){.hierarchy-layout,.review-hierarchy-layout{grid-template-columns:1fr}.hierarchy-plan{height:470px}}
+    .materials-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.material-group{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}.material-group h3{margin-bottom:7px;color:#334955;text-transform:none}.material-swatch-row{display:grid;grid-template-columns:42px 1fr;gap:7px;align-items:center}.material-swatch-row input[type=color]{height:34px;padding:2px}.material-texture-editor{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:9px;background:#f8fafc}.material-texture-preview{min-height:76px;margin:9px 0;border:1px dashed #94a3b8;border-radius:7px;display:grid;place-items:center;color:#64748b;background:#fff center/cover no-repeat}.material-piece-editor{display:grid;grid-template-columns:minmax(190px,1fr) minmax(240px,1.3fr);gap:10px}.material-piece-list{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:5px;background:#f8fbfc}.material-piece-button{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:3px 0;padding:7px 8px!important;text-align:left;color:#334955!important;background:#fff!important;border:1px solid #dbe4e9!important;font-size:10px}.material-piece-button.active{color:#fff!important;background:#2587bd!important}.material-chip{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.2);flex:0 0 auto}.material-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}.material-summary span{padding:7px;border-radius:6px;background:#eef3f5;text-align:center;font-size:10px}
+    @media(max-width:900px){.hierarchy-layout{grid-template-columns:1fr}.hierarchy-plan{height:470px}}
   </style>
 </head>
 <body class="license-locked">
@@ -224,7 +225,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.7.3-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.0-beta.1</div>
   </header>
 
   <main>
@@ -300,6 +301,7 @@
         <div class="card hierarchy-card">
           <div class="hierarchy-title"><div><h2>Configuración</h2><small>Selecciona un espacio en el plano. Cada división se crea únicamente dentro de ese espacio.</small></div><div class="hierarchy-title-actions"><button type="button" class="secondary compact" id="hierarchy_undo" onclick="window.Modular3DHierarchyUndo&&window.Modular3DHierarchyUndo()">Deshacer</button><button type="button" class="secondary compact" id="hierarchy_redo" onclick="window.Modular3DHierarchyRedo&&window.Modular3DHierarchyRedo()">Rehacer</button><button type="button" class="secondary compact" id="hierarchy_reset">Restablecer</button></div></div>
           <details class="material-unico-box" open><summary><strong>Puertas exteriores</strong></summary><div class="row"><label for="external_front_scope">Modo</label><select id="external_front_scope"><option value="BY_SPACE">Configurar por espacios</option><option value="GLOBAL">Global de todo el módulo</option><option value="NONE">Sin puertas exteriores</option></select></div><div class="row"><label for="montaje_puerta">Montaje de puerta</label><select id="montaje_puerta"><option value="SOLAPADA">Solapada (cubre el hueco por fuera)</option><option value="EMBUTIDA">Embutida (queda dentro del hueco)</option></select></div><small>Aplica al ajuste automático por espacio (\"Ajuste de puerta externa: Automático\"). El solape manual (CUSTOM) no se ve afectado. Es independiente del montaje interior/exterior del casco.</small><div id="global_front_controls"><div class="row"><label for="global_front_count_mode">Cantidad</label><select id="global_front_count_mode"><option value="AUTO">Automática según ancho</option><option value="MANUAL">Cantidad manual</option></select></div><div class="row"><label for="global_front_count">Número de puertas</label><input type="number" id="global_front_count" value="2" min="1" max="8"></div><div class="row"><label for="global_front_auto_width">Ancho máximo por puerta (mm)</label><input type="number" id="global_front_auto_width" value="600" min="150"></div><div class="row"><label for="global_front_gap_left">Fuga izquierda (mm)</label><input type="number" id="global_front_gap_left" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_right">Fuga derecha (mm)</label><input type="number" id="global_front_gap_right" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_top">Fuga superior (mm)</label><input type="number" id="global_front_gap_top" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_bottom">Fuga inferior (mm)</label><input type="number" id="global_front_gap_bottom" value="1.5" min="0" step=".5"></div><div class="row"><label for="global_front_gap_center">Fuga entre puertas (mm)</label><input type="number" id="global_front_gap_center" value="3" min="0" step=".5"></div><div class="row"><label for="global_front_hinge">Apertura</label><select id="global_front_hinge"><option value="ALTERNADA">Alternada desde extremos</option><option value="IZQUIERDA">Todas izquierda</option><option value="DERECHA">Todas derecha</option></select></div></div><small>El modo global cubre el frente exterior completo y sustituye únicamente las puertas externas por espacio; las puertas internas se conservan.</small></details>
+          <details class="material-unico-box"><summary><strong>Ajustes de puertas y cajones</strong></summary><div class="row"><label for="puerta_grosor">Grosor de puerta (mm)</label><input type="number" id="puerta_grosor" value="15" min="3"></div><div class="row"><label for="luz_frentes">Luz entre frentes (mm)</label><input type="number" id="luz_frentes" value="3" min="0" step=".5"></div><div class="row"><label for="luz_sup_frente">Luz superior frente (mm)</label><input type="number" id="luz_sup_frente" value="2" min="0" step=".5"></div><div class="row"><label for="luz_perimetral">Luz perimetral embutido (mm)</label><input type="number" id="luz_perimetral" value="3" min="0" step=".5"></div><div class="row"><label for="luz_solape">Luz frentes solapados (mm)</label><input type="number" id="luz_solape" value="1.5" min="0" step=".5"></div><div class="row"><label for="ret_cajones">Retiro de cajones (mm)</label><input type="number" id="ret_cajones" value="0" min="0"></div><div class="row"><label for="sistema_corredera">Sistema de corredera</label><select id="sistema_corredera"><option>Telescopica estandar</option><option>Oculta</option><option>Automatico maximo</option></select></div><div class="row"><label for="reforzar_piso">Reforzar piso cajon</label><select id="reforzar_piso"><option value="NO">No</option><option value="SI">Si</option></select></div></details>
           <div class="hierarchy-layout">
             <section class="hierarchy-plan-wrap">
               <div class="hierarchy-breadcrumb" id="hierarchy_breadcrumb"></div>
@@ -401,8 +403,7 @@
               <small>Ajusta esta pieza puntual por encima o por debajo de la medida calculada (positivo = más grande, negativo = más chica). El resto del módulo no cambia.</small>
               <div class="row"><label for="material_piece_miter_corner">Inglete (corte 45°)</label><select id="material_piece_miter_corner"><option value="">Sin inglete</option><optgroup label="Vertical: costura entre dos laterales (ej. módulo en L)"><option value="front_left">Esquina delantera izquierda</option><option value="front_right">Esquina delantera derecha</option><option value="back_left">Esquina trasera izquierda</option><option value="back_right">Esquina trasera derecha</option></optgroup><optgroup label="Horizontal: lateral con techo o base"><option value="top_outer">Superior exterior (con techo, canto visible)</option><option value="top_inner">Superior interior (con techo)</option><option value="bottom_outer">Inferior exterior (con base, canto visible)</option><option value="bottom_inner">Inferior interior (con base)</option></optgroup></select></div>
               <div class="row"><label for="material_piece_miter_size">Medida del inglete (mm)</label><input type="number" id="material_piece_miter_size" value="20" min="1" step=".5"></div>
-              <small>Vertical = corte constante en toda la altura (esquina de dos laterales). Horizontal = corte constante en todo el fondo (lateral que se encuentra con el techo o la base a 45°).</small>
-              <small>Corta esa esquina vertical de la pieza a 45°, constante en toda su altura. Pensado para uniones visibles entre dos piezas que se encuentran en una arista (por ejemplo, las dos alas de un módulo esquinero). Se ve en tiempo real en el visualizador.</small>
+              <small>Vertical = corte constante en toda la altura (esquina de dos laterales). Horizontal = corte constante en todo el fondo (lateral que se encuentra con el techo o la base a 45°). Se ve en tiempo real en el visualizador.</small>
               <button type="button" id="material_piece_apply">Aplicar a esta pieza</button>
               <button type="button" class="secondary" id="material_piece_clear">Volver a heredar del grupo</button>
             </div>
@@ -413,59 +414,6 @@
           <h3>Resumen antes de construir</h3>
           <div id="material_validation" class="message warn"></div>
           <div id="material_build_summary"></div>
-        </div>
-        <div class="hidden-legacy" aria-hidden="true">
-          <div id="review_breadcrumb"></div><div id="review_tree"></div><div id="review_plan"></div><div id="review_status"></div><div id="review_inspector_slot"></div>
-          <div class="property-panel legacy-space-panel">
-              <h3>Propiedades del espacio</h3>
-              <div class="row"><label>Espacio activo</label><input id="space_label" readonly value="1"></div>
-              <div class="row"><label for="space_content">Contenido</label><select id="space_content"><option value="VACIO">Vacio</option><option value="REPISAS">Repisas</option><option value="PUERTA_UNICA">Puerta unica</option><option value="PUERTA_DOBLE">Puerta doble</option><option value="CAJONERA">Cajonera</option></select></div>
-              <div class="tool-row">
-                <button type="button" class="inline-button" id="space_vertical">Division vertical</button>
-                <button type="button" class="inline-button" id="space_horizontal">Division horizontal</button>
-                <button type="button" class="inline-button secondary" id="space_vertical_remove">Quitar division</button>
-                <button type="button" class="inline-button secondary" id="space_horizontal_remove">Quitar repisa</button>
-              </div>
-              <div class="row"><label for="space_shelves">Repisas</label><input type="number" id="space_shelves" value="1" min="0" max="30"></div>
-              <div class="row"><label for="space_drawers">Cajones</label><input type="number" id="space_drawers" value="0" min="0" max="12"></div>
-              <div class="row"><label for="space_front_type">Tipo de cajón</label><select id="space_front_type"><option value="FRENTES">Con frente exterior</option><option value="INTERNO">Cajón interno</option></select></div>
-              <div class="row"><label for="space_hinge">Apertura puerta</label><select id="space_hinge"><option value="Izquierda">Bisagra izquierda</option><option value="Derecha">Bisagra derecha</option></select></div>
-              <div class="row"><label for="space_opening">Sistema apertura</label><select id="space_opening"><option value="AUTOMATICO">Automatico</option><option value="TIRADOR">Tirador / manija</option><option value="GOLA">Sistema gola</option><option value="PUSH">Push</option></select></div>
-              <div class="row"><label for="space_gap">Luz entre frentes (mm)</label><input type="number" id="space_gap" value="3" min="0" step=".5"></div>
-              <button type="button" class="secondary" id="space_apply">Aplicar a este espacio</button>
-              <button type="button" class="danger-action" id="space_clear">Limpiar interior</button>
-              <small id="space_rule_hint">El diseno actual sincroniza repisas, divisiones, cajones y puertas del modulo seleccionado.</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="frentes" class="page">
-        <div class="card">
-          <h2>Puertas y frentes</h2>
-          <div class="actions-split">
-            <button type="button" class="secondary" id="btn_poner_puertas">Poner puertas</button>
-            <button type="button" class="secondary" id="btn_poner_frentes">Poner frentes</button>
-          </div>
-          <div class="row"><label for="crear_puerta">Crear puerta</label><select id="crear_puerta"><option value="NO">No</option><option value="SI">Si</option></select></div>
-          <div class="row"><label for="tipo_puerta">Tipo de puerta</label><select id="tipo_puerta"><option value="AUTO">Automatico por ancho</option><option value="UNICA">Puerta unica</option><option value="DOBLE">Puerta doble</option></select></div>
-          <div class="row"><label for="puerta_bisagra">Apertura</label><select id="puerta_bisagra"><option value="Izquierda">Izquierda</option><option value="Derecha">Derecha</option></select></div>
-          <div class="row"><label for="puerta_grosor">Grosor (mm)</label><input type="number" id="puerta_grosor" value="15" min="3"></div>
-          <div class="row"><label for="sistema_apertura">Sistema de apertura</label><select id="sistema_apertura"><option value="AUTOMATICO">Automatico</option><option value="TIRADOR">Jalador / manija</option><option value="GOLA">Sistema gola</option><option value="PUSH">Push</option></select></div>
-          <div class="row"><label for="modo_frentes">Frentes de cajon</label><select id="modo_frentes"><option value="POR_NICHO">Segun nicho</option><option value="TODOS">Poner frentes a todos</option><option value="NINGUNO">Cajones internos</option></select></div>
-          <div class="row"><label for="luz_frentes">Luz entre frentes (mm)</label><input type="number" id="luz_frentes" value="3" min="0" step=".5"></div>
-          <div class="row"><label for="ret_cajones">Retiro de cajones (mm)</label><input type="number" id="ret_cajones" value="0" min="0"></div>
-          <div class="row"><label for="sistema_corredera">Sistema de corredera</label><select id="sistema_corredera"><option>Telescopica estandar</option><option>Oculta</option><option>Automatico maximo</option></select></div>
-          <div class="row"><label for="reforzar_piso">Reforzar piso cajon</label><select id="reforzar_piso"><option value="NO">No</option><option value="SI">Si</option></select></div>
-        </div>
-        <div class="card">
-          <h3>Ajustes avanzados</h3>
-          <div class="row"><label for="luz_sup_frente">Luz superior frente (mm)</label><input type="number" id="luz_sup_frente" value="2" min="0" step=".5"></div>
-          <div class="row"><label for="luz_perimetral">Luz perimetral embutido (mm)</label><input type="number" id="luz_perimetral" value="3" min="0" step=".5"></div>
-          <div class="row"><label for="luz_solape">Luz frentes solapados (mm)</label><input type="number" id="luz_solape" value="1.5" min="0" step=".5"></div>
-          <div class="row"><label for="alto_jalador">Altura jalador aluminio (mm)</label><input type="number" id="alto_jalador" value="30" min="0"></div>
-          <div class="row"><label for="alto_perfil_gola">Altura perfil gola (mm)</label><input type="number" id="alto_perfil_gola" value="47" min="0"></div>
-          <div class="row"><label for="prof_gola">Profundidad gola melamina (mm)</label><input type="number" id="prof_gola" value="50" min="0"></div>
         </div>
       </div>
 
@@ -616,8 +564,7 @@
     var fieldCategories = {
       num_repisas: 'interior', num_divisiones: 'interior', retranqueo_interior: 'interior',
       lleva_respaldo: 'back', grosor_resp: 'back', profundidad_ranura: 'back', cantidad_ajustes: 'back', alto_ajuste: 'back',
-      crear_puerta: 'front', tipo_puerta: 'front', puerta_grosor: 'front', puerta_bisagra: 'front',
-      modo_frentes: 'front', luz_frentes: 'front', ret_cajones: 'front', space_drawers: 'front',
+      puerta_grosor: 'front', luz_frentes: 'front', ret_cajones: 'front',
       grosor_superior: 'top', grosor_inferior: 'horizontal', grosor_izq: 'lateral', grosor_der: 'lateral'
     };
 
@@ -660,9 +607,10 @@
         return '<div class="panel-card" data-editor-card="' + panel[0] + '" data-editor-category="' + category + '"><h3>' + panel[1] + '</h3>' +
           '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + ((panel[0] === 'izq' || panel[0] === 'der') ? ' selected' : '') + '>Sobrepuesto exterior</option></select></div>' +
           '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
-          '<div class="row"><label>Hueco delantero (mm)</label><input type="number" id="retranqueo_frontal_' + panel[0] + '" value="0" min="0"></div>' +
-          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" min="0"></div>' +
-          '<small>A mayor hueco, mayor separación visible y menor fondo de este panel (fondo del panel = fondo total − hueco delantero − hueco trasero). No puede ser negativo.</small></div>';
+          '<div class="row"><label>Hueco delantero (mm)</label><input type="number" id="retranqueo_frontal_' + panel[0] + '" value="0" step=".5"></div>' +
+          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" step=".5"></div>' +
+          '<small>Positivo = retranquea hacia adentro (mayor separación, menor fondo de este panel). Negativo = sobresale hacia afuera. Fondo resultante = fondo total − hueco delantero − hueco trasero.</small>' +
+          '<small class="retranqueo-result" id="retranqueo_resultado_' + panel[0] + '"></small></div>';
       }).join('');
     }
     function aplicarPreset() {
@@ -731,8 +679,6 @@
       var rows = layoutRows();
       var drawers = Array(rows).fill(0);
       var types = Array(rows).fill('INTERNO');
-      var hasDoor = false;
-      var firstDoor = '';
       Object.keys(spaceState).forEach(function(key) {
         var space = spaceState[key];
         var niche = Math.max(0, Math.min(rows - 1, parseInt(space.niche, 10) || 0));
@@ -740,21 +686,10 @@
           drawers[niche] += Math.max(0, parseInt(space.drawers, 10) || 0);
           if (space.front_type === 'FRENTES') types[niche] = 'FRENTES';
         }
-        if (String(space.content || '').indexOf('PUERTA') === 0) {
-          hasDoor = true;
-          if (!firstDoor) firstDoor = String(space.content).replace('PUERTA_', '').replace('UNICA', 'UNICA').replace('DOBLE_VIDRIO', 'DOBLE_VIDRIO').replace('VIDRIO', 'VIDRIO').replace('DOBLE', 'DOBLE');
-        }
       });
       if (Object.keys(spaceState).length) {
         document.querySelectorAll('.cajones-nicho').forEach(function(campo, i) { campo.value = drawers[i] || 0; });
         document.querySelectorAll('.tipo-cajon-nicho').forEach(function(campo, i) { campo.value = types[i] || 'INTERNO'; });
-        if (hasDoor) {
-          el('crear_puerta').value = 'SI';
-          el('tipo_puerta').value = firstDoor || 'AUTO';
-        } else {
-          el('crear_puerta').value = 'NO';
-          el('tipo_puerta').value = 'AUTO';
-        }
       }
     }
     function changeStructure(kind, delta) {
@@ -793,7 +728,7 @@
     function campoParaPieza(detail) {
       var name = String(detail.name || '').toLowerCase();
       var category = detail.category || '';
-      if (category === 'front' || category === 'handle' || category === 'drawer') return { page: 'frentes', field: category === 'drawer' ? 'luz_frentes' : 'puerta_grosor', label: 'frentes' };
+      if (category === 'front' || category === 'handle' || category === 'drawer') return { page: 'interior', field: category === 'drawer' ? 'luz_frentes' : 'puerta_grosor', label: 'frentes' };
       if (name.indexOf('ajuste') >= 0) return { page: 'paneles', field: 'cantidad_ajustes', label: 'ajustes posteriores' };
       if (category === 'back') return { page: 'paneles', field: 'grosor_resp', label: 'respaldo' };
       if (category === 'interior') return { page: 'interior', field: name.indexOf('division') >= 0 ? 'num_divisiones' : 'num_repisas', label: 'interior' };
@@ -821,14 +756,13 @@
     function categoriaPorCampo(id) {
       if (fieldCategories[id]) return fieldCategories[id];
       if (id.indexOf('grosor_') === 0 || id.indexOf('montaje_') === 0 || id.indexOf('retranqueo_') === 0) return 'lateral';
-      if (id.indexOf('space_') === 0) return 'front';
       return '';
     }
     window.addEventListener('modular3d:pieceSelected', function(event) {
       var detail = event.detail || {};
       var target = campoParaPieza(detail);
       var activePage=document.querySelector('.page.active');
-      if(!activePage||activePage.id!=='diseno')mostrarPagina(target.page==='frentes'?'interior':target.page);
+      if(!activePage||activePage.id!=='diseno')mostrarPagina(target.page);
       document.querySelectorAll('.panel-card').forEach(function(card){card.classList.remove('piece-card-selected');});
       var roleMap={'shell-left':'izq','shell-right':'der','shell-bottom':'inferior','shell-top':'superior'},cardKey=roleMap[String(detail.role||'')];
       if(cardKey){var selectedCard=document.querySelector('.panel-card[data-editor-card="'+cardKey+'"]');if(selectedCard)selectedCard.classList.add('piece-card-selected');}
@@ -866,98 +800,6 @@
       if(datos.view_camera_json&&window.Modular3DView&&window.Modular3DView.restoreCamera)window.setTimeout(function(){window.Modular3DView.restoreCamera(datos.view_camera_json);},60);
     };
     function spaceKey(niche, column) { return String(niche) + ':' + String(column); }
-    function legacySpace(d, niche, column) {
-      var cajones = nichosActuales();
-      var tipos = tiposActuales();
-      var drawers = column === 0 ? (cajones[niche] || 0) : 0;
-      var content = 'VACIO';
-      if (drawers > 0) content = 'CAJONERA';
-      else if (d.crear_puerta === 'SI' && column === 0) {
-        content = d.tipo_puerta === 'DOBLE_VIDRIO' ? 'PUERTA_DOBLE_VIDRIO' :
-          d.tipo_puerta === 'VIDRIO' ? 'PUERTA_VIDRIO' :
-          d.tipo_puerta === 'DOBLE' ? 'PUERTA_DOBLE' : 'PUERTA_UNICA';
-      }
-      return { niche: niche, column: column, content: content, drawers: drawers,
-        front_type: tipos[niche] || 'INTERNO', gap: numero('luz_frentes', 1.5),
-        opening: el('sistema_apertura').value || 'AUTOMATICO' };
-    }
-
-    function espaciosDiseno() {
-      var d = datosFormulario();
-      var cols = Math.max(1, (parseInt(d.num_divisiones, 10) || 0) + 1);
-      var rows = Math.max(1, (parseInt(d.num_repisas, 10) || 0) + 1);
-      var total = cols * rows;
-      if (selectedSpace >= total) selectedSpace = 0;
-      var spaces = [];
-      for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          var idx = r * cols + c;
-          var nicheFromBottom = rows - 1 - r;
-          var state = spaceState[spaceKey(nicheFromBottom, c)] || legacySpace(d, nicheFromBottom, c);
-          var drawers = parseInt(state.drawers, 10) || 0;
-          var type = 'empty';
-          var label = Math.round((d.alto_total - d.grosor_superior - d.grosor_inferior) / rows);
-          if (state.content === 'CAJONERA' && drawers > 0) { type = 'drawer'; label = drawers + ' cajon(es)'; }
-          if (String(state.content).indexOf('PUERTA') === 0) {
-            type = String(state.content).indexOf('VIDRIO') >= 0 ? 'glass' : (String(state.content).indexOf('DOBLE') >= 0 ? 'double-door' : 'door');
-            label = type === 'glass' ? 'vidrio' : 'puerta';
-          }
-          if (state.front_type === 'FRENTES' && drawers > 0) label = drawers + ' frente(s)';
-          spaces.push({ idx: idx, row: r, col: c, type: type, label: label, drawers: drawers, niche: nicheFromBottom, state: state });
-        }
-      }
-      return { cols: cols, rows: rows, spaces: spaces };
-    }
-    function renderDiseno() {
-      var d = datosFormulario();
-      var layout = espaciosDiseno();
-      var elevation = el('module_elevation');
-      if (!elevation) return;
-      var cellW = 100 / layout.cols;
-      var cellH = 100 / layout.rows;
-      elevation.innerHTML = layout.spaces.map(function(space) {
-        var selected = space.idx === selectedSpace ? ' selected' : '';
-        var handle = space.type === 'drawer' ? '<span class="handle-mark"></span>' : (space.type === 'door' || space.type === 'double-door' ? '<span class="handle-mark handle-v"></span>' : '');
-        return '<div class="space-cell ' + space.type + selected + '" data-space="' + space.idx + '" style="left:' + (space.col * cellW) + '%;top:' + (space.row * cellH) + '%;width:' + cellW + '%;height:' + cellH + '%;">' + handle + '<span class="cell-label">' + space.label + '</span></div>';
-      }).join('');
-      el('designer_widths').innerHTML = Array(layout.cols).fill(0).map(function() { return '<span>' + Math.round((d.ancho_total - d.grosor_izq - d.grosor_der) / layout.cols) + '</span>'; }).join('');
-      el('designer_height').textContent = Math.round(d.alto_total - d.grosor_superior - d.grosor_inferior) + ' mm alto libre';
-      var current = layout.spaces.filter(function(space) { return space.idx === selectedSpace; })[0] || layout.spaces[0];
-      if (current) {
-        if (el('space_label')) el('space_label').value = 'Columna ' + (current.col + 1) + ' / Nivel ' + (current.row + 1);
-        el('space_drawers').value = current.drawers || 0;
-        el('space_shelves').value = current.state.shelves || (current.state.content === 'REPISAS' ? 1 : 0);
-        el('space_content').value = current.state.content || 'VACIO';
-        el('space_gap').value = current.state.gap == null ? d.luz_frentes : current.state.gap;
-        el('space_opening').value = current.state.opening || d.sistema_apertura || 'AUTOMATICO';
-        el('space_front_type').value = current.state.front_type || 'FRENTES';
-        el('space_hinge').value = current.state.hinge || 'Izquierda';
-      }
-    }
-    function aplicarPropiedadesEspacio() {
-      var layout = espaciosDiseno();
-      var current = layout.spaces.filter(function(space) { return space.idx === selectedSpace; })[0] || layout.spaces[0];
-      if (!current) return;
-      var contenido = el('space_content').value;
-      var drawers = Math.max(0, parseInt(el('space_drawers').value, 10) || 0);
-      if (contenido === 'CAJONERA' && drawers <= 0) drawers = 3;
-      if (contenido !== 'CAJONERA') drawers = 0;
-      var shelves = contenido === 'REPISAS' ? Math.max(1, parseInt(el('space_shelves').value, 10) || 0) : 0;
-      var frontType = contenido === 'CAJONERA' && drawers > 0 ? el('space_front_type').value : 'INTERNO';
-      spaceState[spaceKey(current.niche, current.col)] = {
-        niche: current.niche,
-        column: current.col,
-        content: contenido,
-        drawers: drawers,
-        shelves: shelves,
-        front_type: frontType,
-        gap: numero('space_gap', 1.5),
-        opening: el('space_opening').value,
-        hinge: el('space_hinge').value
-      };
-      syncLegacyFieldsFromSpaces();
-      actualizarVista();
-    }
 
     function solveParametricExpression(expr, total, separator) {
       var tokens = String(expr || '').split(':').map(function(v){return v.trim();}).filter(Boolean);
@@ -1006,9 +848,9 @@
       normalizeSpaceState();
       var hasDesignedSpaces = Object.keys(spaceState).length > 0;
       if (hasDesignedSpaces) syncLegacyFieldsFromSpaces();
-      datos.crear_puerta = el('crear_puerta').value;
-      datos.tipo_puerta = el('tipo_puerta').value;
-      datos.modo_frentes = el('modo_frentes').value;
+      datos.crear_puerta = 'NO';
+      datos.tipo_puerta = 'AUTO';
+      datos.modo_frentes = 'POR_NICHO';
       datos.cajones_por_nicho = Array.prototype.map.call(document.querySelectorAll('.cajones-nicho'), function(c) { return parseInt(c.value, 10) || 0; }).join(',');
       var tipos = Array.prototype.map.call(document.querySelectorAll('.tipo-cajon-nicho'), function(c) { return c.value; });
       if (!hasDesignedSpaces) {
@@ -1042,9 +884,13 @@
       if (metrics.height <= 30) errores.push('Las repisas dejan niveles sin altura util.');
       if (metrics.width > 30 && metrics.width < 180) avisos.push('Columnas menores de 180 mm limitan correderas y bisagras.');
       if (metrics.height > 30 && metrics.height < 120) avisos.push('Niveles menores de 120 mm limitan cajones y accesorios.');
+      var minimoRetranqueo = -Math.min(d.prof_total * 0.4, 200);
       paneles.forEach(function(p) {
-        var profundidad = d.prof_total - d['retranqueo_frontal_' + p[0]] - d['retranqueo_trasero_' + p[0]];
+        var frontal = d['retranqueo_frontal_' + p[0]] || 0, trasero = d['retranqueo_trasero_' + p[0]] || 0;
+        var profundidad = d.prof_total - frontal - trasero;
         if (profundidad <= 30) errores.push(p[1] + ' queda sin profundidad util.');
+        if (frontal < minimoRetranqueo) errores.push(p[1] + ': el hueco delantero no puede sobresalir mas de ' + Math.round(-minimoRetranqueo) + ' mm.');
+        if (trasero < minimoRetranqueo) errores.push(p[1] + ': el hueco trasero no puede sobresalir mas de ' + Math.round(-minimoRetranqueo) + ' mm.');
       });
       var spaces = Object.keys(spaceState).map(function(key) { return spaceState[key]; });
       var seen = {};
@@ -1072,8 +918,23 @@
       }
       return { errores: errores, avisos: avisos };
     }
+    function actualizarResultadoRetranqueos(d) {
+      var minimoRetranqueo = -Math.min(d.prof_total * 0.4, 200);
+      paneles.forEach(function(p) {
+        var host = el('retranqueo_resultado_' + p[0]);
+        if (!host) return;
+        var frontal = d['retranqueo_frontal_' + p[0]] || 0, trasero = d['retranqueo_trasero_' + p[0]] || 0;
+        var profundidad = d.prof_total - frontal - trasero;
+        var estado = 'ok';
+        if (profundidad <= 30 || frontal < minimoRetranqueo || trasero < minimoRetranqueo) estado = 'error';
+        else if (profundidad < 80) estado = 'warn';
+        host.textContent = 'Fondo resultante de este panel: ' + Math.round(profundidad) + ' mm';
+        host.className = 'retranqueo-result' + (estado === 'ok' ? '' : ' ' + estado);
+      });
+    }
     function actualizarVista() {
       var d = datosFormulario();
+      actualizarResultadoRetranqueos(d);
       var ancho = Math.max(0, d.ancho_total - d.grosor_izq - d.grosor_der);
       var alto = Math.max(0, d.alto_total - d.grosor_superior - d.grosor_inferior);
       var cajones = d.cajones_por_nicho.split(',').reduce(function(s, n) { return s + parseInt(n || 0, 10); }, 0);
@@ -1104,9 +965,8 @@
       el('avisos').className = 'message warn' + (chequeo.avisos.length ? ' show' : '');
       el('lista_piezas').innerHTML = '<p><strong>Dimensiones interiores:</strong> ' + Math.round(ancho) + ' x ' + Math.round(alto) + ' x ' + Math.round(d.prof_total) + ' mm</p>' +
         '<p><strong>Estimacion:</strong> ' + piezas + ' piezas, ' + d.num_repisas + ' repisas, ' + d.num_divisiones + ' divisiones, ' + cajones + ' cajones, ' + frentesCajon + ' frentes y ' + puertas + ' puerta(s).</p>' +
-        '<p><strong>Sistema:</strong> ' + (d.sistema_apertura || 'AUTOMATICO') + ' / ' + (d.sistema_corredera || 'Telescopica estandar') + '.</p>';
+        '<p><strong>Sistema de corredera:</strong> ' + (d.sistema_corredera || 'Telescopica estandar') + '.</p>';
       if (window.Modular3DPreview) window.Modular3DPreview.update(d);
-      renderDiseno();
       return chequeo.errores.length === 0;
     }
     function mostrarPagina(id) {
@@ -1230,16 +1090,10 @@
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
       if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior') sincronizarReglasRespaldo();
-      if (event.target.id === 'space_content' || event.target.id === 'space_shelves' || event.target.id === 'space_drawers' || event.target.id === 'space_front_type' || event.target.id === 'space_hinge' || event.target.id === 'space_gap' || event.target.id === 'space_opening') aplicarPropiedadesEspacio();
       actualizarVista();
     });
     document.addEventListener('click', function(event) {
-      var space = event.target.closest && event.target.closest('.space-cell');
       var panelCard = event.target.closest && event.target.closest('.panel-card[data-editor-card]');
-      if (space) {
-        selectedSpace = parseInt(space.getAttribute('data-space'), 10) || 0;
-        renderDiseno();
-      }
       if (panelCard && !event.target.matches('input,select,option')) {
         var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO',adjustments:'AJUSTE_SUPERIOR'};
         if(window.Modular3DView&&map[panelCard.dataset.editorCard])window.Modular3DView.selectPieceByKey(map[panelCard.dataset.editorCard]);
@@ -1262,14 +1116,6 @@
       el('alto_total').dispatchEvent(new Event('input', { bubbles: true }));
       actualizarVista();
     });
-    el('space_vertical').addEventListener('click', function() { changeStructure('column', 1); });
-    el('space_horizontal').addEventListener('click', function() { changeStructure('row', 1); });
-    el('space_vertical_remove').addEventListener('click', function() { changeStructure('column', -1); });
-    el('space_horizontal_remove').addEventListener('click', function() { changeStructure('row', -1); });
-    el('space_apply').addEventListener('click', aplicarPropiedadesEspacio);
-    el('space_clear').addEventListener('click', function() { spaceState = {}; el('num_repisas').value = 0; el('num_divisiones').value = 0; el('crear_puerta').value = 'NO'; actualizarNichos(); actualizarVista(); });
-    el('btn_poner_puertas').addEventListener('click', function() { el('crear_puerta').value = 'SI'; if (el('tipo_puerta').value === 'AUTO') el('tipo_puerta').value = numero('ancho_total') > 619 ? 'DOBLE' : 'UNICA'; mostrarPagina('diseno'); });
-    el('btn_poner_frentes').addEventListener('click', function() { el('modo_frentes').value = 'TODOS'; document.querySelectorAll('.tipo-cajon-nicho').forEach(function(campo, i) { if ((parseInt(document.querySelectorAll('.cajones-nicho')[i].value, 10) || 0) > 0) campo.value = 'FRENTES'; }); Object.keys(spaceState).forEach(function(key) { if (spaceState[key].content === 'CAJONERA') spaceState[key].front_type = 'FRENTES'; }); mostrarPagina('diseno'); });
     el('btn_revisar').addEventListener('click', function() { mostrarPagina('resultado'); });
     el('btn_construir').addEventListener('click', construir);
     el('btn_actualizar_modulo').addEventListener('click', actualizarModuloExistente);

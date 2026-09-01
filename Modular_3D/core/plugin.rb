@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.7.3-beta.1
+# Versión: 4.8.0-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1100,14 +1100,41 @@ module LPenafiel_GeneradorMueblesExacto
                 base_x = x_min + holgura
                 base_z = z_min + fuga_h + ((ci - 1) * (altura_caja + fuga_h))
                 prefix = "H_CJ_#{nid}_#{ci}"
-                self.crear_pieza(entities, modulo_nombre, "#{prefix}_LAT_IZQ", espesor, fondo_caja, altura_caja, base_x, y_min, base_z, 1, 0)
-                self.crear_pieza(entities, modulo_nombre, "#{prefix}_LAT_DER", espesor, fondo_caja, altura_caja, base_x + ancho_caja - espesor, y_min, base_z, 1, 0)
-                self.crear_pieza(entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, base_x + espesor, y_min, base_z, 1, 0)
-                self.crear_pieza(entities, modulo_nombre, "#{prefix}_POST", ancho_caja - (espesor * 2), espesor, altura_caja, base_x + espesor, y_min + fondo_caja - espesor, base_z, 1, 0)
-                self.crear_pieza(entities, modulo_nombre, "#{prefix}_FONDO", ancho_caja - (espesor * 2), fondo_caja - (espesor * 2), espesor, base_x + espesor, y_min + espesor, base_z, 0, 0)
+                # Se anida todo el cajon (laterales, frente, fondo, trasero y
+                # frente exterior) dentro de un grupo propio para que un solo
+                # atributo de posicion (Dynamic Components) lo deslice
+                # completo, cajon y frente juntos, con la mano de Interactuar.
+                # Las posiciones internas pasan a ser relativas a base_x/
+                # y_min/base_z (el propio origen del grupo); por eso se anula
+                # @offset_creacion mientras se arman las piezas hijas: ese
+                # desplazamiento de modulo ya lo aplica el grupo contenedor
+                # una sola vez, en su propia transformacion.
+                grupo_cajon = entities.add_group
+                # encapsular_modulo agrupa @piezas_modulo_actual como
+                # entidades de nivel superior (entities.add_group(lista)):
+                # las piezas hijas del cajon NO deben terminar ahi (quedaron
+                # anidadas dentro de grupo_cajon, no como hijas directas del
+                # modulo), asi que se desvia @piezas_modulo_actual a una
+                # lista descartable mientras se arman, y solo grupo_cajon
+                # (ya convertido a componente) se agrega a la lista real.
+                piezas_reales = @piezas_modulo_actual
+                @piezas_modulo_actual = []
+                offset_guardado = @offset_creacion
+                @offset_creacion = nil
+                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_LAT_IZQ", espesor, fondo_caja, altura_caja, 0.mm, 0.mm, 0.mm, 1, 0)
+                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_LAT_DER", espesor, fondo_caja, altura_caja, ancho_caja - espesor, 0.mm, 0.mm, 1, 0)
+                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, 0.mm, 0.mm, 1, 0)
+                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_POST", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, fondo_caja - espesor, 0.mm, 1, 0)
+                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FONDO", ancho_caja - (espesor * 2), fondo_caja - (espesor * 2), espesor, espesor, espesor, 0.mm, 0, 0)
                 if contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL'
-                  self.crear_pieza(entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_nodo - (fuga_h * 2), espesor, altura_caja, x_min + fuga_h, -espesor, base_z, 2, 2)
+                  self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_nodo - (fuga_h * 2), espesor, altura_caja, (x_min + fuga_h) - base_x, -espesor - y_min, 0.mm, 2, 2)
                 end
+                @offset_creacion = offset_guardado
+                @piezas_modulo_actual = piezas_reales
+                grupo_cajon.transformation = Geom::Transformation.new(Geom::Point3d.new(base_x, y_min, base_z) + (@offset_creacion || Geom::Vector3d.new(0, 0, 0)))
+                instancia_cajon = grupo_cajon.to_component rescue grupo_cajon
+                @piezas_modulo_actual << instancia_cajon if @piezas_modulo_actual
+                self.agregar_interactividad_cajon(instancia_cajon, fondo_caja)
               end
             end
           end
@@ -1161,8 +1188,20 @@ module LPenafiel_GeneradorMueblesExacto
             # que ya calculó facadeBox con margen uniforme. Interna: nace
             # dentro del hueco del espacio seleccionado.
             y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -grosor_puerta)
-            self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
+            instancia_puerta = self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
               x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central)), y_puerta, z_min + margen_lateral, 2, 2)
+            # Con una sola puerta se respeta la bisagra elegida en "Apertura"
+            # del espacio; con varias, las de los extremos abren hacia afuera
+            # (la primera por la izquierda, la última por la derecha) como es
+            # habitual en puertas dobles/triples.
+            lado_bisagra_puerta = if cantidad == 1
+                                     node['hinge'].to_s == 'Derecha' ? :derecha : :izquierda
+                                   elsif pi == cantidad
+                                     :derecha
+                                   else
+                                     :izquierda
+                                   end
+            self.agregar_interactividad_puerta(instancia_puerta, lado_bisagra_puerta)
           end
         end
 
@@ -1364,12 +1403,7 @@ module LPenafiel_GeneradorMueblesExacto
           )
           cantidad = contenido.include?('DOBLE') ? 2 : 1
           fuga_celda = [(space['gap'] || datos['luz_perimetral'] || 1.5).to_f, 0.5].max.mm
-          inicio_puertas = @piezas_modulo_actual.length
           self.crear_puertas_en_caja(entities, modulo_nombre, caja_celda, grosor_puerta_celda, lado_puerta_celda, nil, nil, cantidad, fuga_celda, (datos['montaje_puerta'] || 'SOLAPADA'))
-          puertas_celda = @piezas_modulo_actual[inicio_puertas..-1] || []
-          puertas_celda.each { |puerta| self.aplicar_material_vidrio(puerta) } if contenido.include?('VIDRIO')
-          datos_celda = datos.merge('sistema_apertura' => (space['opening'] || datos['sistema_apertura']))
-          self.agregar_sistema_apertura(entities, modulo_nombre, caja_celda, puertas_celda, datos_celda)
         end
       end
 
@@ -1386,17 +1420,11 @@ module LPenafiel_GeneradorMueblesExacto
                            end
         z_min_puerta = zonas_frentes_cajon.empty? ? nil : zonas_frentes_cajon.map { |zona| zona[1] }.max
         unless caja_modulo_estructura.empty?
-          inicio_puertas = @piezas_modulo_actual.length
           montaje_puerta_modulo = (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase
           fuga_puertas = montaje_puerta_modulo == 'EMBUTIDA' ? (datos['luz_perimetral'] || datos['juego_general'] || 3).to_f.mm : (datos['luz_solape'] || 1.5).to_f.mm
           luz_superior = (datos['luz_sup_frente'] || 0).to_f.mm
           z_max_puerta = caja_modulo_estructura.max.z - luz_superior
           self.crear_puertas_en_caja(entities, modulo_nombre, caja_modulo_estructura, grosor_puerta, lado_puerta, z_min_puerta, z_max_puerta, cantidad_puertas, fuga_puertas, montaje_puerta_modulo)
-          puertas_creadas = @piezas_modulo_actual[inicio_puertas..-1] || []
-          if tipo_puerta.include?("VIDRIO")
-            puertas_creadas.each { |puerta| self.aplicar_material_vidrio(puerta) }
-          end
-          self.agregar_sistema_apertura(entities, modulo_nombre, caja_modulo_estructura, puertas_creadas, datos)
         end
       end
 
@@ -1643,6 +1671,7 @@ module LPenafiel_GeneradorMueblesExacto
 
     @seleccion_edicion = seleccion.to_a
     @offset_edicion = Geom::Vector3d.new(caja.min.x, caja.min.y, caja.min.z)
+    @transformacion_edicion = nil
     if datos_guardados
       @modulo_uuid_actual = datos_guardados['module_uuid'] || SecureRandom.uuid
       datos_guardados["__edit_mode"] = "SI"
@@ -1890,6 +1919,7 @@ module LPenafiel_GeneradorMueblesExacto
     end
     datos['modulo_nombre'] = modulo_nombre
     datos['module_uuid'] ||= SecureRandom.uuid
+    datos['module_base_offset'] ||= [caja.min.x.to_mm, caja.min.y.to_mm, caja.min.z.to_mm]
     manifiesto = crear_manifiesto(datos, modulo_nombre, datos['module_uuid'], source)
     model.start_operation('Convertir selección en módulo Modular_3D', true)
     begin
@@ -1960,51 +1990,58 @@ module LPenafiel_GeneradorMueblesExacto
     instancia
   end
 
-  def self.aplicar_material_vidrio(instancia)
-    model = Sketchup.active_model
-    material = model.materials["Modular_3D_Vidrio"] || model.materials.add("Modular_3D_Vidrio")
-    material.color = Sketchup::Color.new(150, 210, 230)
-    material.alpha = 0.35
-    instancia.material = material if instancia.respond_to?(:material=)
-    if instancia.respond_to?(:definition)
-      instancia.definition.entities.grep(Sketchup::Face).each do |face|
-        face.material = material
-        face.back_material = material
-      end
-      instancia.definition.set_attribute("LPenafiel", "material_especial", "VIDRIO")
+  # Puerta interactiva con la mano de Interactuar (Dynamic Components): usa
+  # exactamente el mismo esquema de atributos que crear_puerta_dinamica de
+  # arriba (onclick/rotz sin guion bajo, metadatos _label/_units/_formula con
+  # guion bajo, formula ANIMATE), que ya existía en el codigo pero nunca
+  # estaba conectada a las puertas que arma la jerarquia (siempre pasaban por
+  # crear_pieza, sin ningun atributo de Dynamic Components). Se llama DESPUES
+  # de crear_pieza. Si la bisagra es derecha, el origen local de la pieza
+  # (que crear_pieza siempre deja en el borde izquierdo) se traslada al borde
+  # derecho para que el giro ocurra sobre el lado correcto: se mueve la
+  # geometria interna -ancho en X y se compensa la transformacion de la
+  # instancia sumando +ancho, dejando la posicion final en el mundo
+  # identica a la que ya tenia (comprobado: para una traslacion pura, sumar
+  # o restar el mismo vector en cualquier orden da el mismo resultado, por
+  # eso no importa el orden de composicion de transformaciones aqui).
+  def self.agregar_interactividad_puerta(instancia, lado_bisagra)
+    return unless instancia && instancia.respond_to?(:definition) && instancia.definition
+    definicion = instancia.definition
+    if lado_bisagra == :derecha
+      ancho_real = instancia.bounds.width
+      definicion.entities.transform_entities(Geom::Transformation.translation(Geom::Vector3d.new(-ancho_real, 0, 0)), definicion.entities.to_a)
+      instancia.transformation = instancia.transformation * Geom::Transformation.translation(Geom::Vector3d.new(ancho_real, 0, 0))
     end
-    instancia
+    giro = lado_bisagra == :derecha ? 90 : -90
+    formula_click = "ANIMATE(\"RotZ\",0,#{giro / 2},#{giro},0)"
+    [definicion, instancia].each do |destino|
+      destino.set_attribute("dynamic_attributes", "_name", definicion.name)
+      destino.set_attribute("dynamic_attributes", "onclick", formula_click)
+      destino.set_attribute("dynamic_attributes", "_onclick_formula", formula_click)
+      destino.set_attribute("dynamic_attributes", "rotz", 0)
+      destino.set_attribute("dynamic_attributes", "_rotz_label", "Apertura")
+      destino.set_attribute("dynamic_attributes", "_rotz_units", "DEGREES")
+    end
   end
 
-  def self.agregar_sistema_apertura(entities, modulo_nombre, caja_total, puertas, datos)
-    sistema = (datos['sistema_apertura'] || "AUTOMATICO").to_s.upcase
-    return if sistema == "PUSH" || puertas.empty?
-
-    if sistema == "GOLA"
-      alto = [(datos['alto_perfil_gola'] || 47).to_f, 10].max.mm
-      fondo = [(datos['prof_gola'] || 50).to_f, 10].max.mm
-      offset = @offset_creacion || Geom::Vector3d.new(0, 0, 0)
-      self.crear_pieza(
-        entities, modulo_nombre, "PERFIL_GOLA",
-        caja_total.width, fondo, alto,
-        caja_total.min.x - offset.x,
-        caja_total.min.y - offset.y - fondo,
-        caja_total.max.z - offset.z - alto,
-        0, 0
-      )
-      return
-    end
-
-    alto_jalador = [(datos['alto_jalador'] || 30).to_f, 10].max.mm
-    puertas.each_with_index do |puerta, indice|
-      next unless puerta.respond_to?(:bounds)
-      caja = puerta.bounds
-      ancho_jalador = [caja.width * 0.32, 120.mm].min
-      x = caja.center.x - (ancho_jalador / 2.0)
-      y = caja.min.y - 8.mm
-      z = caja.center.z - (alto_jalador / 2.0)
-      offset = @offset_creacion || Geom::Vector3d.new(0, 0, 0)
-      self.crear_pieza(entities, modulo_nombre, "JALADOR_#{indice + 1}", ancho_jalador, 8.mm, alto_jalador, x - offset.x, y - offset.y, z - offset.z, 0, 0)
+  # Cajon interactivo: desliza el cajon completo (laterales, frente, fondo,
+  # trasero y frente exterior si lo tiene) usando el mismo esquema de
+  # Dynamic Components que las puertas, pero con la posicion Y en vez de la
+  # rotacion Z. instancia debe ser el grupo/componente que contiene TODAS
+  # las piezas del cajon ya anidadas (ver el bucle de cajones mas abajo),
+  # para que un solo atributo de posicion mueva el cajon y su frente juntos.
+  def self.agregar_interactividad_cajon(instancia, fondo_caja)
+    return unless instancia && instancia.respond_to?(:definition) && instancia.definition
+    definicion = instancia.definition
+    salida = -[fondo_caja * 0.7, 500.mm].min.to_mm.round
+    formula_click = "ANIMATE(\"Y\",0,#{(salida / 2.0).round},#{salida},0)"
+    [definicion, instancia].each do |destino|
+      destino.set_attribute("dynamic_attributes", "_name", definicion.name)
+      destino.set_attribute("dynamic_attributes", "onclick", formula_click)
+      destino.set_attribute("dynamic_attributes", "_onclick_formula", formula_click)
+      destino.set_attribute("dynamic_attributes", "y", 0)
+      destino.set_attribute("dynamic_attributes", "_y_label", "Apertura")
+      destino.set_attribute("dynamic_attributes", "_y_units", "LEN")
     end
   end
 
@@ -2256,12 +2293,21 @@ module LPenafiel_GeneradorMueblesExacto
     HTML
   end
 
-  def self.generar_despiece_seleccion
+  # Si no hay nada seleccionado, usa todo el modelo activo en vez de exigir
+  # selección: evita el caso de piezas de diseño libre (o cualquier módulo)
+  # etiquetadas correctamente pero "invisibles" para despiece/presupuesto
+  # solo porque el usuario olvidó seleccionarlas antes de generar.
+  def self.entidades_para_despiece
     model = Sketchup.active_model
     seleccion = model.selection
+    seleccion.empty? ? model.active_entities.to_a : seleccion.to_a
+  end
+
+  def self.generar_despiece_seleccion
+    seleccion = entidades_para_despiece
 
     if seleccion.empty?
-      UI.messagebox("Selecciona primero las piezas o modulos para generar el despiece.")
+      UI.messagebox("No hay nada en el modelo para generar el despiece.")
       return
     end
 
@@ -2269,7 +2315,7 @@ module LPenafiel_GeneradorMueblesExacto
     seleccion.each { |entity| recolectar_piezas_despiece(entity, piezas) }
 
     if piezas.empty?
-      UI.messagebox("No se encontraron piezas con datos de despiece en la seleccion.")
+      UI.messagebox("No se encontraron piezas con datos de despiece. Si es una pieza de diseño libre, etiquetala primero con 'Etiquetar pieza para despiece'.")
       return
     end
 
@@ -2886,9 +2932,8 @@ module LPenafiel_GeneradorMueblesExacto
   end
 
   def self.datos_costo_seleccion
-    model = Sketchup.active_model
     piezas = []
-    model.selection.each { |entity| recolectar_piezas_despiece(entity, piezas) }
+    entidades_para_despiece.each { |entity| recolectar_piezas_despiece(entity, piezas) }
     return nil if piezas.empty?
 
     por_material = Hash.new { |hash, clave| hash[clave] = { :area_m2 => 0.0, :canto_pvc_m => 0.0, :canto_duro_m => 0.0 } }
@@ -2916,7 +2961,7 @@ module LPenafiel_GeneradorMueblesExacto
     return unless acceso_autorizado?
     datos_costo = datos_costo_seleccion
     unless datos_costo
-      UI.messagebox('Selecciona primero uno o varios módulos Modular_3D para presupuestar.')
+      UI.messagebox('No se encontraron piezas con datos de despiece en el modelo para presupuestar.')
       return
     end
 

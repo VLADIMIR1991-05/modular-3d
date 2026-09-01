@@ -412,10 +412,10 @@
         if (enclosure.bottom) addPiece('Base local · '+nodeLabel,b.w,general,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
         if (enclosure.top) addPiece('Techo local · '+nodeLabel,b.w,general,b.d,b.x,b.z+b.h-general,b.y,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
         if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));
-        var shelfCount = isLeaf && content === 'REPISAS' ? Math.max(1, parseInt(node.shelves, 10) || 1) : 0;
+        var shelfCount = isLeaf && content === 'REPISAS' ? Math.min(20, Math.max(1, parseInt(node.shelves, 10) || 1)) : 0;
         for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, b.d, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));
         if (isLeaf && content.indexOf('CAJONES') === 0) {
-          drawerCount = Math.max(1, drawerCount || 3); var drawerHeight = Math.max(20, (b.h - gap * (drawerCount + 1)) / drawerCount);
+          drawerCount = Math.min(12, Math.max(1, drawerCount || 3)); var drawerHeight = Math.max(20, (b.h - gap * (drawerCount + 1)) / drawerCount);
           for (var hd = 0; hd < drawerCount; hd += 1) {
             var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL';
             addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+gap+hd*(drawerHeight+gap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
