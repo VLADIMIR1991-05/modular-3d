@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.1-beta.1
+# Versión: 4.8.2-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1164,10 +1164,22 @@ module LPenafiel_GeneradorMueblesExacto
           end
           if contenido.start_with?('CAJONES')
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
-            fuga_h = [(node['gap'] || 3).to_f, 1.0].max.mm
+            # Espacio entre cajones: propio de los cajones (no el mismo que
+            # la fuga de puertas), 30 mm por defecto entre cajon y cajon, y
+            # entre el primero/ultimo cajon y la base/techo/repisa que los
+            # encierra (misma fuga aplicada antes del primero y despues del
+            # ultimo). Editable por espacio con "Espacio entre cajones".
+            fuga_h = [(node['drawerGap'] || 30).to_f, 1.0].max.mm
             holgura = 13.mm
             ancho_caja = ancho_nodo - (holgura * 2)
-            altura_caja = (alto_nodo - ((cantidad + 1) * fuga_h)) / cantidad
+            # Altura de cajon: automatica (reparte el alto disponible en
+            # partes iguales) salvo que se pida una altura manual y esta
+            # quepa junto con las fugas; si no entra, se ignora en silencio
+            # y se usa la automatica en su lugar (nunca se solapan cajones).
+            altura_manual = (node['drawerHeight'] || 0).to_f.mm
+            altura_auto = (alto_nodo - ((cantidad + 1) * fuga_h)) / cantidad
+            cabe_manual = altura_manual.positive? && ((altura_manual * cantidad) + (fuga_h * (cantidad + 1))) <= alto_nodo
+            altura_caja = cabe_manual ? altura_manual : altura_auto
             fondo_caja = [prof_input_cj, fondo_nodo - 10.mm].min
             if ancho_caja > (espesor * 2) && altura_caja > 25.mm && fondo_caja > (espesor * 2)
               (1..cantidad).each do |ci|
@@ -1212,8 +1224,16 @@ module LPenafiel_GeneradorMueblesExacto
                 end
                 @offset_creacion = offset_guardado
                 @piezas_modulo_actual = piezas_reales
-                grupo_cajon.transformation = Geom::Transformation.new(Geom::Point3d.new(base_x, y_min, base_z) + (@offset_creacion || Geom::Vector3d.new(0, 0, 0)))
+                # OJO: to_component() debe llamarse ANTES de fijar la
+                # transformacion (igual que hace crear_pieza en todos lados),
+                # no despues -- fijarla sobre el Group y recien despues
+                # convertirlo a componente la perdia (el grupo quedaba
+                # colocado cerca del origen del mundo, muy lejos de donde
+                # deberia estar el resto del modulo, viendose como una caja
+                # invisible/aparte unida por una arista larguisima). Se
+                # aplica sobre la instancia YA convertida, tal cual crear_pieza.
                 instancia_cajon = grupo_cajon.to_component rescue grupo_cajon
+                instancia_cajon.transformation = Geom::Transformation.new(Geom::Point3d.new(base_x, y_min, base_z) + (@offset_creacion || Geom::Vector3d.new(0, 0, 0)))
                 @piezas_modulo_actual << instancia_cajon if @piezas_modulo_actual
                 self.agregar_interactividad_cajon(instancia_cajon, fondo_caja)
               end

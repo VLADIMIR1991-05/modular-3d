@@ -418,11 +418,19 @@
         var shelfCount = isLeaf && content === 'REPISAS' ? Math.min(20, Math.max(1, parseInt(node.shelves, 10) || 1)) : 0;
         for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, b.d, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));
         if (isLeaf && content.indexOf('CAJONES') === 0) {
-          drawerCount = Math.min(12, Math.max(1, drawerCount || 3)); var drawerHeight = Math.max(20, (b.h - gap * (drawerCount + 1)) / drawerCount);
+          drawerCount = Math.min(12, Math.max(1, drawerCount || 3));
+          // Espacio entre cajones: propio (drawerGap, 30mm por defecto), no
+          // el mismo "gap" que usan las puertas. Altura manual si se pidio
+          // una y entra junto con las fugas; si no, automatica.
+          var drawerGap = Number(node.drawerGap == null ? 30 : node.drawerGap);
+          var drawerHeightAuto = Math.max(20, (b.h - drawerGap * (drawerCount + 1)) / drawerCount);
+          var drawerHeightManual = Number(node.drawerHeight) || 0;
+          var drawerHeightFits = drawerHeightManual > 0 && (drawerHeightManual * drawerCount + drawerGap * (drawerCount + 1)) <= b.h;
+          var drawerHeight = drawerHeightFits ? drawerHeightManual : drawerHeightAuto;
           for (var hd = 0; hd < drawerCount; hd += 1) {
             var nodeSinPuertaPropia = !node.front || String(node.front).toUpperCase() === 'NINGUNO';
             var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL' && nodeSinPuertaPropia;
-            addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+gap+hd*(drawerHeight+gap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
+            addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+drawerGap+hd*(drawerHeight+drawerGap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
           }
         }
         var front = String(node.front || (content === 'CAJONES_PUERTA' ? 'PUERTA_UNICA' : 'NINGUNO')).replace(/_VIDRIO/g,'').replace(/VIDRIO/g,'UNICA');

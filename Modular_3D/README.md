@@ -1,7 +1,13 @@
-# Modular_3D 4.8.1-beta.1 · Puerta derecha, sobremedida y despiece legible
+# Modular_3D 4.8.2-beta.1 · Corrección de posición de cajones y espacio de 30mm
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.1-beta.1  
+**Versión:** 4.8.2-beta.1  
+
+## Cambios 4.8.2-beta.1
+
+- **Corregido el cajón que aparecía lejos del módulo (con una arista larguísima uniéndolo):** el grupo que contiene todo el cajón fijaba su posición ANTES de convertirse en componente en vez de después; `to_component` no conserva esa transformación puesta sobre el `Group` original, así que el cajón terminaba colocado cerca del origen del mundo en vez de en su lugar real dentro del módulo. Se corrigió el orden (igual que ya hace `crear_pieza` en todos lados: primero convertir a componente, después fijar la posición sobre la instancia resultante).
+- **Espacio entre cajones ahora es de 30 mm por defecto** (antes 3 mm, heredado del campo de fuga de puertas) — aplicado siempre entre cajón y cajón, y entre el primero/último cajón y la base, techo o repisa que los encierra. Es su propio campo ("Espacio entre cajones"), independiente del usado para puertas.
+- **Nueva opción "Altura de cajón (mm)"** para fijar manualmente la altura de cada cajón en vez del reparto automático; si el valor pedido no entra junto con las fugas de 30 mm, se ignora en silencio y se usa la altura automática (nunca se solapan cajones).
 
 ## Cambios 4.8.1-beta.1
 
