@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.7-beta.1
+# Versión: 4.8.8-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -2269,7 +2269,12 @@ module LPenafiel_GeneradorMueblesExacto
     return unless instancia && instancia.respond_to?(:definition) && instancia.definition
     definicion = instancia.definition
     salida = -[fondo_caja * 0.7, 500.mm].min.to_mm.round
-    formula_click = "ANIMATE(\"Y\",0,#{(salida / 2.0).round},#{salida},0)"
+    # Solo dos valores (cerrado/abierto): con un punto intermedio de mas
+    # (0, mitad, salida, 0) cada clic solo avanza UN paso de la lista en vez
+    # de alternar cerrado<->abierto -- por eso el cajon salia un poco con el
+    # primer clic y mas lejos todavia con el segundo, en vez de abrirse del
+    # todo y volver a cerrarse.
+    formula_click = "ANIMATE(\"Y\",0,#{salida})"
     [definicion, instancia].each do |destino|
       destino.set_attribute("dynamic_attributes", "_name", definicion.name)
       destino.set_attribute("dynamic_attributes", "onclick", formula_click)
@@ -2987,10 +2992,18 @@ module LPenafiel_GeneradorMueblesExacto
     })
     dialogo.set_html(html)
     dialogo.add_action_callback("exportarDespieceExcel") do |_action_context, filas|
-      self.exportar_despiece_excel(filas)
+      begin
+        self.exportar_despiece_excel(filas)
+      rescue StandardError => e
+        UI.messagebox("No se pudo exportar a Excel: #{e.class}: #{e.message}")
+      end
     end
     dialogo.add_action_callback("exportarDespiecePdf") do |_action_context, filas|
-      self.exportar_despiece_pdf(filas)
+      begin
+        self.exportar_despiece_pdf(filas)
+      rescue StandardError => e
+        UI.messagebox("No se pudo exportar a PDF: #{e.class}: #{e.message}")
+      end
     end
     dialogo.show
   end
@@ -3395,7 +3408,23 @@ module LPenafiel_GeneradorMueblesExacto
       texto('total_margen', margen);
       texto('total_general', baseMargen + margen);
     }
+    function congelarValoresParaExportar() {
+      // outerHTML serializa el atributo value="" original de cada <input>,
+      // no lo que el usuario escribió (eso vive solo en la propiedad .value
+      // en memoria): por eso el PDF salía siempre con todo en 0.00 aunque en
+      // pantalla ya calculaba bien. Se copia .value/checked a los atributos
+      // justo antes de capturar el HTML para que el PDF conserve lo tecleado.
+      document.querySelectorAll('input').forEach(function (el) {
+        if (el.type === 'checkbox') {
+          if (el.checked) el.setAttribute('checked', 'checked'); else el.removeAttribute('checked');
+        } else {
+          el.setAttribute('value', el.value);
+        }
+      });
+    }
     function exportarPdf() {
+      recalcular();
+      congelarValoresParaExportar();
       document.querySelectorAll('.acciones').forEach(function (el) { el.style.display = 'none'; });
       sketchup.exportarPresupuestoPdf(document.documentElement.outerHTML);
       document.querySelectorAll('.acciones').forEach(function (el) { el.style.display = 'flex'; });
@@ -3419,7 +3448,11 @@ module LPenafiel_GeneradorMueblesExacto
     })
     dialogo.set_html(html)
     dialogo.add_action_callback('exportarPresupuestoPdf') do |_action_context, html_actual|
-      self.imprimir_html_como_pdf(html_actual, 'presupuesto.pdf', 'Presupuesto')
+      begin
+        self.imprimir_html_como_pdf(html_actual, 'presupuesto.pdf', 'Presupuesto')
+      rescue StandardError => e
+        UI.messagebox("No se pudo exportar a PDF: #{e.class}: #{e.message}")
+      end
     end
     dialogo.show
   end

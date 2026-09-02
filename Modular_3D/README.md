@@ -1,7 +1,14 @@
-# Modular_3D 4.8.7-beta.1 · Frentes de cajón alineados al plano de la puerta
+# Modular_3D 4.8.8-beta.1 · Cajón: apertura corregida; Presupuesto: PDF con valores reales
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.7-beta.1  
+**Versión:** 4.8.8-beta.1  
+
+## Cambios 4.8.8-beta.1
+
+- **Corregida la apertura del cajón con Interactuar** (salía un poco y, al volver a hacer clic, se alejaba más en vez de cerrarse): la fórmula `ANIMATE` tenía un punto intermedio de más (cerrado, mitad, abierto, cerrado); con 4 valores cada clic solo avanza un paso de la lista en vez de alternar cerrado/abierto. Ahora son solo 2 valores (cerrado/abierto), alternando correctamente en cada clic.
+- **Corregido el PDF de Presupuesto que salía con todos los valores en 0.00** aunque en pantalla calculaba bien: el export capturaba `outerHTML`, que serializa el `value=""` original de cada campo, no lo que el usuario tecleó (eso vive solo en memoria). Ahora, antes de exportar, se copian los valores tecleados a los atributos del HTML para que el PDF los conserve.
+- **Mensajes de error visibles si falla una exportación** (Excel/PDF del despiece, PDF del presupuesto) en vez de que el botón simplemente no haga nada — ayuda a diagnosticar cualquier caso puntual que quede.
+- Puesto bajo revisión (sin cambio de código todavía, pendiente de más datos): panel largo y desalineado al construir un módulo con varios niveles de jerarquía tras usar "Girar 90°", y conteo de bisagras que no sube de 2 a 3 en una puerta reportada de más de 1000mm en el despiece de un módulo editado — no reproducido en la revisión de código, se necesita más detalle para aislarlo.
 
 ## Cambios 4.8.7-beta.1
 
