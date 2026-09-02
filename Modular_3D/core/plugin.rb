@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.5-beta.1
+# Versión: 4.8.6-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1247,11 +1247,6 @@ module LPenafiel_GeneradorMueblesExacto
             cabe_manual = altura_manual.positive? && ((altura_manual * cantidad) + (fuga_h * (cantidad + 1))) <= alto_nodo
             altura_caja = cabe_manual ? altura_manual : altura_auto
             fondo_caja = [prof_input_cj, fondo_nodo - 10.mm].min
-            # Alto total de la pila de cajones (todas las cajas mas las fugas
-            # mecanicas entre ellas, sin contar la fuga externa antes de la
-            # primera ni despues de la ultima): lo que debe cubrir el frente
-            # unico para tapar tambien los huecos mecanicos entre cajas.
-            total_altura_pila = (altura_caja * cantidad) + (fuga_h * (cantidad - 1))
             if ancho_caja > (espesor * 2) && altura_caja > 25.mm && fondo_caja > (espesor * 2)
               (1..cantidad).each do |ci|
                 base_x = x_min + holgura
@@ -1290,17 +1285,35 @@ module LPenafiel_GeneradorMueblesExacto
                 # frente interno (el que ya arma crear_pieza mas arriba),
                 # que nunca sobresale.
                 # UNICO_INFERIOR: el frente solo se construye en el cajon mas
-                # bajo (ci==1) y cubre TODA la pila (total_altura_pila); los
-                # demas cajones de la columna quedan sin frente propio, ocultos
-                # detras de ese frente unico mientras estan cerrados.
+                # bajo (ci==1) y cubre TODO el espacio; los demas cajones de la
+                # columna quedan sin frente propio, ocultos detras de ese
+                # frente unico mientras estan cerrados.
                 construir_frente_este_cajon = frente_cajon_activo && (estilo_frente != 'UNICO_INFERIOR' || ci == 1)
                 if construir_frente_este_cajon
-                  alto_frente_bruto = estilo_frente == 'UNICO_INFERIOR' ? total_altura_pila : altura_caja
+                  # La zona que le toca cubrir a ESTE frente va hasta la MITAD
+                  # de la fuga mecanica (fuga_h, hoy 30mm por defecto) con el
+                  # cajon vecino -- no hasta el borde de su propia caja -- para
+                  # que el frente se trague ese hueco mecanico por completo y
+                  # solo deje una junta fina y fija de 3mm (1.5+1.5) contra el
+                  # frente vecino, sin importar cuanta fuga mecanica se pida
+                  # entre cajones. Contra el borde real del espacio (arriba del
+                  # todo o abajo del todo) deja el mismo 1.5mm, igual que
+                  # contra una puerta vecina en otro nodo. UNICO_INFERIOR
+                  # siempre usa el espacio completo, ignorando las cajas
+                  # intermedias que tapa.
+                  if estilo_frente == 'UNICO_INFERIOR'
+                    zona_inferior = z_min
+                    zona_superior = z_min + alto_nodo
+                  else
+                    zona_inferior = ci == 1 ? z_min : (base_z - (fuga_h / 2.0))
+                    zona_superior = ci == cantidad ? (z_min + alto_nodo) : (base_z + altura_caja + (fuga_h / 2.0))
+                  end
                   ancho_frente_ext = ancho_nodo - (fuga_frente_ext * 2)
-                  alto_frente_ext = alto_frente_bruto - (fuga_frente_ext * 2)
+                  alto_frente_ext = (zona_superior - zona_inferior) - (fuga_frente_ext * 2)
+                  z_frente_local = (zona_inferior - base_z) + fuga_frente_ext
                   if ancho_frente_ext > 0.mm && alto_frente_ext > 0.mm
                     self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_frente_ext, espesor, alto_frente_ext,
-                      (x_min + fuga_frente_ext) - base_x, -espesor - y_min, fuga_frente_ext, 2, 2)
+                      (x_min + fuga_frente_ext) - base_x, -espesor - y_min, z_frente_local, 2, 2)
                   end
                 end
                 @offset_creacion = offset_guardado

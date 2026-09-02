@@ -1,7 +1,11 @@
-# Modular_3D 4.8.5-beta.1 · Puerta vs. frente de cajón como elección explícita
+# Modular_3D 4.8.6-beta.1 · Frentes de cajón: 3mm fijos entre sí, sin importar la fuga mecánica
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.5-beta.1  
+**Versión:** 4.8.6-beta.1  
+
+## Cambios 4.8.6-beta.1
+
+- **Corregidos los huecos enormes entre frentes de cajón:** cada frente se dimensionaba y posicionaba pegado a su propia caja de cajón, cuya fuga mecánica con la caja vecina es de 30mm por defecto (`drawerGap`) — como el frente solo restaba 1.5mm por lado a partir de ahí, el hueco visible entre dos frentes vecinos terminaba siendo de 30+1.5+1.5 = 33mm en vez de 3mm. Ahora cada frente se calcula por su propia zona, que llega hasta la MITAD de la fuga mecánica con el cajón vecino (no hasta el borde de su propia caja): así el frente se "traga" el hueco mecánico completo por fuera y solo queda una junta fina y fija de 3mm (1.5mm de cada frente) entre frentes vecinos, sin importar cuánta fuga mecánica se pida entre cajones. Contra el borde real del espacio (arriba del todo o abajo del todo, por ejemplo contra una puerta o el casco) deja 1.5mm, igual que un frente vecino en otro espacio — dando 3mm también ahí. Aplica igual a "Uno por cajón" y a "Único · acoplado al cajón de abajo" (que ahora cubre el espacio completo con 1.5mm arriba y abajo, en vez de solo la altura sumada de las cajas). Reflejado también en la vista previa 3D.
 
 ## Cambios 4.8.5-beta.1
 
