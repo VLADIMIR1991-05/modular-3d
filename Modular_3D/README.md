@@ -1,7 +1,15 @@
-# Modular_3D 4.8.8-beta.1 · Cajón: apertura corregida; Presupuesto: PDF con valores reales
+# Modular_3D 4.8.9-beta.1 · Excel del despiece, apertura de puertas y miniatura completa
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.8-beta.1  
+**Versión:** 4.8.9-beta.1  
+
+## Cambios 4.8.9-beta.1
+
+- **Corregido el error al descargar Excel del despiece** (`Encoding::CompatibilityError: incompatible character encodings: ASCII-8BIT and UTF-8`, reproducido y verificado con un script aparte): el CSV se escribía concatenando bytes marcados como ASCII-8BIT (el BOM) con texto UTF-8, lo que revienta en cuanto el contenido trae un carácter no-ASCII — la columna "Bisagrado" agrega justamente eso ("Ø35mm"). Se soluciona forzando ambos fragmentos a ASCII-8BIT antes de unirlos (concatenación de bytes crudos, sin chequeo de compatibilidad).
+- **Corregida la apertura de las puertas** (mismo problema que ya se había corregido en los cajones, pero se había pasado por alto en las puertas): la fórmula `ANIMATE("RotZ",0,giro/2,giro,0)` tenía un punto intermedio de más — con 4 valores, cada clic de Interactuar solo avanza un paso de la lista en vez de alternar cerrado/abierto. Reducida a 2 valores en las puertas (jerarquía y el generador de puertas antiguo) y en los cajones.
+- **La miniatura del módulo en el despiece ahora siempre encuadra el módulo completo**, en vez de la miniatura salir recortada si el usuario había dejado la cámara del visor 3D con zoom sobre un detalle antes de construir: la captura ahora siempre usa el mismo encuadre isométrico que ajusta todo el módulo, independiente de dónde haya quedado la cámara del usuario (que no se toca).
+- **Presupuesto: nuevo campo editable para el nombre del proyecto o cliente** (ej. "Presupuesto Familia Pérez"), que se conserva en el PDF exportado.
+- Reportado y aún en investigación, sin cambio de código todavía: el conteo de bisagras no sube de 2 a 3 para una puerta de 1177mm de altura real en un despiece concreto — la fórmula fue verificada de nuevo y da 3 para ese valor, así que el número que llega a esa función parece no ser el real; y el panel/puerta desplazados al construir un módulo con varios niveles de jerarquía. Se necesita más información puntual del caso (detallada al usuario) para aislar la causa exacta.
 
 ## Cambios 4.8.8-beta.1
 

@@ -957,9 +957,14 @@
       scene.background=new THREE.Color(0xffffff);if(grid)grid.visible=false;if(floor)floor.visible=false;if(sky)sky.visible=false;dimensionsVisible=false;
       if(selectionBox)selectionBox.visible=false;if(spaceSelection)spaceSelection.visible=false;spaceMeshes.forEach(function(hit){hit.visible=false;});
       exploded=0;transparent=false;applyVisualState();
-      var direction=oldPosition.clone().sub(oldTarget),distance=direction.length();
-      if(distance>0)camera.position.copy(oldTarget).add(direction.normalize().multiplyScalar(distance*.78));
-      camera.lookAt(oldTarget);controls.update();renderer.render(scene,camera);
+      // Encuadra el modulo COMPLETO (misma formula que la vista isometrica),
+      // no la camara donde haya quedado el usuario -- si estaba con zoom
+      // sobre un detalle, la miniatura del despiece salia recortada en vez
+      // de mostrar el modulo entero.
+      var center=originalCenter.clone(),max=modelMaxSize(),direction=new THREE.Vector3(1,0.72,1);
+      camera.position.copy(center).add(direction.normalize().multiplyScalar(max*3.25));
+      controls.target.copy(center);
+      camera.lookAt(center);controls.update();renderer.render(scene,camera);
       var result=renderer.domElement.toDataURL('image/png');
       scene.background=background;if(grid)grid.visible=gridVisible;if(floor)floor.visible=floorVisible;if(sky)sky.visible=skyVisible;dimensionsVisible=dimensionsWereVisible;
       if(selectionBox)selectionBox.visible=selectionVisible;if(spaceSelection)spaceSelection.visible=spaceVisible;spaceMeshes.forEach(function(hit,index){hit.visible=hitVisibility[index];});

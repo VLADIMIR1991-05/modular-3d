@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.8-beta.1
+# Versión: 4.8.9-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -2191,7 +2191,7 @@ module LPenafiel_GeneradorMueblesExacto
     dimensiones = dimensiones_tablero(ancho, espesor, alto)
     nombre_definicion = nombre_pieza("PT", dimensiones, 2, 2)
     giro = lado_bisagra == :derecha ? 90 : -90
-    formula_click = "ANIMATE(\"RotZ\",0,#{giro / 2},#{giro},0)"
+    formula_click = "ANIMATE(\"RotZ\",0,#{giro})"
 
     instancia.name = nombre_definicion
     definicion.name = nombre_definicion
@@ -2248,7 +2248,10 @@ module LPenafiel_GeneradorMueblesExacto
     # solo se agregan los atributos de Dynamic Components, sin tocar
     # geometria ni transformaciones.
     giro = lado_bisagra == :derecha ? 90 : -90
-    formula_click = "ANIMATE(\"RotZ\",0,#{giro / 2},#{giro},0)"
+    # Solo dos valores (cerrado/abierto): con un punto intermedio de mas
+    # (0, mitad, giro, 0) cada clic solo avanza UN paso de la lista en vez de
+    # alternar cerrado<->abierto (mismo problema ya corregido en el cajon).
+    formula_click = "ANIMATE(\"RotZ\",0,#{giro})"
     [definicion, instancia].each do |destino|
       destino.set_attribute("dynamic_attributes", "_name", definicion.name)
       destino.set_attribute("dynamic_attributes", "onclick", formula_click)
@@ -2445,7 +2448,12 @@ module LPenafiel_GeneradorMueblesExacto
         csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete bisagrado].map { |clave| fila[clave] }
       end
     end
-    File.binwrite(path, "\xEF\xBB\xBF".b + contenido.encode('UTF-8'))
+    # "\xEF\xBB\xBF".b es ASCII-8BIT y contenido.encode('UTF-8') es UTF-8:
+    # concatenarlos directo revienta con Encoding::CompatibilityError en
+    # cuanto el contenido trae un caracter no-ASCII (p. ej. "Ø" de "Ø35mm"
+    # en la columna Bisagrado). Forzando ambos a ASCII-8BIT antes de sumar,
+    # es una concatenacion de bytes crudos sin chequeo de compatibilidad.
+    File.binwrite(path, "\xEF\xBB\xBF".b + contenido.encode('UTF-8').b)
     UI.messagebox("Despiece exportado como CSV compatible con Excel.")
   end
 
@@ -3303,10 +3311,14 @@ module LPenafiel_GeneradorMueblesExacto
   .campos-tablero { margin-top: 4px; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #475569; flex-wrap: wrap; }
   .campos-tablero input { width: 58px; }
   input:disabled { background: #f1f5f9; color: #64748b; }
+  .titulo-editable { font-size: 15px; font-weight: 600; border: none; background: transparent; padding: 4px 0; margin: 0 0 6px 0; width: 100%; color: #1f2937; }
+  .titulo-editable:focus { outline: 1px dashed #94a3b8; }
+  .titulo-editable::placeholder { color: #94a3b8; font-weight: 400; }
 </style>
 </head>
 <body>
   <h2>Presupuesto</h2>
+  <input class="titulo-editable" id="presupuesto_titulo" type="text" placeholder="Nombre del proyecto o cliente (opcional, ej. Presupuesto Familia Pérez)">
   <p>#{datos_costo[:total_piezas]} piezas · #{datos_costo[:puertas]} puerta(s) · #{datos_costo[:bisagras_total]} bisagra(s) estimadas · #{datos_costo[:cajones]} cajón(es) estimados</p>
   <div class="acciones">
     <button onclick="recalcular()">Recalcular</button>
