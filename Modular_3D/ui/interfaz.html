@@ -89,7 +89,7 @@
     .property-panel button, .inline-button { padding: 8px 7px; font-size: 11px; }
     .property-panel .danger-action { color: var(--danger); border: 1px solid #f0b6b0; background: #fff; }
     .property-panel .danger-action:hover { color: #fff; background: var(--danger); }
-    .update-badge { position: absolute; z-index: 2; right: 8px; top: 8px; display: none; width: auto; padding: 7px 10px; border-radius: 5px; background: #1769e0; box-shadow: 0 2px 10px rgba(23,105,224,.24); font-size: 11px; }
+    .update-badge { position: absolute; z-index: 6; right: 8px; bottom: 8px; display: none; width: auto; padding: 7px 10px; border-radius: 5px; background: #1769e0; box-shadow: 0 2px 10px rgba(23,105,224,.24); font-size: 11px; }
     .update-badge.show { display: inline-flex; }
     .actions-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .step-footer { position: relative; bottom:auto; z-index:4; display: grid; grid-template-columns: 120px minmax(0, 1fr) 120px; gap: 8px; align-items: center; margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background:#fff; box-shadow:0 2px 10px rgba(23,35,45,.06); }
@@ -225,7 +225,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.0-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.1-beta.1</div>
   </header>
 
   <main>
@@ -607,10 +607,10 @@
         return '<div class="panel-card" data-editor-card="' + panel[0] + '" data-editor-category="' + category + '"><h3>' + panel[1] + '</h3>' +
           '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + ((panel[0] === 'izq' || panel[0] === 'der') ? ' selected' : '') + '>Sobrepuesto exterior</option></select></div>' +
           '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
-          '<div class="row"><label>Hueco delantero (mm)</label><input type="number" id="retranqueo_frontal_' + panel[0] + '" value="0" step=".5"></div>' +
-          '<div class="row"><label>Hueco trasero (mm)</label><input type="number" id="retranqueo_trasero_' + panel[0] + '" value="0" step=".5"></div>' +
-          '<small>Positivo = retranquea hacia adentro (mayor separación, menor fondo de este panel). Negativo = sobresale hacia afuera. Fondo resultante = fondo total − hueco delantero − hueco trasero.</small>' +
-          '<small class="retranqueo-result" id="retranqueo_resultado_' + panel[0] + '"></small></div>';
+          '<div class="row"><label>Sobremedida delantera (mm)</label><input type="number" id="sobremedida_frontal_' + panel[0] + '" value="0" step=".5"></div>' +
+          '<div class="row"><label>Sobremedida trasera (mm)</label><input type="number" id="sobremedida_trasera_' + panel[0] + '" value="0" step=".5"></div>' +
+          '<small>Positivo = agranda este panel hacia ese lado (sobresale). Negativo = lo achica (se retranquea hacia adentro). Fondo resultante = fondo total + sobremedida delantera + sobremedida trasera.</small>' +
+          '<small class="retranqueo-result" id="sobremedida_resultado_' + panel[0] + '"></small></div>';
       }).join('');
     }
     function aplicarPreset() {
@@ -755,7 +755,7 @@
     }
     function categoriaPorCampo(id) {
       if (fieldCategories[id]) return fieldCategories[id];
-      if (id.indexOf('grosor_') === 0 || id.indexOf('montaje_') === 0 || id.indexOf('retranqueo_') === 0) return 'lateral';
+      if (id.indexOf('grosor_') === 0 || id.indexOf('montaje_') === 0 || id.indexOf('sobremedida_') === 0) return 'lateral';
       return '';
     }
     window.addEventListener('modular3d:pieceSelected', function(event) {
@@ -884,13 +884,13 @@
       if (metrics.height <= 30) errores.push('Las repisas dejan niveles sin altura util.');
       if (metrics.width > 30 && metrics.width < 180) avisos.push('Columnas menores de 180 mm limitan correderas y bisagras.');
       if (metrics.height > 30 && metrics.height < 120) avisos.push('Niveles menores de 120 mm limitan cajones y accesorios.');
-      var minimoRetranqueo = -Math.min(d.prof_total * 0.4, 200);
+      var maximaSobremedida = Math.min(d.prof_total * 0.4, 200);
       paneles.forEach(function(p) {
-        var frontal = d['retranqueo_frontal_' + p[0]] || 0, trasero = d['retranqueo_trasero_' + p[0]] || 0;
-        var profundidad = d.prof_total - frontal - trasero;
+        var frontal = d['sobremedida_frontal_' + p[0]] || 0, trasero = d['sobremedida_trasera_' + p[0]] || 0;
+        var profundidad = d.prof_total + frontal + trasero;
         if (profundidad <= 30) errores.push(p[1] + ' queda sin profundidad util.');
-        if (frontal < minimoRetranqueo) errores.push(p[1] + ': el hueco delantero no puede sobresalir mas de ' + Math.round(-minimoRetranqueo) + ' mm.');
-        if (trasero < minimoRetranqueo) errores.push(p[1] + ': el hueco trasero no puede sobresalir mas de ' + Math.round(-minimoRetranqueo) + ' mm.');
+        if (frontal > maximaSobremedida) errores.push(p[1] + ': la sobremedida delantera no puede sobresalir mas de ' + Math.round(maximaSobremedida) + ' mm.');
+        if (trasero > maximaSobremedida) errores.push(p[1] + ': la sobremedida trasera no puede sobresalir mas de ' + Math.round(maximaSobremedida) + ' mm.');
       });
       var spaces = Object.keys(spaceState).map(function(key) { return spaceState[key]; });
       var seen = {};
@@ -919,14 +919,14 @@
       return { errores: errores, avisos: avisos };
     }
     function actualizarResultadoRetranqueos(d) {
-      var minimoRetranqueo = -Math.min(d.prof_total * 0.4, 200);
+      var maximaSobremedida = Math.min(d.prof_total * 0.4, 200);
       paneles.forEach(function(p) {
-        var host = el('retranqueo_resultado_' + p[0]);
+        var host = el('sobremedida_resultado_' + p[0]);
         if (!host) return;
-        var frontal = d['retranqueo_frontal_' + p[0]] || 0, trasero = d['retranqueo_trasero_' + p[0]] || 0;
-        var profundidad = d.prof_total - frontal - trasero;
+        var frontal = d['sobremedida_frontal_' + p[0]] || 0, trasero = d['sobremedida_trasera_' + p[0]] || 0;
+        var profundidad = d.prof_total + frontal + trasero;
         var estado = 'ok';
-        if (profundidad <= 30 || frontal < minimoRetranqueo || trasero < minimoRetranqueo) estado = 'error';
+        if (profundidad <= 30 || frontal > maximaSobremedida || trasero > maximaSobremedida) estado = 'error';
         else if (profundidad < 80) estado = 'warn';
         host.textContent = 'Fondo resultante de este panel: ' + Math.round(profundidad) + ' mm';
         host.className = 'retranqueo-result' + (estado === 'ok' ? '' : ' ' + estado);

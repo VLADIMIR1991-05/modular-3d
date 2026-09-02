@@ -1,7 +1,17 @@
-# Modular_3D 4.8.0-beta.1 · Puertas y cajones interactivos, limpieza a fondo
+# Modular_3D 4.8.1-beta.1 · Puerta derecha, sobremedida y despiece legible
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.0-beta.1  
+**Versión:** 4.8.1-beta.1  
+
+## Cambios 4.8.1-beta.1
+
+- **Corregida la puerta con bisagra derecha (Dynamic Components):** el mecanismo de la versión anterior movía la geometría ya construida y la compensaba con una transformación — frágil, y era la causa real de la puerta rota / "algo más grande invisible" al crecer el módulo a dos puertas. Se reemplazó por construcción directa espejada (mismo patrón ya probado que usaba el generador de puertas antiguo, con `face.reverse!` si la normal queda mirando hacia abajo), verificada con un guion numérico (Newell + comparación de rango en el mundo) antes de integrarla. Sin mover geometría después de creada.
+- **"Hueco delantero/trasero" ahora es "Sobremedida delantera/trasera"**, con el signo que se pidió: positivo agranda esa pieza hacia ese lado (sobresale), negativo la achica (se retranquea) — resta/suma directa sobre el fondo de la pieza, igual criterio que la sobremedida por pieza individual.
+- **Cajón: frente interno vs. frente exterior.** Si un espacio con cajones "con frentes" tiene además su propia puerta, el frente exterior del cajón ya no se construye (competía por el mismo plano) — el cajón se queda con su frente interno, que nunca sobresale.
+- **Botón "Actualizar módulo" ya no queda tapado por el cubo de navegación** (ambos vivían en la misma esquina del visor con el cubo por delante); se movió a la esquina opuesta.
+- **Despiece: nombres legibles, "Canto duro" en vez de "HARD", color por nombre en vez de hex.** Los códigos internos de pieza (LAT, BAS, PT, REP...) no reconocían los nombres nuevos generados desde la jerarquía (`H_PUERTA_...`, `H_CJ_...`) y se mostraban tal cual, ilegibles — además esto hacía que el presupuesto subcontara puertas y cajones de módulos hechos con la jerarquía. Corregido en la raíz (`codigo_pieza` ahora reconoce los prefijos `H_`/`G_`), con una etiqueta legible en español para mostrar en la tabla.
+- **Corregido el "S/P" (sin puerta) en despiece** cuando el módulo sí tenía puertas: el conteo seguía leyendo un campo legado que quedó fijo en "NO" desde la limpieza anterior; ahora cuenta las puertas reales de la jerarquía.
+- **Diseño libre: miniatura 3D real por pieza en el despiece**, en vez de únicamente el ícono genérico de mueble — nueva columna "Vista" en la tabla, generada con el renderizador de miniaturas nativo de SketchUp para cada pieza etiquetada manualmente.
 
 ## Cambios 4.8.0-beta.1
 

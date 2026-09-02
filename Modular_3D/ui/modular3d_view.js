@@ -311,10 +311,13 @@
     var hasRight = String(data.lleva_lateral_der || 'SI') !== 'NO';
     var hasBottom = String(data.lleva_base || 'SI') !== 'NO';
     var hasTop = String(data.lleva_techo || 'SI') !== 'NO';
-    var setbackFrontTop = number(data, 'retranqueo_frontal_superior', 0), setbackBackTop = number(data, 'retranqueo_trasero_superior', 0);
-    var setbackFrontBottom = number(data, 'retranqueo_frontal_inferior', 0), setbackBackBottom = number(data, 'retranqueo_trasero_inferior', 0);
-    var setbackFrontLeft = number(data, 'retranqueo_frontal_izq', 0), setbackBackLeft = number(data, 'retranqueo_trasero_izq', 0);
-    var setbackFrontRight = number(data, 'retranqueo_frontal_der', 0), setbackBackRight = number(data, 'retranqueo_trasero_der', 0);
+    // Sobremedida: positivo = panel mas grande hacia ese lado (sobresale),
+    // negativo = mas chico (se retranquea). Se niega para reusar el mismo
+    // calculo de fondo/posicion de mas abajo (setback = -sobremedida).
+    var setbackFrontTop = -number(data, 'sobremedida_frontal_superior', 0), setbackBackTop = -number(data, 'sobremedida_trasera_superior', 0);
+    var setbackFrontBottom = -number(data, 'sobremedida_frontal_inferior', 0), setbackBackBottom = -number(data, 'sobremedida_trasera_inferior', 0);
+    var setbackFrontLeft = -number(data, 'sobremedida_frontal_izq', 0), setbackBackLeft = -number(data, 'sobremedida_trasera_izq', 0);
+    var setbackFrontRight = -number(data, 'sobremedida_frontal_der', 0), setbackBackRight = -number(data, 'sobremedida_trasera_der', 0);
 
     var depthLeft = Math.max(1, depth - setbackFrontLeft - setbackBackLeft);
     var depthRight = Math.max(1, depth - setbackFrontRight - setbackBackRight);
@@ -417,7 +420,8 @@
         if (isLeaf && content.indexOf('CAJONES') === 0) {
           drawerCount = Math.min(12, Math.max(1, drawerCount || 3)); var drawerHeight = Math.max(20, (b.h - gap * (drawerCount + 1)) / drawerCount);
           for (var hd = 0; hd < drawerCount; hd += 1) {
-            var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL';
+            var nodeSinPuertaPropia = !node.front || String(node.front).toUpperCase() === 'NINGUNO';
+            var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL' && nodeSinPuertaPropia;
             addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+gap+hd*(drawerHeight+gap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
           }
         }

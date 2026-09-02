@@ -171,22 +171,22 @@ module Modular3D
         end
       end
 
-      # Un hueco negativo hace que el panel sobresalga hacia afuera en vez de
-      # retranquearse (util para zocalos o repisas voladas); se limita a un
-      # maximo razonable para evitar que sobresalga mas que la mitad del
-      # fondo del modulo. La suma frontal+trasero de cada panel se valida en
-      # conjunto para que no se quede sin fondo aunque cada campo por
-      # separado luzca razonable.
-      minimo_retranqueo = -[profundidad * 0.4, 200.0].min
+      # Sobremedida delantera/trasera: delta directo sobre el fondo de ese
+      # panel (positivo = mas grande hacia ese lado -sobresale-, negativo =
+      # mas chico -se retranquea-). Un positivo muy grande se limita a un
+      # maximo razonable; la suma frontal+trasera de cada panel se valida en
+      # conjunto para que un par de negativos no deje el panel sin fondo
+      # aunque cada campo por separado luzca razonable.
+      maximo_sobremedida = [profundidad * 0.4, 200.0].min
       %w[superior inferior izq der].each do |panel|
-        frontal_clave = "retranqueo_frontal_#{panel}"
-        trasero_clave = "retranqueo_trasero_#{panel}"
+        frontal_clave = "sobremedida_frontal_#{panel}"
+        trasero_clave = "sobremedida_trasera_#{panel}"
         frontal = numero(datos, frontal_clave)
         trasero = numero(datos, trasero_clave)
         [[frontal_clave, frontal], [trasero_clave, trasero]].each do |clave, valor|
-          errores << "#{clave.tr('_', ' ')} no puede sobresalir mas de #{minimo_retranqueo.abs.round} mm." if valor < minimo_retranqueo
+          errores << "#{clave.tr('_', ' ')} no puede sobresalir mas de #{maximo_sobremedida.round} mm." if valor > maximo_sobremedida
         end
-        errores << "El hueco frontal + trasero del panel #{panel} deja el panel sin profundidad." if (frontal + trasero) >= (profundidad - 30)
+        errores << "La sobremedida del panel #{panel} lo deja sin profundidad util." if (frontal + trasero) <= (30 - profundidad)
       end
 
       cajones_totales = if spaces.empty?

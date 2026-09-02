@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.0-beta.1
+# Versión: 4.8.1-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -153,16 +153,44 @@ module LPenafiel_GeneradorMueblesExacto
     "CJ_LAT_IZQ" => "COS",
     "CJ_LAT_DER" => "COS",
     "CJ_FRENTE_EXTERIOR" => "FC",
+    "CJ_FRENTE_EXT" => "FC",
     "CJ_FRENTE" => "FCC",
     "CJ_POSTERIOR" => "POS",
+    "CJ_POST" => "POS",
     "CJ_FONDO" => "FON",
-    "PUERTA" => "PT"
+    "PUERTA" => "PT",
+    # Piezas generadas desde la jerarquía (prefijo H_/G_ ya retirado en
+    # codigo_pieza antes de llegar aquí): mismos códigos que sus
+    # equivalentes del sistema legado, para que despiece/presupuesto las
+    # cuenten y agrupen igual sin importar de qué sistema vinieron.
+    "CIERRE_IZQ" => "LAT",
+    "CIERRE_DER" => "LAT",
+    "RESP" => "RES",
+    "REP_LOCAL" => "REP",
+    "REP_Z" => "REP",
+    "DIV_X" => "DIV",
+    "DIV_Y" => "DIV"
   }
 
+  ETIQUETAS_CODIGO_PIEZA = {
+    "LAT" => "Lateral", "BAS" => "Base", "TEC" => "Techo", "AJ" => "Ajuste posterior",
+    "RES" => "Respaldo", "DIV" => "División", "REP" => "Repisa", "PT" => "Puerta",
+    "COS" => "Cajón · costado", "FC" => "Cajón · frente exterior", "FCC" => "Cajón · frente interno",
+    "POS" => "Cajón · trasero", "FON" => "Cajón · fondo"
+  }.freeze
+
   def self.codigo_pieza(nombre)
-    nombre_base = nombre.to_s.upcase.sub(/^CJ_\d+_/, "CJ_")
+    nombre_base = nombre.to_s.upcase.sub(/\A[HG]_/, "")
+    nombre_base = nombre_base.sub(/\ACJ_.*?_(LAT_IZQ|LAT_DER|FRENTE_EXTERIOR|FRENTE_EXT|FRENTE|POSTERIOR|POST|FONDO)\z/) { "CJ_#{Regexp.last_match(1)}" }
     codigo = CODIGOS_PIEZAS.find { |clave, _valor| nombre_base.start_with?(clave) }
     codigo ? codigo[1] : nombre_base
+  end
+
+  # Etiqueta legible en español para la columna "Nombre" del despiece; el
+  # codigo interno (LAT, BAS, PT...) sigue siendo el que se usa para agrupar
+  # piezas iguales y para nombrar la definicion de SketchUp.
+  def self.etiqueta_despiece_pieza(codigo)
+    ETIQUETAS_CODIGO_PIEZA[codigo.to_s] || codigo.to_s.split('_').map(&:capitalize).join(' ')
   end
 
   # ID estable para nombrar piezas generadas desde la jerarquía: usa el id del
@@ -436,6 +464,7 @@ module LPenafiel_GeneradorMueblesExacto
       canto_tipo, canto_color = configuracion_canto_pieza(nombre, grupo, color)
       instancia.definition.set_attribute('LPenafiel', 'tipo_canto', canto_tipo)
       instancia.definition.set_attribute('LPenafiel', 'color_canto', canto_color)
+      instancia.definition.set_attribute('LPenafiel', 'color_canto_nombre', canto_color == color ? material_nombre : canto_color)
     end
     instancia
   end
@@ -596,14 +625,33 @@ module LPenafiel_GeneradorMueblesExacto
     %w[delta_ancho delta_prof delta_alto].map { |clave| individual[clave].to_f.mm }
   end
 
-  def self.crear_pieza(entities, modulo_nombre, nombre, ancho, prof, alto, x, y, z, cantos_l, cantos_c)
+  # espejado_x: para puertas con bisagra derecha, el origen local (0,0,0)
+  # debe coincidir con el borde DERECHO de la pieza (no el izquierdo, que es
+  # donde lo deja el footprint normal) para que el pivote de giro de Dynamic
+  # Components caiga sobre la bisagra real. En vez de construir la pieza
+  # normal y mover la geometria despues (metodo fragil, causaba una puerta
+  # rota/con algo "invisible" mas grande al abrir), se construye el
+  # footprint espejado desde el inicio -x en vez de +x- con el mismo patron
+  # que ya usaba crear_puerta_dinamica (probado): la normal puede quedar
+  # mirando hacia abajo y se corrige con face.reverse!, exactamente igual
+  # que esa funcion. Verificado con guion numerico (Newell + comparacion de
+  # rango mundial) que el footprint resultante ocupa el mismo espacio que
+  # una puerta normal, con el pivote en el borde correcto. Cuando
+  # espejado_x es true, x debe ser la posicion mundial del borde DERECHO de
+  # la pieza (no el izquierdo).
+  def self.crear_pieza(entities, modulo_nombre, nombre, ancho, prof, alto, x, y, z, cantos_l, cantos_c, espejado_x = false)
     delta_ancho, delta_prof, delta_alto = sobremedida_pieza(nombre)
     ancho = [ancho + delta_ancho, 1.mm].max
     prof = [prof + delta_prof, 1.mm].max
     alto = [alto + delta_alto, 1.mm].max
     esquina_inglete, medida_inglete, eje_inglete = inglete_pieza(nombre)
     grupo = entities.add_group
-    if eje_inglete == :horizontal
+    if espejado_x
+      puntos = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(-ancho, 0, 0), Geom::Point3d.new(-ancho, prof, 0), Geom::Point3d.new(0, prof, 0)]
+      face = grupo.entities.add_face(puntos)
+      face.reverse! if face.normal.z < 0
+      face.pushpull(-alto)
+    elsif eje_inglete == :horizontal
       puntos = perfil_biselado_horizontal(ancho, alto, esquina_inglete, medida_inglete)
       face = grupo.entities.add_face(puntos)
       face.pushpull(-prof)
@@ -736,14 +784,30 @@ module LPenafiel_GeneradorMueblesExacto
       montaje_inferior = (datos['montaje_inferior'] || "INTERIOR").to_s
       montaje_izq = (datos['montaje_izq'] || "EXTERIOR").to_s
       montaje_der = (datos['montaje_der'] || "EXTERIOR").to_s
-      retranqueo_frontal_superior = (datos['retranqueo_frontal_superior'] || 0).to_f.mm
-      retranqueo_trasero_superior = (datos['retranqueo_trasero_superior'] || 0).to_f.mm
-      retranqueo_frontal_inferior = (datos['retranqueo_frontal_inferior'] || 0).to_f.mm
-      retranqueo_trasero_inferior = (datos['retranqueo_trasero_inferior'] || 0).to_f.mm
-      retranqueo_frontal_izq = (datos['retranqueo_frontal_izq'] || 0).to_f.mm
-      retranqueo_trasero_izq = (datos['retranqueo_trasero_izq'] || 0).to_f.mm
-      retranqueo_frontal_der = (datos['retranqueo_frontal_der'] || 0).to_f.mm
-      retranqueo_trasero_der = (datos['retranqueo_trasero_der'] || 0).to_f.mm
+      # Sobremedida delantera/trasera: delta directo sobre el fondo de ESE
+      # panel (positivo = panel mas grande hacia ese lado, negativo = mas
+      # chico), igual convencion de signo que la sobremedida por pieza en
+      # Materiales. La posicion (retranqueo_frontal_X, usado abajo como
+      # coordenada Y de arranque del panel) es el negativo de la sobremedida
+      # delantera: crecer hacia el frente desplaza el arranque del panel
+      # hacia Y negativo (sobresale), achicarlo lo desplaza hacia Y positivo
+      # (se mete hacia adentro).
+      sobremedida_frontal_superior = (datos['sobremedida_frontal_superior'] || 0).to_f.mm
+      sobremedida_trasera_superior = (datos['sobremedida_trasera_superior'] || 0).to_f.mm
+      sobremedida_frontal_inferior = (datos['sobremedida_frontal_inferior'] || 0).to_f.mm
+      sobremedida_trasera_inferior = (datos['sobremedida_trasera_inferior'] || 0).to_f.mm
+      sobremedida_frontal_izq = (datos['sobremedida_frontal_izq'] || 0).to_f.mm
+      sobremedida_trasera_izq = (datos['sobremedida_trasera_izq'] || 0).to_f.mm
+      sobremedida_frontal_der = (datos['sobremedida_frontal_der'] || 0).to_f.mm
+      sobremedida_trasera_der = (datos['sobremedida_trasera_der'] || 0).to_f.mm
+      retranqueo_frontal_superior = 0.mm - sobremedida_frontal_superior
+      retranqueo_trasero_superior = 0.mm - sobremedida_trasera_superior
+      retranqueo_frontal_inferior = 0.mm - sobremedida_frontal_inferior
+      retranqueo_trasero_inferior = 0.mm - sobremedida_trasera_inferior
+      retranqueo_frontal_izq = 0.mm - sobremedida_frontal_izq
+      retranqueo_trasero_izq = 0.mm - sobremedida_trasera_izq
+      retranqueo_frontal_der = 0.mm - sobremedida_frontal_der
+      retranqueo_trasero_der = 0.mm - sobremedida_trasera_der
       num_repisas     = datos['num_repisas'].to_i
       num_divisiones  = datos['num_divisiones'].to_i
       param_x_expr = datos['param_x_expr'].to_s.strip
@@ -825,7 +889,17 @@ module LPenafiel_GeneradorMueblesExacto
                      end
       prof_input_cj   = datos['prof_input_cj'].mm
       descuento_madeval = datos['madeval'] == "SI" ? 1.mm : 0.mm
-      @modulo_despiece_actual = nombre_modulo_despiece(modulo_nombre, ancho_total, alto_total, prof_total, num_cajones, datos['crear_puerta'])
+      # crear_puerta es un campo legado (siempre "NO" desde que se quito la
+      # pagina vieja de puertas); el indicador real de si el modulo lleva
+      # puertas hay que sacarlo de la jerarquia (cualquier nodo con frente
+      # distinto de NINGUNO) o de spaces_config, para no mostrar "S/P" en
+      # despiece cuando el modulo si tiene puertas.
+      tiene_puertas_jerarquia = if hierarchy_geometry
+                                  hierarchy_geometry['nodes'].any? { |nodo| nodo.is_a?(Hash) && !%w[NINGUNO].include?(nodo['front'].to_s.upcase) && !nodo['front'].to_s.empty? }
+                                else
+                                  spaces_config.any? { |space| space['content'].to_s.upcase.start_with?('PUERTA') } || datos['crear_puerta'] == 'SI'
+                                end
+      @modulo_despiece_actual = nombre_modulo_despiece(modulo_nombre, ancho_total, alto_total, prof_total, num_cajones, tiene_puertas_jerarquia ? 'SI' : 'NO')
       
       actualizar_existente = datos['__edit_mode'].to_s == "SI" && @seleccion_edicion && @offset_edicion
       @offset_creacion = actualizar_existente ? @offset_edicion : offset_siguiente_modulo
@@ -1126,7 +1200,14 @@ module LPenafiel_GeneradorMueblesExacto
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, 0.mm, 0.mm, 1, 0)
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_POST", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, fondo_caja - espesor, 0.mm, 1, 0)
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FONDO", ancho_caja - (espesor * 2), fondo_caja - (espesor * 2), espesor, espesor, espesor, 0.mm, 0, 0)
-                if contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL'
+                # El frente exterior (a la altura de la puerta) solo tiene
+                # sentido si este espacio NO tiene ya su propia puerta: si
+                # ambos existieran a la vez competirian por el mismo plano
+                # exterior. Con puerta propia, el cajon se queda con su
+                # frente interno (el que ya arma crear_pieza mas arriba),
+                # que nunca sobresale.
+                sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
+                if contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
                   self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_nodo - (fuga_h * 2), espesor, altura_caja, (x_min + fuga_h) - base_x, -espesor - y_min, 0.mm, 2, 2)
                 end
                 @offset_creacion = offset_guardado
@@ -1188,8 +1269,7 @@ module LPenafiel_GeneradorMueblesExacto
             # que ya calculó facadeBox con margen uniforme. Interna: nace
             # dentro del hueco del espacio seleccionado.
             y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -grosor_puerta)
-            instancia_puerta = self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
-              x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central)), y_puerta, z_min + margen_lateral, 2, 2)
+            x_puerta_izq = x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central))
             # Con una sola puerta se respeta la bisagra elegida en "Apertura"
             # del espacio; con varias, las de los extremos abren hacia afuera
             # (la primera por la izquierda, la última por la derecha) como es
@@ -1201,6 +1281,13 @@ module LPenafiel_GeneradorMueblesExacto
                                    else
                                      :izquierda
                                    end
+            instancia_puerta = if lado_bisagra_puerta == :derecha
+                                  self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
+                                    x_puerta_izq + ancho_puerta, y_puerta, z_min + margen_lateral, 2, 2, true)
+                                else
+                                  self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
+                                    x_puerta_izq, y_puerta, z_min + margen_lateral, 2, 2)
+                                end
             self.agregar_interactividad_puerta(instancia_puerta, lado_bisagra_puerta)
           end
         end
@@ -2007,11 +2094,10 @@ module LPenafiel_GeneradorMueblesExacto
   def self.agregar_interactividad_puerta(instancia, lado_bisagra)
     return unless instancia && instancia.respond_to?(:definition) && instancia.definition
     definicion = instancia.definition
-    if lado_bisagra == :derecha
-      ancho_real = instancia.bounds.width
-      definicion.entities.transform_entities(Geom::Transformation.translation(Geom::Vector3d.new(-ancho_real, 0, 0)), definicion.entities.to_a)
-      instancia.transformation = instancia.transformation * Geom::Transformation.translation(Geom::Vector3d.new(ancho_real, 0, 0))
-    end
+    # El pivote correcto (borde izquierdo o derecho segun la bisagra) ya lo
+    # deja construido crear_pieza con espejado_x=true para :derecha -- aqui
+    # solo se agregan los atributos de Dynamic Components, sin tocar
+    # geometria ni transformaciones.
     giro = lado_bisagra == :derecha ? 90 : -90
     formula_click = "ANIMATE(\"RotZ\",0,#{giro / 2},#{giro},0)"
     [definicion, instancia].each do |destino|
@@ -2118,10 +2204,16 @@ module LPenafiel_GeneradorMueblesExacto
     definicion = entity.definition
     codigo = definicion.get_attribute("LPenafiel", "codigo")
     return nil unless codigo && !codigo.to_s.empty?
+    modulo = definicion.get_attribute("LPenafiel", "modulo_despiece") || definicion.get_attribute("LPenafiel", "modulo") || "SIN_MODULO"
 
     {
-      :modulo => definicion.get_attribute("LPenafiel", "modulo_despiece") || definicion.get_attribute("LPenafiel", "modulo") || "SIN_MODULO",
+      :modulo => modulo,
       :codigo => codigo.to_s,
+      :nombre_legible => etiqueta_despiece_pieza(codigo.to_s),
+      # Las piezas parametricas ya muestran una vista 3D del modulo completo
+      # (view_snapshot); las de diseño libre no pertenecen a ningún módulo
+      # real, así que se les genera una miniatura de su propia geometría.
+      :miniatura => modulo.to_s == 'DISENO_LIBRE' ? miniatura_pieza(definicion) : nil,
       :medida_1 => definicion.get_attribute("LPenafiel", "dimension_1_mm").to_i,
       :medida_2 => definicion.get_attribute("LPenafiel", "dimension_2_mm").to_i,
       :placa => definicion.get_attribute("LPenafiel", "placa_mm").to_i,
@@ -2131,9 +2223,29 @@ module LPenafiel_GeneradorMueblesExacto
       :datos_modulo => definicion.get_attribute("LPenafiel", "datos_modulo"),
       :material => material_pieza(entity),
       :tipo_canto => definicion.get_attribute("LPenafiel", "tipo_canto") || "PVC",
-      :color_canto => definicion.get_attribute("LPenafiel", "color_canto") || definicion.get_attribute("LPenafiel", "color_configurado"),
+      :color_canto => definicion.get_attribute("LPenafiel", "color_canto_nombre") || definicion.get_attribute("LPenafiel", "color_canto") || definicion.get_attribute("LPenafiel", "color_configurado"),
       :inglete => etiqueta_inglete(definicion.get_attribute("LPenafiel", "inglete_esquina"), definicion.get_attribute("LPenafiel", "inglete_medida_mm"))
     }
+  end
+
+  def self.etiqueta_tipo_canto(tipo)
+    tipo.to_s.upcase == 'HARD' ? 'Canto duro' : 'PVC'
+  end
+
+  # Miniatura real (no un ícono genérico) de una pieza puntual, usando el
+  # renderizador de miniaturas nativo de SketchUp. Pensada para piezas de
+  # diseño libre, que no pertenecen a ningún módulo parametrico con su
+  # propia vista 3D guardada.
+  def self.miniatura_pieza(definicion)
+    ruta = File.join(Sketchup.temp_dir, "m3d_thumb_#{rand(1_000_000_000)}.png")
+    ok = definicion.save_thumbnail(ruta)
+    return nil unless ok && File.exist?(ruta)
+    binario = File.binread(ruta)
+    "data:image/png;base64,#{[binario].pack('m0')}"
+  rescue StandardError
+    nil
+  ensure
+    File.delete(ruta) if ruta && File.exist?(ruta)
   end
 
   ETIQUETAS_ESQUINA_INGLETE = {
@@ -2213,6 +2325,7 @@ module LPenafiel_GeneradorMueblesExacto
       filas_originales = por_modulo[modulo]
       filas_modulo = filas_originales.map do |fila|
         "<tr>" \
+        "<td>#{fila['miniatura'] ? "<img class='pieza-miniatura' src='#{html_escape(fila['miniatura'])}' alt='Vista 3D de #{html_escape(fila['nombre'])}'>" : ''}</td>" \
         "<td class='#{clase_editable}'#{data_attrs}>#{html_escape(fila['nombre'])}</td>" \
         "<td class='#{clase_editable} num'#{editable ? " data-campo='cantidad'" : ""}>#{html_escape(fila['cantidad'])}</td>" \
         "<td class='#{clase_editable} num'#{editable ? " data-campo='medida1'" : ""}>#{html_escape(fila['medida1'])}</td>" \
@@ -2235,7 +2348,7 @@ module LPenafiel_GeneradorMueblesExacto
       vista_html = vista_guardada.start_with?('data:image/') ? "<img class='modulo-view' src='#{html_escape(vista_guardada)}' alt='Vista 3D guardada de #{html_escape(modulo)}'>" : svg_modulo_despiece(modulo, filas_originales)
       "<section class='modulo-page'><div class='modulo-head'>#{vista_html}<div><h3>Modulo: #{html_escape(modulo)}</h3><p>Vista 3D sincronizada al construir o actualizar este módulo. Cada módulo conserva su propia cámara.</p></div></div>" \
       "<table data-modulo='#{html_escape(modulo)}'>" \
-      "<thead><tr><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th></tr></thead>" \
+      "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th></tr></thead>" \
       "<tbody>#{filas_modulo}</tbody>" \
       "</table></section>"
     end.join
@@ -2276,6 +2389,7 @@ module LPenafiel_GeneradorMueblesExacto
     th, td { border: 1px solid #d1d5db; padding: 7px 8px; font-size: 12px; text-align: left; }
     th { background: #e5e7eb; font-weight: 700; }
     .num { text-align: right; }
+    .pieza-miniatura { width: 46px; height: 46px; object-fit: contain; background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; display: block; }
     @media print {
       body { background: white; }
       .modulo-page { page-break-inside: avoid; break-inside: avoid; }
@@ -2341,7 +2455,8 @@ module LPenafiel_GeneradorMueblesExacto
     filas_data = agrupado.values.sort_by { |pieza| [pieza[:modulo], pieza[:codigo], pieza[:medida_1], pieza[:medida_2], pieza[:material]] }.map do |pieza|
       {
         "modulo" => pieza[:modulo],
-        "nombre" => pieza[:codigo],
+        "miniatura" => pieza[:miniatura],
+        "nombre" => pieza[:nombre_legible] || etiqueta_despiece_pieza(pieza[:codigo]),
         "cantidad" => pieza[:cantidad],
         "medida1" => pieza[:medida_1],
         "canto1" => "#{pieza[:canto_1]}L",
@@ -2349,7 +2464,7 @@ module LPenafiel_GeneradorMueblesExacto
         "canto2" => "#{pieza[:canto_2]}C",
         "placa" => pieza[:placa],
         "material" => pieza[:material],
-        "tipo_canto" => pieza[:tipo_canto],
+        "tipo_canto" => etiqueta_tipo_canto(pieza[:tipo_canto]),
         "color_canto" => pieza[:color_canto],
         "inglete" => pieza[:inglete]
       }
@@ -2377,6 +2492,7 @@ module LPenafiel_GeneradorMueblesExacto
     th, td { border: 1px solid #d1d5db; padding: 7px 8px; font-size: 12px; text-align: left; }
     th { background: #e5e7eb; font-weight: 700; }
     .num { text-align: right; }
+    .pieza-miniatura { width: 46px; height: 46px; object-fit: contain; background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; display: block; }
     .edicion-activa td.editable { background: #fff7ed; outline: 1px dashed #fb923c; }
     .panel-optimizacion { display: none; border: 1px solid #cbd5e1; background: #ffffff; padding: 12px; margin: 0 0 14px 0; }
     .panel-optimizacion.activo { display: block; }
