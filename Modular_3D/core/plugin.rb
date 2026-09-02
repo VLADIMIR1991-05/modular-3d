@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.9-beta.1
+# Versión: 4.8.10-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -2277,7 +2277,13 @@ module LPenafiel_GeneradorMueblesExacto
     # de alternar cerrado<->abierto -- por eso el cajon salia un poco con el
     # primer clic y mas lejos todavia con el segundo, en vez de abrirse del
     # todo y volver a cerrarse.
-    formula_click = "ANIMATE(\"Y\",0,#{salida})"
+    # ANIMATE interpreta un numero suelto segun la unidad activa del modelo
+    # (tipicamente cm), no en mm: pasar "321" literal lo toma como 321cm en
+    # vez de 321mm, y el cajon sale disparado mucho mas lejos de lo debido.
+    # Se pasa en cm con punto decimal (las comas ya separan los parametros
+    # de ANIMATE) para que sea inequivoco sin importar la unidad del modelo.
+    salida_cm = (salida / 10.0).round(1)
+    formula_click = "ANIMATE(\"Y\",0,#{salida_cm})"
     [definicion, instancia].each do |destino|
       destino.set_attribute("dynamic_attributes", "_name", definicion.name)
       destino.set_attribute("dynamic_attributes", "onclick", formula_click)

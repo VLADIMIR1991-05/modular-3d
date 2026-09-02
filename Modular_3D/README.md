@@ -1,7 +1,11 @@
-# Modular_3D 4.8.9-beta.1 · Excel del despiece, apertura de puertas y miniatura completa
+# Modular_3D 4.8.10-beta.1 · Cajón: unidad correcta en la fórmula de apertura
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.9-beta.1  
+**Versión:** 4.8.10-beta.1  
+
+## Cambios 4.8.10-beta.1
+
+- **Corregida la causa real de que el cajón se alejara demasiado al interactuar** (diagnosticado por el usuario): `ANIMATE` interpreta un número suelto según la unidad activa del modelo (típicamente cm), no en mm — pasar "321" literal lo tomaba como 321cm en vez de 321mm. Ahora el valor de salida del cajón se pasa en cm con punto decimal (las comas ya separan los parámetros de `ANIMATE`), inequívoco sin importar la unidad del modelo.
 
 ## Cambios 4.8.9-beta.1
 
