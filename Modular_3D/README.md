@@ -1,7 +1,12 @@
-# Modular_3D 4.8.3-beta.1 · Presupuesto: bisagras automáticas y costo por tablero
+# Modular_3D 4.8.4-beta.1 · Frente de cajón corregido y tipo de bisagra por solape
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.3-beta.1  
+**Versión:** 4.8.4-beta.1  
+
+## Cambios 4.8.4-beta.1
+
+- **Corregido el frente exterior de cajón (jerarquía):** reutilizaba por error la misma fuga de 30mm del espacio mecánico entre cajones (`drawerGap`) como si fuera también su luz de acabado contra el casco, dejándolo 60mm más angosto de lo debido y con un reveal enorme entre frentes vecinos. Ahora tiene su propia luz fina, independiente del espacio mecánico entre cajones: la mitad de "Fuga perimetral" del espacio (1.5mm por lado por defecto, igual que una puerta), en los cuatro lados. Si el resultado no deja tamaño positivo, se omite en silencio en vez de dibujar una pieza inválida.
+- **Tipo de bisagra según el solape real de cada puerta**, siguiendo la convención estándar de herrajes (recta / semicodada / codada): se mide cuánto solapa el borde de la puerta donde va la bisagra contra el panel real de ese lado (lateral propio del casco, división central compartida con otra puerta, o ninguno) y se compara con las dos referencias de la industria — solape ≈ espesor − 1.5mm → **recta**, solape ≈ espesor / 2 → **semicodada** —, tomando la más cercana como tolerancia natural en vez de cortes fijos. Puertas embutidas o internas siempre son **codada**. La columna "Bisagrado" del despiece ahora muestra, por ejemplo, "3 bisagras Recta (3 perf. Ø35mm)".
 
 ## Cambios 4.8.3-beta.1
 

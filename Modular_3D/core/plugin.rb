@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.3-beta.1
+# Versión: 4.8.4-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -207,10 +207,32 @@ module LPenafiel_GeneradorMueblesExacto
 
   # Texto para la columna "Bisagrado" del despiece: solo las puertas (codigo
   # "PT") llevan bisagra, con una perforación de Ø35mm por bisagra.
-  def self.texto_bisagrado_pieza(codigo, alto_mm)
+  def self.texto_bisagrado_pieza(codigo, alto_mm, tipo_bisagra)
     return '' unless codigo.to_s == 'PT'
     cantidad = bisagras_por_altura(alto_mm)
-    "#{cantidad} bisagras (#{cantidad} perf. Ø35mm)"
+    etiqueta = tipo_bisagra.to_s.empty? ? 'Recta' : tipo_bisagra.to_s
+    "#{cantidad} bisagras #{etiqueta} (#{cantidad} perf. Ø35mm)"
+  end
+
+  # Tipo de bisagra según el solape real de la puerta sobre el panel de su
+  # lado de bisagra, siguiendo la convención estándar de herrajes europeos
+  # de mueble melamínico:
+  # - Recta (overlay total): la puerta solapa casi todo el grosor de un
+  #   lateral propio del casco -> solape de referencia = espesor - 1.5mm.
+  # - Semicodada (half overlay): dos puertas comparten una división central,
+  #   cada una tapa la mitad del grosor de esa división -> referencia =
+  #   espesor / 2.
+  # - Codada (inset): puerta embutida o interna (dentro de un hueco), sin
+  #   solape hacia afuera.
+  # Se clasifica por la referencia numérica más cercana al solape real, en
+  # vez de cortes fijos, para que el "más/menos 3mm" quede como tolerancia
+  # natural en vez de dejar huecos sin clasificar entre los dos casos.
+  def self.tipo_bisagra_por_solape(solape_mm, espesor_mm, embutida)
+    return 'Codada' if embutida
+    return 'Recta (revisar: sin apoyo firme)' if solape_mm < 3.0
+    ref_recta = espesor_mm - 1.5
+    ref_semicodada = espesor_mm / 2.0
+    (solape_mm - ref_recta).abs <= (solape_mm - ref_semicodada).abs ? 'Recta' : 'Semicodada'
   end
 
   # ID estable para nombrar piezas generadas desde la jerarquía: usa el id del
@@ -1240,7 +1262,20 @@ module LPenafiel_GeneradorMueblesExacto
                 # que nunca sobresale.
                 sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
                 if contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
-                  self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_nodo - (fuga_h * 2), espesor, altura_caja, (x_min + fuga_h) - base_x, -espesor - y_min, 0.mm, 2, 2)
+                  # Luz de acabado del frente exterior: propia y fina (mitad de
+                  # "Fuga perimetral", 1.5mm por lado por defecto), para que se
+                  # alinee igual que una puerta contra el casco. Nada que ver
+                  # con fuga_h (espacio MECÁNICO entre cajones, ahora 30mm por
+                  # defecto): usar esa fuga aquí hacía que el frente saliera
+                  # 60mm más angosto de lo debido y con un reveal enorme entre
+                  # frentes vecinos en vez de una luz fina de 3mm.
+                  fuga_frente_ext = ([(node['gap'] || 3).to_f, 0.5].max / 2.0).mm
+                  ancho_frente_ext = ancho_nodo - (fuga_frente_ext * 2)
+                  alto_frente_ext = altura_caja - (fuga_frente_ext * 2)
+                  if ancho_frente_ext > 0.mm && alto_frente_ext > 0.mm
+                    self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_frente_ext, espesor, alto_frente_ext,
+                      (x_min + fuga_frente_ext) - base_x, -espesor - y_min, fuga_frente_ext, 2, 2)
+                  end
                 end
                 @offset_creacion = offset_guardado
                 @piezas_modulo_actual = piezas_reales
@@ -1271,6 +1306,11 @@ module LPenafiel_GeneradorMueblesExacto
           next if !puerta_interna && alcance_frentes != 'BY_SPACE'
           box = node['box'] || {}; fuga_h = [(node['gap'] || 3).to_f, 0.5].max.mm
           x_min = box['x'].to_f.mm; z_min = box['z'].to_f.mm; ancho_nodo = box['w'].to_f.mm; alto_nodo = box['h'].to_f.mm
+          # Borde real del hueco/casco (antes de que front_box lo agrande con
+          # el solape): sirve para medir cuánto solapa cada puerta sobre el
+          # panel real de ese lado, y así saber qué tipo de bisagra le
+          # corresponde (recta/semicodada/codada) según su altura de solape.
+          cavidad_x_min = x_min; cavidad_x_max = x_min + ancho_nodo
           # Los valores antiguos de vidrio se abren como puertas sólidas para conservar proyectos.
           frente = frente.gsub('_VIDRIO', '').gsub('VIDRIO', 'UNICA')
           cantidad_solicitada = node['frontCount'].to_s.upcase
@@ -1329,6 +1369,20 @@ module LPenafiel_GeneradorMueblesExacto
                                     x_puerta_izq, y_puerta, z_min + margen_lateral, 2, 2)
                                 end
             self.agregar_interactividad_puerta(instancia_puerta, lado_bisagra_puerta)
+            # Solape real de la bisagra sobre el panel de ese lado (lateral
+            # izq/der del borde de la puerta contra el borde real del hueco):
+            # una puerta intermedia de una fachada de varias hojas sin
+            # división física de por medio da 0 (sin apoyo firme detrás).
+            borde_bisagra = lado_bisagra_puerta == :derecha ? (x_puerta_izq + ancho_puerta) : x_puerta_izq
+            solape_mm = if lado_bisagra_puerta == :derecha
+                          [(borde_bisagra - cavidad_x_max).to_mm, 0.0].max
+                        else
+                          [(cavidad_x_min - borde_bisagra).to_mm, 0.0].max
+                        end
+            embutida_efectiva = externa_embutida || puerta_interna
+            if instancia_puerta.respond_to?(:definition)
+              instancia_puerta.definition.set_attribute('LPenafiel', 'tipo_bisagra', tipo_bisagra_por_solape(solape_mm, espesor.to_mm, embutida_efectiva))
+            end
           end
         end
 
@@ -2261,6 +2315,7 @@ module LPenafiel_GeneradorMueblesExacto
       # listado de corte y no siempre coinciden con la altura). Se usa para
       # calcular cuántas bisagras necesita cada puerta según su altura real.
       :alto_real_mm => entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.height) : 0,
+      :tipo_bisagra => definicion.get_attribute("LPenafiel", "tipo_bisagra"),
       :placa => definicion.get_attribute("LPenafiel", "placa_mm").to_i,
       :canto_1 => definicion.get_attribute("LPenafiel", "cantos_largos").to_i,
       :canto_2 => definicion.get_attribute("LPenafiel", "cantos_cortos").to_i,
@@ -2492,7 +2547,8 @@ module LPenafiel_GeneradorMueblesExacto
         pieza[:material],
         pieza[:tipo_canto],
         pieza[:color_canto],
-        pieza[:inglete]
+        pieza[:inglete],
+        pieza[:tipo_bisagra]
       ]
       agrupado[clave] ||= pieza.merge(:cantidad => 0)
       agrupado[clave][:cantidad] += 1
@@ -2513,7 +2569,7 @@ module LPenafiel_GeneradorMueblesExacto
         "tipo_canto" => etiqueta_tipo_canto(pieza[:tipo_canto]),
         "color_canto" => pieza[:color_canto],
         "inglete" => pieza[:inglete],
-        "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm])
+        "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm], pieza[:tipo_bisagra])
       }
     end
     filas_html = filas_html_despiece(filas_data, true)
