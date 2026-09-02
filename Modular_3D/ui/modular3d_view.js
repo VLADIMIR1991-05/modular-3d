@@ -430,9 +430,15 @@
           var nodeSinPuertaPropia = !node.front || String(node.front).toUpperCase() === 'NINGUNO';
           var frenteCajonActivo = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL' && nodeSinPuertaPropia;
           var estiloFrenteCajon = frenteCajonActivo ? String(node.drawerFrontStyle || 'POR_CAJON').toUpperCase() : 'POR_CAJON';
+          // El frente se alinea al mismo plano/ancho que tendria una puerta
+          // ahi (front_box, con el mismo solape sobre el casco/division):
+          // sale del hueco interno del cajon igual que una puerta vecina, en
+          // vez de quedarse angosto dentro de su propio espacio disponible.
+          var fb = node.front_box || b;
           if (frenteCajonActivo && estiloFrenteCajon === 'FALSO') {
             // Frente falso: un unico panel fijo, sin ningun cajon detras.
-            addPiece('Frente falso · ' + nodeLabel, Math.max(1,b.w-gap*2), Math.max(1,b.h-gap*2), general, b.x+gap, b.z+gap, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
+            var fugaFalso = gap / 2;
+            addPiece('Frente falso · ' + nodeLabel, Math.max(1,fb.w-fugaFalso*2), Math.max(1,fb.h-fugaFalso*2), general, fb.x+fugaFalso, fb.z+fugaFalso, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
           } else {
             for (var hd = 0; hd < drawerCount; hd += 1) {
               var baseZ = b.z + drawerGap + hd * (drawerHeight + drawerGap);
@@ -451,14 +457,14 @@
               var fugaFrenteExt = gap / 2;
               var zonaInferior, zonaSuperior;
               if (estiloFrenteCajon === 'UNICO_INFERIOR') {
-                zonaInferior = b.z; zonaSuperior = b.z + b.h;
+                zonaInferior = fb.z; zonaSuperior = fb.z + fb.h;
               } else {
-                zonaInferior = hd === 0 ? b.z : (baseZ - drawerGap / 2);
-                zonaSuperior = hd === drawerCount - 1 ? (b.z + b.h) : (baseZ + drawerHeight + drawerGap / 2);
+                zonaInferior = hd === 0 ? fb.z : (baseZ - drawerGap / 2);
+                zonaSuperior = hd === drawerCount - 1 ? (fb.z + fb.h) : (baseZ + drawerHeight + drawerGap / 2);
               }
               var altoFrente = (zonaSuperior - zonaInferior) - fugaFrenteExt * 2;
               var zFrente = zonaInferior + fugaFrenteExt;
-              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-fugaFrenteExt*2), altoFrente, general, b.x+fugaFrenteExt, zFrente, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
+              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,fb.w-fugaFrenteExt*2), altoFrente, general, fb.x+fugaFrenteExt, zFrente, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
             }
           }
         }

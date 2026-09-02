@@ -1,7 +1,12 @@
-# Modular_3D 4.8.6-beta.1 · Frentes de cajón: 3mm fijos entre sí, sin importar la fuga mecánica
+# Modular_3D 4.8.7-beta.1 · Frentes de cajón alineados al plano de la puerta
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.6-beta.1  
+**Versión:** 4.8.7-beta.1  
+
+## Cambios 4.8.7-beta.1
+
+- **El frente de cajón ahora se alinea al mismo plano/ancho que tendría una puerta en ese lugar**, en vez de quedarse angosto dentro del hueco interno del propio espacio de cajones: usa el mismo cálculo de solape sobre el casco o sobre una división (`front_box`, ya probado en las puertas) para salir del hueco y cubrir los laterales igual que una puerta vecina — arriba, abajo y a los costados —, dejando siempre 1.5mm contra el borde real (casco o una puerta/frente vecino en otro espacio) y por lo tanto 3mm donde dos frentes o un frente y una puerta se encuentran. Antes el frente solo llegaba hasta el borde de su propio hueco interior, mucho más angosto que la puerta de al lado. Reflejado también en la vista previa 3D.
+- **Bisagras: el corte de "recta" (2 bisagras) sube de 900mm a 950mm** de altura real de puerta, según lo confirmado.
 
 ## Cambios 4.8.6-beta.1
 

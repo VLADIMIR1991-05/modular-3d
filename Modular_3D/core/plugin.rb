@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.6-beta.1
+# Versión: 4.8.7-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -199,7 +199,7 @@ module LPenafiel_GeneradorMueblesExacto
   # puerta y comparta su solape, no es una puerta y no lleva bisagra.
   def self.bisagras_por_altura(alto_mm)
     alto = alto_mm.to_f
-    return 2 if alto <= 900.0
+    return 2 if alto <= 950.0
     return 3 if alto <= 1600.0
     return 4 if alto <= 2200.0
     5
@@ -1220,13 +1220,24 @@ module LPenafiel_GeneradorMueblesExacto
             frente_cajon_activo = contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
             estilo_frente = frente_cajon_activo ? (node['drawerFrontStyle'] || 'POR_CAJON').to_s.upcase : 'POR_CAJON'
             fuga_frente_ext = ([(node['gap'] || 3).to_f, 0.5].max / 2.0).mm
+            # El frente de cajon se alinea al mismo plano/ancho que tendria una
+            # puerta ahi (front_box, calculado en JS con el mismo solape sobre
+            # el casco/division que usan las puertas): asi los frentes salen
+            # del hueco interno del cajon y solapan los laterales igual que
+            # una puerta vecina, en vez de quedarse angostos dentro de su
+            # propio espacio disponible.
+            frente_box_cajon = node['front_box'].is_a?(Hash) ? node['front_box'] : nil
+            frente_x_min = frente_box_cajon ? frente_box_cajon['x'].to_f.mm : x_min
+            frente_ancho = frente_box_cajon ? frente_box_cajon['w'].to_f.mm : ancho_nodo
+            frente_z_min = frente_box_cajon ? frente_box_cajon['z'].to_f.mm : z_min
+            frente_alto = frente_box_cajon ? frente_box_cajon['h'].to_f.mm : alto_nodo
 
             if frente_cajon_activo && estilo_frente == 'FALSO'
-              ancho_falso = ancho_nodo - (fuga_frente_ext * 2)
-              alto_falso = alto_nodo - (fuga_frente_ext * 2)
+              ancho_falso = frente_ancho - (fuga_frente_ext * 2)
+              alto_falso = frente_alto - (fuga_frente_ext * 2)
               if ancho_falso > 0.mm && alto_falso > 0.mm
                 self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", ancho_falso, espesor, alto_falso,
-                  x_min + fuga_frente_ext, -espesor, z_min + fuga_frente_ext, 2, 2)
+                  frente_x_min + fuga_frente_ext, -espesor, frente_z_min + fuga_frente_ext, 2, 2)
               end
             else
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
@@ -1301,19 +1312,23 @@ module LPenafiel_GeneradorMueblesExacto
                   # contra una puerta vecina en otro nodo. UNICO_INFERIOR
                   # siempre usa el espacio completo, ignorando las cajas
                   # intermedias que tapa.
+                  # Los bordes exteriores (arriba del primero, abajo del
+                  # ultimo) llegan hasta frente_z_min/frente_alto -- el mismo
+                  # plano que tendria una puerta ahi -- en vez de quedarse en
+                  # el borde del hueco interno del cajon.
                   if estilo_frente == 'UNICO_INFERIOR'
-                    zona_inferior = z_min
-                    zona_superior = z_min + alto_nodo
+                    zona_inferior = frente_z_min
+                    zona_superior = frente_z_min + frente_alto
                   else
-                    zona_inferior = ci == 1 ? z_min : (base_z - (fuga_h / 2.0))
-                    zona_superior = ci == cantidad ? (z_min + alto_nodo) : (base_z + altura_caja + (fuga_h / 2.0))
+                    zona_inferior = ci == 1 ? frente_z_min : (base_z - (fuga_h / 2.0))
+                    zona_superior = ci == cantidad ? (frente_z_min + frente_alto) : (base_z + altura_caja + (fuga_h / 2.0))
                   end
-                  ancho_frente_ext = ancho_nodo - (fuga_frente_ext * 2)
+                  ancho_frente_ext = frente_ancho - (fuga_frente_ext * 2)
                   alto_frente_ext = (zona_superior - zona_inferior) - (fuga_frente_ext * 2)
                   z_frente_local = (zona_inferior - base_z) + fuga_frente_ext
                   if ancho_frente_ext > 0.mm && alto_frente_ext > 0.mm
                     self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_frente_ext, espesor, alto_frente_ext,
-                      (x_min + fuga_frente_ext) - base_x, -espesor - y_min, z_frente_local, 2, 2)
+                      (frente_x_min + fuga_frente_ext) - base_x, -espesor - y_min, z_frente_local, 2, 2)
                   end
                 end
                 @offset_creacion = offset_guardado
@@ -3301,7 +3316,7 @@ module LPenafiel_GeneradorMueblesExacto
   </table>
 
   <h3>3. Herrajes estimados</h3>
-  <p class="hint">Bisagras calculadas automáticamente según la altura real de cada puerta (2 hasta 900mm, 3 hasta 1600mm, 4 hasta 2200mm, 5 en puertas más altas). Los frentes de cajón no suman bisagras, solo las puertas.</p>
+  <p class="hint">Bisagras calculadas automáticamente según la altura real de cada puerta (2 hasta 950mm, 3 hasta 1600mm, 4 hasta 2200mm, 5 en puertas más altas). Los frentes de cajón no suman bisagras, solo las puertas.</p>
   <table>
     <thead><tr><th>Concepto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead>
     <tbody>
