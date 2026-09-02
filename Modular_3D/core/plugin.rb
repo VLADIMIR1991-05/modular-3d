@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.2-beta.1
+# Versión: 4.8.3-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -191,6 +191,26 @@ module LPenafiel_GeneradorMueblesExacto
   # piezas iguales y para nombrar la definicion de SketchUp.
   def self.etiqueta_despiece_pieza(codigo)
     ETIQUETAS_CODIGO_PIEZA[codigo.to_s] || codigo.to_s.split('_').map(&:capitalize).join(' ')
+  end
+
+  # Regla estándar de herrajes por altura de puerta (ajustable si el
+  # proveedor local usa otros cortes). Solo aplica a puertas reales (codigo
+  # "PT"): un frente de cajón exterior, aunque salga a la altura de la
+  # puerta y comparta su solape, no es una puerta y no lleva bisagra.
+  def self.bisagras_por_altura(alto_mm)
+    alto = alto_mm.to_f
+    return 2 if alto <= 900.0
+    return 3 if alto <= 1600.0
+    return 4 if alto <= 2200.0
+    5
+  end
+
+  # Texto para la columna "Bisagrado" del despiece: solo las puertas (codigo
+  # "PT") llevan bisagra, con una perforación de Ø35mm por bisagra.
+  def self.texto_bisagrado_pieza(codigo, alto_mm)
+    return '' unless codigo.to_s == 'PT'
+    cantidad = bisagras_por_altura(alto_mm)
+    "#{cantidad} bisagras (#{cantidad} perf. Ø35mm)"
   end
 
   # ID estable para nombrar piezas generadas desde la jerarquía: usa el id del
@@ -2236,6 +2256,11 @@ module LPenafiel_GeneradorMueblesExacto
       :miniatura => modulo.to_s == 'DISENO_LIBRE' ? miniatura_pieza(definicion) : nil,
       :medida_1 => definicion.get_attribute("LPenafiel", "dimension_1_mm").to_i,
       :medida_2 => definicion.get_attribute("LPenafiel", "dimension_2_mm").to_i,
+      # Altura real (Z) de la pieza tal cual quedó dibujada, independiente del
+      # orden mayor/menor de medida_1/medida_2 (esos se ordenan para el
+      # listado de corte y no siempre coinciden con la altura). Se usa para
+      # calcular cuántas bisagras necesita cada puerta según su altura real.
+      :alto_real_mm => entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.height) : 0,
       :placa => definicion.get_attribute("LPenafiel", "placa_mm").to_i,
       :canto_1 => definicion.get_attribute("LPenafiel", "cantos_largos").to_i,
       :canto_2 => definicion.get_attribute("LPenafiel", "cantos_cortos").to_i,
@@ -2300,9 +2325,9 @@ module LPenafiel_GeneradorMueblesExacto
     path += ".csv" unless File.extname(path).downcase == ".csv"
 
     contenido = CSV.generate(:col_sep => ';', :force_quotes => true) do |csv|
-      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto', 'Inglete']
+      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto', 'Inglete', 'Bisagrado']
       filas.each do |fila|
-        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete].map { |clave| fila[clave] }
+        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete bisagrado].map { |clave| fila[clave] }
       end
     end
     File.binwrite(path, "\xEF\xBB\xBF".b + contenido.encode('UTF-8'))
@@ -2357,6 +2382,7 @@ module LPenafiel_GeneradorMueblesExacto
         "<td#{editable ? " data-campo='tipo_canto'" : ""}>#{html_escape(fila['tipo_canto'])}</td>" \
         "<td#{editable ? " data-campo='color_canto'" : ""}>#{html_escape(fila['color_canto'])}</td>" \
         "<td#{editable ? " data-campo='inglete'" : ""}>#{html_escape(fila['inglete'])}</td>" \
+        "<td#{editable ? " data-campo='bisagrado'" : ""}>#{html_escape(fila['bisagrado'])}</td>" \
         "</tr>"
       end.join
 
@@ -2368,7 +2394,7 @@ module LPenafiel_GeneradorMueblesExacto
       vista_html = vista_guardada.start_with?('data:image/') ? "<img class='modulo-view' src='#{html_escape(vista_guardada)}' alt='Vista 3D guardada de #{html_escape(modulo)}'>" : svg_modulo_despiece(modulo, filas_originales)
       "<section class='modulo-page'><div class='modulo-head'>#{vista_html}<div><h3>Modulo: #{html_escape(modulo)}</h3><p>Vista 3D sincronizada al construir o actualizar este módulo. Cada módulo conserva su propia cámara.</p></div></div>" \
       "<table data-modulo='#{html_escape(modulo)}'>" \
-      "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th></tr></thead>" \
+      "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th><th>Bisagrado</th></tr></thead>" \
       "<tbody>#{filas_modulo}</tbody>" \
       "</table></section>"
     end.join
@@ -2486,7 +2512,8 @@ module LPenafiel_GeneradorMueblesExacto
         "material" => pieza[:material],
         "tipo_canto" => etiqueta_tipo_canto(pieza[:tipo_canto]),
         "color_canto" => pieza[:color_canto],
-        "inglete" => pieza[:inglete]
+        "inglete" => pieza[:inglete],
+        "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm])
       }
     end
     filas_html = filas_html_despiece(filas_data, true)
@@ -3074,6 +3101,7 @@ module LPenafiel_GeneradorMueblesExacto
 
     por_material = Hash.new { |hash, clave| hash[clave] = { :area_m2 => 0.0, :canto_pvc_m => 0.0, :canto_duro_m => 0.0 } }
     puertas = 0
+    bisagras_total = 0
     piezas_cos = 0
 
     piezas.each do |pieza|
@@ -3086,11 +3114,16 @@ module LPenafiel_GeneradorMueblesExacto
       else
         grupo[:canto_pvc_m] += largo_canto_m
       end
-      puertas += 1 if pieza[:codigo].to_s == 'PT'
+      # Solo puertas reales (codigo "PT") llevan bisagra: un frente de cajón
+      # exterior no es una puerta aunque salga a su misma altura y solape.
+      if pieza[:codigo].to_s == 'PT'
+        puertas += 1
+        bisagras_total += bisagras_por_altura(pieza[:alto_real_mm])
+      end
       piezas_cos += 1 if pieza[:codigo].to_s == 'COS'
     end
 
-    { :por_material => por_material, :puertas => puertas, :cajones => (piezas_cos / 2.0).ceil, :total_piezas => piezas.length }
+    { :por_material => por_material, :puertas => puertas, :bisagras_total => bisagras_total, :cajones => (piezas_cos / 2.0).ceil, :total_piezas => piezas.length }
   end
 
   def self.mostrar_presupuesto
@@ -3105,7 +3138,16 @@ module LPenafiel_GeneradorMueblesExacto
       "<tr data-material='#{html_escape(material)}'>" \
       "<td>#{html_escape(material)}</td>" \
       "<td class='num'>#{'%.2f' % valores[:area_m2]}</td>" \
-      "<td><input class='precio-m2' type='number' step='0.01' value='0' data-area='#{valores[:area_m2]}'></td>" \
+      "<td>" \
+      "<input class='precio-m2' type='number' step='0.01' value='0' data-area='#{valores[:area_m2]}'>" \
+      "<div class='modo-tablero'>" \
+      "<label class='switch-tablero'><input type='checkbox' class='usar-tablero'> Por costo total del tablero</label>" \
+      "<div class='campos-tablero' hidden>" \
+      "<input class='tablero-ancho' type='number' value='1830' step='1' title='Ancho del tablero (mm)'> x " \
+      "<input class='tablero-largo' type='number' value='2440' step='1' title='Largo del tablero (mm)'> mm · Costo total " \
+      "<input class='tablero-costo' type='number' value='0' step='0.01' title='Costo total del tablero completo'>" \
+      "</div></div>" \
+      "</td>" \
       "<td class='num subtotal-material'>0.00</td>" \
       "</tr>"
     end.join
@@ -3130,11 +3172,18 @@ module LPenafiel_GeneradorMueblesExacto
   .acciones { display: flex; gap: 10px; margin-bottom: 14px; }
   button { border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff; border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
   button.secondary { background: #fff; color: #1d4ed8; }
+  p.hint { color: #64748b; font-size: 11.5px; margin: -4px 0 8px 0; }
+  .modo-tablero { margin-top: 5px; }
+  .switch-tablero { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; width: max-content; }
+  .switch-tablero input { width: auto; }
+  .campos-tablero { margin-top: 4px; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #475569; flex-wrap: wrap; }
+  .campos-tablero input { width: 58px; }
+  input:disabled { background: #f1f5f9; color: #64748b; }
 </style>
 </head>
 <body>
   <h2>Presupuesto</h2>
-  <p>#{datos_costo[:total_piezas]} piezas · #{datos_costo[:puertas]} puerta(s) · #{datos_costo[:cajones]} cajón(es) estimados</p>
+  <p>#{datos_costo[:total_piezas]} piezas · #{datos_costo[:puertas]} puerta(s) · #{datos_costo[:bisagras_total]} bisagra(s) estimadas · #{datos_costo[:cajones]} cajón(es) estimados</p>
   <div class="acciones">
     <button onclick="recalcular()">Recalcular</button>
     <button class="secondary" onclick="exportarPdf()">Descargar PDF</button>
@@ -3156,10 +3205,11 @@ module LPenafiel_GeneradorMueblesExacto
   </table>
 
   <h3>3. Herrajes estimados</h3>
+  <p class="hint">Bisagras calculadas automáticamente según la altura real de cada puerta (2 hasta 900mm, 3 hasta 1600mm, 4 hasta 2200mm, 5 en puertas más altas). Los frentes de cajón no suman bisagras, solo las puertas.</p>
   <table>
     <thead><tr><th>Concepto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead>
     <tbody>
-      <tr><td>Bisagras (2 por puerta)</td><td class="num" id="cant_bisagras">#{datos_costo[:puertas] * 2}</td><td><input id="precio_bisagra" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_bisagras">0.00</td></tr>
+      <tr><td>Bisagras (según altura de cada puerta)</td><td class="num" id="cant_bisagras">#{datos_costo[:bisagras_total]}</td><td><input id="precio_bisagra" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_bisagras">0.00</td></tr>
       <tr><td>Juegos de corredera (1 por cajón)</td><td class="num" id="cant_correderas">#{datos_costo[:cajones]}</td><td><input id="precio_corredera" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_correderas">0.00</td></tr>
       <tr><td>Jaladores/tiradores (1 por puerta/cajón)</td><td class="num" id="cant_jaladores">#{datos_costo[:puertas] + datos_costo[:cajones]}</td><td><input id="precio_jalador" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_jaladores">0.00</td></tr>
     </tbody>
@@ -3186,22 +3236,44 @@ module LPenafiel_GeneradorMueblesExacto
 
   <script>
     function numero(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+    // Las celdas de cantidad/metros (metros_pvc, cant_bisagras, etc.) son <td>
+    // de solo texto, no <input>: no tienen .value, así que necesitan su
+    // propia lectura por .textContent (antes se leían con numero() y siempre
+    // daban NaN -> 0, por eso Cantos y Herrajes nunca mostraban subtotal).
+    function numeroTexto(id) { var el = document.getElementById(id); return el ? (parseFloat(el.textContent) || 0) : 0; }
     function texto(id, valor) { var el = document.getElementById(id); if (el) el.textContent = valor.toFixed(2); }
     function recalcular() {
       var totalMateriales = 0;
       document.querySelectorAll('#tabla_material tbody tr').forEach(function (fila) {
         var area = parseFloat(fila.querySelector('.precio-m2').dataset.area) || 0;
-        var precio = parseFloat(fila.querySelector('.precio-m2').value) || 0;
+        var precioInput = fila.querySelector('.precio-m2');
+        var usarTablero = fila.querySelector('.usar-tablero');
+        var campos = fila.querySelector('.campos-tablero');
+        var precio;
+        if (usarTablero && usarTablero.checked) {
+          if (campos) campos.hidden = false;
+          var anchoT = parseFloat(fila.querySelector('.tablero-ancho').value) || 0;
+          var largoT = parseFloat(fila.querySelector('.tablero-largo').value) || 0;
+          var costoT = parseFloat(fila.querySelector('.tablero-costo').value) || 0;
+          var areaTablero = (anchoT * largoT) / 1000000;
+          precio = areaTablero > 0 ? (costoT / areaTablero) : 0;
+          precioInput.value = precio.toFixed(2);
+          precioInput.disabled = true;
+        } else {
+          if (campos) campos.hidden = true;
+          precioInput.disabled = false;
+          precio = parseFloat(precioInput.value) || 0;
+        }
         var subtotal = area * precio;
         fila.querySelector('.subtotal-material').textContent = subtotal.toFixed(2);
         totalMateriales += subtotal;
       });
-      var subtotalPvc = numero('metros_pvc') * numero('precio_pvc'); texto('subtotal_pvc', subtotalPvc);
-      var subtotalDuro = numero('metros_duro') * numero('precio_duro'); texto('subtotal_duro', subtotalDuro);
+      var subtotalPvc = numeroTexto('metros_pvc') * numero('precio_pvc'); texto('subtotal_pvc', subtotalPvc);
+      var subtotalDuro = numeroTexto('metros_duro') * numero('precio_duro'); texto('subtotal_duro', subtotalDuro);
       totalMateriales += subtotalPvc + subtotalDuro;
-      var subtotalBisagras = numero('cant_bisagras') * numero('precio_bisagra'); texto('subtotal_bisagras', subtotalBisagras);
-      var subtotalCorrederas = numero('cant_correderas') * numero('precio_corredera'); texto('subtotal_correderas', subtotalCorrederas);
-      var subtotalJaladores = numero('cant_jaladores') * numero('precio_jalador'); texto('subtotal_jaladores', subtotalJaladores);
+      var subtotalBisagras = numeroTexto('cant_bisagras') * numero('precio_bisagra'); texto('subtotal_bisagras', subtotalBisagras);
+      var subtotalCorrederas = numeroTexto('cant_correderas') * numero('precio_corredera'); texto('subtotal_correderas', subtotalCorrederas);
+      var subtotalJaladores = numeroTexto('cant_jaladores') * numero('precio_jalador'); texto('subtotal_jaladores', subtotalJaladores);
       var totalHerrajes = subtotalBisagras + subtotalCorrederas + subtotalJaladores;
       var totalOtros = numero('costo_mano_obra') + numero('costo_transporte') + numero('costo_otros');
       var baseMargen = totalMateriales + totalHerrajes + totalOtros;
@@ -3218,6 +3290,7 @@ module LPenafiel_GeneradorMueblesExacto
       document.querySelectorAll('.acciones').forEach(function (el) { el.style.display = 'flex'; });
     }
     document.addEventListener('input', recalcular);
+    document.addEventListener('change', recalcular);
     recalcular();
   </script>
 </body>

@@ -1,7 +1,14 @@
-# Modular_3D 4.8.2-beta.1 · Corrección de posición de cajones y espacio de 30mm
+# Modular_3D 4.8.3-beta.1 · Presupuesto: bisagras automáticas y costo por tablero
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.2-beta.1  
+**Versión:** 4.8.3-beta.1  
+
+## Cambios 4.8.3-beta.1
+
+- **Corregido el bug de subtotales en "Cantos" y "Herrajes estimados" del Presupuesto (siempre mostraban 0.00):** la función `numero()` del script de recalculo leía `.value`, pero esas celdas (metros de canto, cantidad de bisagras/correderas/jaladores) son `<td>` de solo texto, sin `.value` — siempre daba `NaN` y caía a 0. Se agregó `numeroTexto()` para leerlas por `.textContent`; "Tableros por material" no tenía este problema porque ya usaba `.value` de inputs reales.
+- **Nueva opción "Por costo total del tablero" en cada fila de material:** además del "Precio por m²" de siempre (que sigue funcionando exactamente igual si no se toca), se puede activar un enlace por fila que pide ancho x largo del tablero completo y su costo total, y calcula el precio por m² a partir de eso (`costo_total / área_tablero`) reusando el mismo cálculo de subtotal de siempre.
+- **Bisagras calculadas automáticamente según la altura real de cada puerta**, en vez de un fijo "2 por puerta": 2 hasta 900mm, 3 hasta 1600mm, 4 hasta 2200mm, 5 en puertas más altas. Solo cuentan puertas reales (código "PT") — un frente de cajón exterior, aunque salga a la altura de la puerta, no es una puerta y no suma bisagras.
+- **Despiece: nueva columna "Bisagrado"** que indica, pieza por pieza, cuántas bisagras lleva cada puerta y cuántas perforaciones de Ø35mm implica, según su altura real (independiente del orden de las medidas 1/2, que se ordenan para el listado de corte). Piezas que no son puertas quedan en blanco. Incluida también en la exportación a Excel/CSV.
 
 ## Cambios 4.8.2-beta.1
 
