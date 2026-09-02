@@ -427,10 +427,22 @@
           var drawerHeightManual = Number(node.drawerHeight) || 0;
           var drawerHeightFits = drawerHeightManual > 0 && (drawerHeightManual * drawerCount + drawerGap * (drawerCount + 1)) <= b.h;
           var drawerHeight = drawerHeightFits ? drawerHeightManual : drawerHeightAuto;
-          for (var hd = 0; hd < drawerCount; hd += 1) {
-            var nodeSinPuertaPropia = !node.front || String(node.front).toUpperCase() === 'NINGUNO';
-            var externalDrawer = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL' && nodeSinPuertaPropia;
-            addPiece((externalDrawer ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, b.z+drawerGap+hd*(drawerHeight+drawerGap), externalDrawer ? -general-3 : b.y+12, COLORS.drawer, externalDrawer ? 'front' : 'drawer',false,localMeta(externalDrawer?'drawer-front':'drawer','h_drawers'));
+          var nodeSinPuertaPropia = !node.front || String(node.front).toUpperCase() === 'NINGUNO';
+          var frenteCajonActivo = content === 'CAJONES_FRENTES' && frontScope !== 'GLOBAL' && nodeSinPuertaPropia;
+          var estiloFrenteCajon = frenteCajonActivo ? String(node.drawerFrontStyle || 'POR_CAJON').toUpperCase() : 'POR_CAJON';
+          if (frenteCajonActivo && estiloFrenteCajon === 'FALSO') {
+            // Frente falso: un unico panel fijo, sin ningun cajon detras.
+            addPiece('Frente falso · ' + nodeLabel, Math.max(1,b.w-gap*2), Math.max(1,b.h-gap*2), general, b.x+gap, b.z+gap, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
+          } else {
+            // Pila total de cajones (todas las cajas + fugas mecanicas entre
+            // ellas): lo que debe cubrir el frente unico cuando se acopla al
+            // cajon mas bajo (hd===0), tapando tambien los huecos mecanicos.
+            var altoPilaCajones = drawerHeight * drawerCount + drawerGap * Math.max(0, drawerCount - 1);
+            for (var hd = 0; hd < drawerCount; hd += 1) {
+              var construirFrenteEsteCajon = frenteCajonActivo && (estiloFrenteCajon !== 'UNICO_INFERIOR' || hd === 0);
+              var altoPieza = construirFrenteEsteCajon && estiloFrenteCajon === 'UNICO_INFERIOR' ? altoPilaCajones : drawerHeight;
+              addPiece((construirFrenteEsteCajon ? 'Frente cajón · ' : 'Cajón interno · ') + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), altoPieza, general, b.x+gap, b.z+drawerGap+hd*(drawerHeight+drawerGap), construirFrenteEsteCajon ? -general-3 : b.y+12, COLORS.drawer, construirFrenteEsteCajon ? 'front' : 'drawer',false,localMeta(construirFrenteEsteCajon?'drawer-front':'drawer','h_drawers'));
+            }
           }
         }
         var front = String(node.front || (content === 'CAJONES_PUERTA' ? 'PUERTA_UNICA' : 'NINGUNO')).replace(/_VIDRIO/g,'').replace(/VIDRIO/g,'UNICA');

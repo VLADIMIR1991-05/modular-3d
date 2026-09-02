@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.4-beta.1
+# Versión: 4.8.5-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1205,6 +1205,30 @@ module LPenafiel_GeneradorMueblesExacto
             end
           end
           if contenido.start_with?('CAJONES')
+            # Frente de este espacio de cajones: independiente de "Puerta del
+            # espacio" (esa sigue siendo la puerta con bisagra de verdad).
+            # - POR_CAJON (por defecto): un frente por cada cajon, como hasta
+            #   ahora.
+            # - UNICO_INFERIOR: un solo frente que cubre TODA la pila de
+            #   cajones, atornillado siempre al cajon mas bajo -- los demas
+            #   cajones de esa columna se abren igual de independientes con
+            #   la mano de Interactuar, pero sin frente propio (quedan ocultos
+            #   detras del frente unico mientras estan cerrados).
+            # - FALSO: un panel fijo (sin Dynamic Component) que cubre todo el
+            #   espacio; no se crea ningun cajon real detras.
+            sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
+            frente_cajon_activo = contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
+            estilo_frente = frente_cajon_activo ? (node['drawerFrontStyle'] || 'POR_CAJON').to_s.upcase : 'POR_CAJON'
+            fuga_frente_ext = ([(node['gap'] || 3).to_f, 0.5].max / 2.0).mm
+
+            if frente_cajon_activo && estilo_frente == 'FALSO'
+              ancho_falso = ancho_nodo - (fuga_frente_ext * 2)
+              alto_falso = alto_nodo - (fuga_frente_ext * 2)
+              if ancho_falso > 0.mm && alto_falso > 0.mm
+                self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", ancho_falso, espesor, alto_falso,
+                  x_min + fuga_frente_ext, -espesor, z_min + fuga_frente_ext, 2, 2)
+              end
+            else
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
             # Espacio entre cajones: propio de los cajones (no el mismo que
             # la fuga de puertas), 30 mm por defecto entre cajon y cajon, y
@@ -1223,6 +1247,11 @@ module LPenafiel_GeneradorMueblesExacto
             cabe_manual = altura_manual.positive? && ((altura_manual * cantidad) + (fuga_h * (cantidad + 1))) <= alto_nodo
             altura_caja = cabe_manual ? altura_manual : altura_auto
             fondo_caja = [prof_input_cj, fondo_nodo - 10.mm].min
+            # Alto total de la pila de cajones (todas las cajas mas las fugas
+            # mecanicas entre ellas, sin contar la fuga externa antes de la
+            # primera ni despues de la ultima): lo que debe cubrir el frente
+            # unico para tapar tambien los huecos mecanicos entre cajas.
+            total_altura_pila = (altura_caja * cantidad) + (fuga_h * (cantidad - 1))
             if ancho_caja > (espesor * 2) && altura_caja > 25.mm && fondo_caja > (espesor * 2)
               (1..cantidad).each do |ci|
                 base_x = x_min + holgura
@@ -1260,18 +1289,15 @@ module LPenafiel_GeneradorMueblesExacto
                 # exterior. Con puerta propia, el cajon se queda con su
                 # frente interno (el que ya arma crear_pieza mas arriba),
                 # que nunca sobresale.
-                sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
-                if contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
-                  # Luz de acabado del frente exterior: propia y fina (mitad de
-                  # "Fuga perimetral", 1.5mm por lado por defecto), para que se
-                  # alinee igual que una puerta contra el casco. Nada que ver
-                  # con fuga_h (espacio MECÁNICO entre cajones, ahora 30mm por
-                  # defecto): usar esa fuga aquí hacía que el frente saliera
-                  # 60mm más angosto de lo debido y con un reveal enorme entre
-                  # frentes vecinos en vez de una luz fina de 3mm.
-                  fuga_frente_ext = ([(node['gap'] || 3).to_f, 0.5].max / 2.0).mm
+                # UNICO_INFERIOR: el frente solo se construye en el cajon mas
+                # bajo (ci==1) y cubre TODA la pila (total_altura_pila); los
+                # demas cajones de la columna quedan sin frente propio, ocultos
+                # detras de ese frente unico mientras estan cerrados.
+                construir_frente_este_cajon = frente_cajon_activo && (estilo_frente != 'UNICO_INFERIOR' || ci == 1)
+                if construir_frente_este_cajon
+                  alto_frente_bruto = estilo_frente == 'UNICO_INFERIOR' ? total_altura_pila : altura_caja
                   ancho_frente_ext = ancho_nodo - (fuga_frente_ext * 2)
-                  alto_frente_ext = altura_caja - (fuga_frente_ext * 2)
+                  alto_frente_ext = alto_frente_bruto - (fuga_frente_ext * 2)
                   if ancho_frente_ext > 0.mm && alto_frente_ext > 0.mm
                     self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_frente_ext, espesor, alto_frente_ext,
                       (x_min + fuga_frente_ext) - base_x, -espesor - y_min, fuga_frente_ext, 2, 2)
@@ -1292,6 +1318,7 @@ module LPenafiel_GeneradorMueblesExacto
                 @piezas_modulo_actual << instancia_cajon if @piezas_modulo_actual
                 self.agregar_interactividad_cajon(instancia_cajon, fondo_caja)
               end
+            end
             end
           end
         end

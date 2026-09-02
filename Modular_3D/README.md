@@ -1,7 +1,16 @@
-# Modular_3D 4.8.4-beta.1 · Frente de cajón corregido y tipo de bisagra por solape
+# Modular_3D 4.8.5-beta.1 · Puerta vs. frente de cajón como elección explícita
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.4-beta.1  
+**Versión:** 4.8.5-beta.1  
+
+## Cambios 4.8.5-beta.1
+
+- **"Puerta del espacio" ya no compite en silencio con "Cajones con frentes":** ese campo (y sus dependientes: Apertura, Cantidad externa) ahora se oculta automáticamente cuando el contenido del espacio es "Cajones con frentes" — en ese modo una puerta real nunca tenía sentido ahí (competían por el mismo plano), así que ya no aparece para evitar que alguien lo toque por costumbre y desactive el frente adosado sin darse cuenta. Al volver a un contenido con puerta, reaparece normal.
+- **Nueva opción "Frente de cajón"** (solo visible con "Cajones con frentes"), con tres estilos:
+  - **Uno por cajón** (el de siempre): cada cajón tiene su propio frente.
+  - **Único · acoplado al cajón de abajo**: un solo frente cubre toda la pila de cajones de esa columna y se desliza junto con el cajón más bajo al interactuar; los demás cajones de esa columna se siguen abriendo de forma independiente, pero sin frente propio (quedan ocultos detrás del frente único mientras están cerrados).
+  - **Falso · fijo, sin cajón**: un panel fijo (no es componente dinámico, no se abre) que cubre todo el espacio; en ese caso no se crea ningún cajón real detrás.
+- Reflejado también en la vista previa 3D (MODULAR-3D VIEW) para que coincida con lo que se va a construir.
 
 ## Cambios 4.8.4-beta.1
 

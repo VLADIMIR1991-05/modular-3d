@@ -225,7 +225,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.4-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.5-beta.1</div>
   </header>
 
   <main>
@@ -329,10 +329,12 @@
                 <div class="row h-drawers"><label for="h_drawer_gap">Espacio entre cajones (mm)</label><input type="number" id="h_drawer_gap" value="30" min="0" step="1"></div>
                 <div class="row h-drawers"><label for="h_drawer_height">Altura de cajón (mm)</label><input type="number" id="h_drawer_height" value="0" min="0" step="1"></div>
                 <small class="h-drawers">Espacio entre cajones: por defecto 30 mm entre cajón y cajón, y entre el primero/último y la base, techo o repisa que los encierra. Altura de cajón en 0 = automático (reparte el alto disponible en partes iguales); un valor mayor a 0 fija esa altura para cada cajón.</small>
-                <div class="row"><label for="h_front">Puerta del espacio</label><select id="h_front"><option value="NINGUNO">Sin puerta</option><option value="PUERTA_AUTO">Automática según ancho</option><option value="PUERTA_UNICA">Externa · una puerta</option><option value="PUERTA_DOBLE">Externa · dos puertas</option><option value="PUERTA_INTERNA">Interna · una puerta</option><option value="PUERTA_DOBLE_INTERNA">Interna · dos puertas</option></select></div>
-                <small>Selecciona el espacio padre para crear una o dos puertas que cubran todos sus espacios hijos.</small>
-                <div class="row"><label for="h_hinge">Apertura</label><select id="h_hinge"><option value="Izquierda">Bisagra izquierda</option><option value="Derecha">Bisagra derecha</option></select></div>
-                <div class="row"><label for="h_front_count">Cantidad externa</label><select id="h_front_count"><option value="AUTO">Automática</option><option value="1">1 puerta</option><option value="2">2 puertas</option><option value="3">3 puertas</option><option value="4">4 puertas</option></select></div>
+                <div class="row h-drawer-frentes"><label for="h_drawer_front_style">Frente de cajón</label><select id="h_drawer_front_style"><option value="POR_CAJON">Uno por cajón</option><option value="UNICO_INFERIOR">Único · acoplado al cajón de abajo</option><option value="FALSO">Falso · fijo, sin cajón</option></select></div>
+                <small class="h-drawer-frentes">"Uno por cajón": cada cajón tiene su propio frente. "Único": un solo frente cubre toda la pila de cajones y se desliza junto con el cajón más bajo; los demás cajones de esa columna se siguen abriendo aparte con Interactuar, pero sin frente propio (quedan ocultos detrás del frente único mientras están cerrados). "Falso": un panel fijo que no se abre; en ese espacio no se crea ningún cajón.</small>
+                <div class="row h-front-puerta"><label for="h_front">Puerta del espacio</label><select id="h_front"><option value="NINGUNO">Sin puerta</option><option value="PUERTA_AUTO">Automática según ancho</option><option value="PUERTA_UNICA">Externa · una puerta</option><option value="PUERTA_DOBLE">Externa · dos puertas</option><option value="PUERTA_INTERNA">Interna · una puerta</option><option value="PUERTA_DOBLE_INTERNA">Interna · dos puertas</option></select></div>
+                <small class="h-front-puerta">Selecciona el espacio padre para crear una o dos puertas que cubran todos sus espacios hijos.</small>
+                <div class="row h-front-puerta"><label for="h_hinge">Apertura</label><select id="h_hinge"><option value="Izquierda">Bisagra izquierda</option><option value="Derecha">Bisagra derecha</option></select></div>
+                <div class="row h-front-puerta"><label for="h_front_count">Cantidad externa</label><select id="h_front_count"><option value="AUTO">Automática</option><option value="1">1 puerta</option><option value="2">2 puertas</option><option value="3">3 puertas</option><option value="4">4 puertas</option></select></div>
                 <div class="row"><label for="h_gap">Fuga perimetral (mm)</label><input type="number" id="h_gap" value="3" min="0" step=".5"></div>
                 <div class="row"><label for="h_gap_center">Fuga entre puertas (mm)</label><input type="number" id="h_gap_center" value="3" min="0" step=".5"></div>
                 <div class="row h-external-fit"><label for="h_front_fit">Ajuste de puerta externa</label><select id="h_front_fit"><option value="AUTO">Automático sobre casco</option><option value="CUSTOM">Solape manual</option></select></div>
