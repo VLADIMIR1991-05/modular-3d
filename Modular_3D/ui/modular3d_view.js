@@ -413,7 +413,15 @@
         if (enclosure.left) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-left','h_left'));
         if (enclosure.right) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x+b.w-general,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-right','h_right'));
         if (enclosure.bottom) addPiece('Base local · '+nodeLabel,b.w,general,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
-        if (enclosure.top) addPiece('Techo local · '+nodeLabel,b.w,general,b.d,b.x,b.z+b.h-general,b.y,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
+        if (enclosure.top) {
+          if (String(enclosure.topMode || 'FULL').toUpperCase() === 'TRAVESANOS') {
+            var anchoTrav = Math.max(20, Number(enclosure.topTravesano) || 70);
+            addPiece('Travesaño delantero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_del'));
+            addPiece('Travesaño trasero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y+b.d-anchoTrav, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_tras'));
+          } else {
+            addPiece('Techo local · '+nodeLabel,b.w,general,b.d,b.x,b.z+b.h-general,b.y,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
+          }
+        }
         if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));
         var shelfCount = isLeaf && content === 'REPISAS' ? Math.min(20, Math.max(1, parseInt(node.shelves, 10) || 1)) : 0;
         for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, b.d, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));

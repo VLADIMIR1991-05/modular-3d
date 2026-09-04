@@ -1,7 +1,16 @@
-# Modular_3D 4.8.10-beta.1 · Cajón: unidad correcta en la fórmula de apertura
+# Modular_3D 4.8.11-beta.1 · Travesaños, bisagras por altura ajustadas y panel más compacto
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.10-beta.1  
+**Versión:** 4.8.11-beta.1  
+
+## Cambios 4.8.11-beta.1
+
+- **Nueva opción "2 travesaños" para el cierre superior de un espacio**, alternativa al techo completo (dos tablas angostas, adelante y atrás, de 70mm por defecto). Se elige junto al check "Cierre superior" (antes "Techo").
+- **Bisagras por altura ajustadas**: 2 hasta 950mm, 3 hasta 1400mm, 4 hasta 2120mm, 5 en puertas más altas (antes 950/1600/2200).
+- **Eliminada la opción "Reforzar piso cajón"**: el fondo del cajón ya es 15mm por defecto (usa el mismo espesor general que el resto del módulo); la plancha extra que agregaba esta opción no aportaba nada que no se pudiera lograr subiendo el espesor general.
+- **Cubo de navegación menos distorsionado**: se aumentó la perspectiva CSS del cubo (de 280 a 900) para reducir el efecto "ojo de pez" que lo hacía verse descuadrado en ángulos oblicuos.
+- **Panel "Interior y frente" del configurador más compacto**: los ajustes de cajones y de puerta de cada espacio ahora están en sub-paneles plegables (colapsados por defecto, un clic para expandir) en vez de mostrar todos los campos siempre — mismo tamaño de letra, menos scroll.
+- **Puerta con bisagra derecha (endurecimiento defensivo, aún sin confirmar en vivo):** la cara espejada de esa puerta ahora siempre se invierte sin condición (antes dependía de un chequeo que debía coincidir exactamente con un cálculo matemático aparte). Si la puerta derecha sigue apareciendo desplazada después de esta versión, revisar primero en "Materiales → Editar una pieza individual" si esa puerta específica tiene alguna sobremedida (ancho/alto) cargada por accidente de una edición anterior.
 
 ## Cambios 4.8.10-beta.1
 

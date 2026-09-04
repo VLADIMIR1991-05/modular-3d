@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.10-beta.1
+# Versión: 4.8.11-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -169,14 +169,17 @@ module LPenafiel_GeneradorMueblesExacto
     "REP_LOCAL" => "REP",
     "REP_Z" => "REP",
     "DIV_X" => "DIV",
-    "DIV_Y" => "DIV"
+    "DIV_Y" => "DIV",
+    "TRAV_DEL" => "TRAVD",
+    "TRAV_TRAS" => "TRAVT"
   }
 
   ETIQUETAS_CODIGO_PIEZA = {
     "LAT" => "Lateral", "BAS" => "Base", "TEC" => "Techo", "AJ" => "Ajuste posterior",
     "RES" => "Respaldo", "DIV" => "División", "REP" => "Repisa", "PT" => "Puerta",
     "COS" => "Cajón · costado", "FC" => "Cajón · frente exterior", "FCC" => "Cajón · frente interno",
-    "POS" => "Cajón · trasero", "FON" => "Cajón · fondo"
+    "POS" => "Cajón · trasero", "FON" => "Cajón · fondo",
+    "TRAVD" => "Travesaño delantero", "TRAVT" => "Travesaño trasero"
   }.freeze
 
   def self.codigo_pieza(nombre)
@@ -200,8 +203,8 @@ module LPenafiel_GeneradorMueblesExacto
   def self.bisagras_por_altura(alto_mm)
     alto = alto_mm.to_f
     return 2 if alto <= 950.0
-    return 3 if alto <= 1600.0
-    return 4 if alto <= 2200.0
+    return 3 if alto <= 1400.0
+    return 4 if alto <= 2120.0
     5
   end
 
@@ -689,9 +692,17 @@ module LPenafiel_GeneradorMueblesExacto
     esquina_inglete, medida_inglete, eje_inglete = inglete_pieza(nombre)
     grupo = entities.add_group
     if espejado_x
+      # Este orden de puntos (con -ancho) siempre da area con signo negativo
+      # (verificado por Newell/producto cruzado: para cualquier ancho,prof>0
+      # el resultado es matematicamente inequivoco), asi que la normal cruda
+      # de esta cara SIEMPRE sale mirando hacia -Z antes de corregirla -- se
+      # invierte sin condicion en vez de preguntar "if normal.z<0" (que
+      # dependia de que face.normal coincidiera exactamente con ese calculo)
+      # para eliminar cualquier margen de duda en la altura real de la pieza
+      # espejada.
       puntos = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(-ancho, 0, 0), Geom::Point3d.new(-ancho, prof, 0), Geom::Point3d.new(0, prof, 0)]
       face = grupo.entities.add_face(puntos)
-      face.reverse! if face.normal.z < 0
+      face.reverse!
       face.pushpull(-alto)
     elsif eje_inglete == :horizontal
       puntos = perfil_biselado_horizontal(ancho, alto, esquina_inglete, medida_inglete)
@@ -1184,7 +1195,18 @@ module LPenafiel_GeneradorMueblesExacto
           self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{nid}", espesor, d, h, x, y, z, 1, 1) if enc['left']
           self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{nid}", espesor, d, h, x + w - espesor, y, z, 1, 1) if enc['right']
           self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", w, d, espesor, x, y, z, 1, 0) if enc['bottom']
-          self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d, espesor, x, y, z + h - espesor, 1, 0) if enc['top']
+          if enc['top']
+            if enc['topMode'].to_s.upcase == 'TRAVESANOS'
+              # Cierre superior alternativo: 2 travesaños (adelante y atras) en
+              # vez de un techo completo -- ahorra material cuando no hace
+              # falta un panel entero encima (p. ej. debajo de una encimera).
+              ancho_trav = [(enc['topTravesano'] || 70).to_f, 20.0].max.mm
+              self.crear_pieza(entities, modulo_nombre, "H_TRAV_DEL_#{nid}", w, ancho_trav, espesor, x, y, z + h - espesor, 1, 0)
+              self.crear_pieza(entities, modulo_nombre, "H_TRAV_TRAS_#{nid}", w, ancho_trav, espesor, x, y + d - ancho_trav, z + h - espesor, 1, 0)
+            else
+              self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d, espesor, x, y, z + h - espesor, 1, 0)
+            end
+          end
           self.crear_pieza(entities, modulo_nombre, "H_RESP_#{nid}", w, grosor_resp, h, x, y + d - grosor_resp, z, 0, 0) if enc['back']
         end
 
@@ -1538,9 +1560,6 @@ module LPenafiel_GeneradorMueblesExacto
             self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_POSTERIOR", ancho_frente_cajon, prof_frente_cajon, alto_frente_cajon, x_cj_frente, y_cj_post, z_inicio_cajon, 1, 0)
             y_cj_fondo = retiro_cajones + espesor; z_cj_fondo = z_inicio_cajon
             self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_FONDO", ancho_fondo_cajon, prof_fondo_cajon, alto_fondo_cajon, x_cj_frente, y_cj_fondo, z_cj_fondo, 0, 0)
-            if datos['reforzar_piso'].to_s == "SI"
-              self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_REFUERZO_FONDO", ancho_fondo_cajon, prof_fondo_cajon, alto_fondo_cajon, x_cj_frente, y_cj_fondo, z_cj_fondo + espesor, 0, 0)
-            end
           end
 
           if tipo_cajon_nicho == "FRENTES"
@@ -3347,7 +3366,7 @@ module LPenafiel_GeneradorMueblesExacto
   </table>
 
   <h3>3. Herrajes estimados</h3>
-  <p class="hint">Bisagras calculadas automáticamente según la altura real de cada puerta (2 hasta 950mm, 3 hasta 1600mm, 4 hasta 2200mm, 5 en puertas más altas). Los frentes de cajón no suman bisagras, solo las puertas.</p>
+  <p class="hint">Bisagras calculadas automáticamente según la altura real de cada puerta (2 hasta 950mm, 3 hasta 1400mm, 4 hasta 2120mm, 5 en puertas más altas). Los frentes de cajón no suman bisagras, solo las puertas.</p>
   <table>
     <thead><tr><th>Concepto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead>
     <tbody>
