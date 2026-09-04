@@ -1,7 +1,12 @@
-# Modular_3D 4.8.21-beta.1 · Frentes de cajón uniformes + despiece por módulo
+# Modular_3D 4.8.22-beta.1 · Diagnóstico ampliado: bisagras (geometría real de la puerta)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.21-beta.1  
+**Versión:** 4.8.22-beta.1  
+
+## Cambios 4.8.22-beta.1
+
+- **Diagnóstico de bisagras, segunda vuelta.** Con tus datos anteriores encontré algo puntual: una puerta de 2117×597mm apareció con `bounds.height` (alto medido en vivo) de solo 15mm y `bounds.depth` de 2117mm — es decir, la puerta quedó **acostada** (el alto corrido hacia la profundidad) en vez de parada, y por eso el cálculo de bisagras usa 15mm en lugar de 2117mm. Confirmaste que la columna "Inglete" del despiece está vacía para esa puerta, lo que descarta mi primera sospecha (un inglete horizontal mal aplicado). Para ir a la causa real sin seguir adivinando, se agregó un diagnóstico más profundo, dentro de `crear_pieza` (donde se arma la geometría), que muestra el ancho/profundidad/alto exactos que recibe la pieza y el eje de inglete calculado, justo antes de dibujarla.
+  - **Para seguir ayudando**: con Window > Ruby Console abierta, reconstruí el mismo módulo con la puerta de 2117mm (o cualquiera que dé bisagras incorrectas) y copiame las líneas `[Modular_3D DEBUG geometria]` que aparezcan para esa puerta.
 
 ## Cambios 4.8.21-beta.1
 

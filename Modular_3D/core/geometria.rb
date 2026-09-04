@@ -514,6 +514,13 @@ module LPenafiel_GeneradorMueblesExacto
     prof = [prof + delta_prof, 1.mm].max
     alto = [alto + delta_alto, 1.mm].max
     esquina_inglete, medida_inglete, eje_inglete = inglete_pieza(nombre)
+    # DEBUG TEMPORAL (a retirar en cuanto se confirme el fix del bug de
+    # cantidad de bisagras incorrecta): muestra exactamente que ancho/prof/
+    # alto y que eje de inglete recibe crear_pieza para una puerta, justo
+    # antes de armar la geometria. Se ve en Window > Ruby Console.
+    if nombre.to_s.upcase.include?('PUERTA')
+      puts "[Modular_3D DEBUG geometria] nombre=#{nombre} espejado_x=#{espejado_x} ancho=#{ancho.to_mm.round(1)}mm prof=#{prof.to_mm.round(1)}mm alto=#{alto.to_mm.round(1)}mm eje_inglete=#{eje_inglete.inspect} esquina_inglete=#{esquina_inglete.inspect} medida_inglete=#{medida_inglete.inspect} delta_ancho=#{delta_ancho.to_mm.round(1)} delta_prof=#{delta_prof.to_mm.round(1)} delta_alto=#{delta_alto.to_mm.round(1)}"
+    end
     grupo = entities.add_group
     if espejado_x
       puntos = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(-ancho, 0, 0), Geom::Point3d.new(-ancho, prof, 0), Geom::Point3d.new(0, prof, 0)]
