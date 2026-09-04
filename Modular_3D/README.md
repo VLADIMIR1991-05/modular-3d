@@ -1,7 +1,12 @@
-# Modular_3D 4.8.18-beta.1 · Biblioteca de texturas incluidas
+# Modular_3D 4.8.19 · Fix crítico: crash al abrir el configurador + puerta bisagra derecha
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.18-beta.1  
+**Versión:** 4.8.19  
+
+## Cambios 4.8.19
+
+- **Fix crítico: el plugin no abría en SketchUp 2020** (`NoMethodError: undefined method 'filter_map'`). `Array#filter_map` es Ruby 2.7+, y SketchUp 2020 trae Ruby 2.5 — se reemplazó por `map` + `compact` en `core/profiles.rb`, que es compatible con ambos. Se hizo además un barrido de todo el código buscando otros métodos de Ruby moderno (`filter_map`, parámetros numerados, pattern matching `case/in`, `Hash#except`, métodos endless, `tally`, `clamp` con rango) y no se encontró ningún otro caso.
+- **Fix del bug de la puerta con bisagra derecha desplazada, encontrado con datos reales**: gracias a la instrumentación temporal de la versión anterior, un usuario mandó los números reales de una puerta bisagra derecha construida — el alto salía invertido en Z (por ejemplo, esperado 1.5..758.5mm, real -755.5..1.5mm: exactamente el mismo alto, para el lado opuesto). La causa era el `face.reverse!` que se aplicaba a la cara espejada antes de extruirla: esa cara en particular ya queda orientada de forma que `pushpull` extruye para el lado correcto sin revertirla, así que revertirla era justo lo que invertía el alto. Se quitó ese `reverse!`. **Si construís un módulo con puerta bisagra derecha, avisame si ya sale bien** para retirar la instrumentación de depuración (las líneas `[Modular_3D DEBUG puerta]` en la consola) en la próxima versión.
 
 ## Cambios 4.8.18-beta.1
 

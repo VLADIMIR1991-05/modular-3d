@@ -16,7 +16,9 @@ module Modular3D
     def listar
       return [] unless Dir.exist?(DIRECTORIO)
 
-      Dir.glob(File.join(DIRECTORIO, '*.json')).sort.filter_map do |ruta|
+      # filter_map (Array#filter_map) es Ruby 2.7+; SketchUp 2020 trae Ruby
+      # 2.5, asi que se arma con map+compact en su lugar.
+      Dir.glob(File.join(DIRECTORIO, '*.json')).sort.map do |ruta|
         begin
           datos = JSON.parse(File.read(ruta))
         rescue JSON::ParserError, StandardError
@@ -25,7 +27,7 @@ module Modular3D
         next nil unless datos.is_a?(Hash) && datos['id'] && datos['fields'].is_a?(Hash)
 
         datos
-      end
+      end.compact
     end
   end
 end

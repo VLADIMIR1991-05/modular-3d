@@ -494,14 +494,20 @@ module LPenafiel_GeneradorMueblesExacto
   # Components caiga sobre la bisagra real. En vez de construir la pieza
   # normal y mover la geometria despues (metodo fragil, causaba una puerta
   # rota/con algo "invisible" mas grande al abrir), se construye el
-  # footprint espejado desde el inicio -x en vez de +x- con el mismo patron
-  # que ya usaba crear_puerta_dinamica (probado): la normal puede quedar
-  # mirando hacia abajo y se corrige con face.reverse!, exactamente igual
-  # que esa funcion. Verificado con guion numerico (Newell + comparacion de
-  # rango mundial) que el footprint resultante ocupa el mismo espacio que
-  # una puerta normal, con el pivote en el borde correcto. Cuando
-  # espejado_x es true, x debe ser la posicion mundial del borde DERECHO de
-  # la pieza (no el izquierdo).
+  # footprint espejado desde el inicio -x en vez de +x.
+  #
+  # BUG REAL (encontrado con datos de consola de un usuario, no solo
+  # teoria): con face.reverse! + pushpull(-alto), la puerta con bisagra
+  # derecha salia con los bounds en Z invertidos -- por ejemplo z esperado
+  # 1.5..758.5mm y bounds reales -755.5..1.5mm, exactamente el mismo alto
+  # pero para el lado opuesto. La suposicion anterior (que la cara espejada
+  # SIEMPRE sale con normal -Z y hay que corregirla con reverse! antes de
+  # extruir igual que el resto de las piezas) no se cumple en la practica:
+  # SketchUp arma esta cara concreta con la orientacion que YA hace que
+  # pushpull(-alto) extruya para el lado correcto sin tocarla. Por eso el
+  # fix es simplemente no revertir la cara -- no hace falta, y revertirla
+  # es lo que invertia el alto. Cuando espejado_x es true, x debe ser la
+  # posicion mundial del borde DERECHO de la pieza (no el izquierdo).
   def self.crear_pieza(entities, modulo_nombre, nombre, ancho, prof, alto, x, y, z, cantos_l, cantos_c, espejado_x = false)
     delta_ancho, delta_prof, delta_alto = sobremedida_pieza(nombre)
     ancho = [ancho + delta_ancho, 1.mm].max
@@ -510,17 +516,8 @@ module LPenafiel_GeneradorMueblesExacto
     esquina_inglete, medida_inglete, eje_inglete = inglete_pieza(nombre)
     grupo = entities.add_group
     if espejado_x
-      # Este orden de puntos (con -ancho) siempre da area con signo negativo
-      # (verificado por Newell/producto cruzado: para cualquier ancho,prof>0
-      # el resultado es matematicamente inequivoco), asi que la normal cruda
-      # de esta cara SIEMPRE sale mirando hacia -Z antes de corregirla -- se
-      # invierte sin condicion en vez de preguntar "if normal.z<0" (que
-      # dependia de que face.normal coincidiera exactamente con ese calculo)
-      # para eliminar cualquier margen de duda en la altura real de la pieza
-      # espejada.
       puntos = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(-ancho, 0, 0), Geom::Point3d.new(-ancho, prof, 0), Geom::Point3d.new(0, prof, 0)]
       face = grupo.entities.add_face(puntos)
-      face.reverse!
       face.pushpull(-alto)
     elsif eje_inglete == :horizontal
       puntos = perfil_biselado_horizontal(ancho, alto, esquina_inglete, medida_inglete)
