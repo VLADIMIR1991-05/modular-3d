@@ -1,7 +1,13 @@
-# Modular_3D 4.8.13-beta.1 · Sobremedida por espacio en la jerarquía
+# Modular_3D 4.8.14-beta.1 · Diagnóstico temporal: puerta desplazada
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.13-beta.1  
+**Versión:** 4.8.14-beta.1  
+
+## Cambios 4.8.14-beta.1
+
+- **Diagnóstico temporal para el bug de la puerta izq./der. desplazada** (tarea 3/8 de esta ronda): tras 3+ rondas revisando el código sin encontrar la causa por pura lectura (la fórmula de posición es textualmente idéntica entre bisagra izquierda y derecha), se agregó una línea de depuración que se ve en **Window > Ruby Console** cada vez que se crea una puerta: compara la posición que se le pidió a la pieza (x/y/z esperados) contra los bounds reales de la puerta ya insertada en el modelo. No cambia ningún comportamiento, solo imprime información.
+  - **Para ayudar a resolverlo**: abre Window > Ruby Console *antes* de construir un módulo con al menos una puerta con bisagra derecha (y otra con bisagra izquierda para comparar), construye el módulo, y copia/pega aquí las líneas que empiezan con `[Modular_3D DEBUG puerta]`. Con esos números exactos (esperado vs. real) se podrá identificar la causa real en vez de seguir revisando el código a ciegas.
+  - Esta instrumentación es temporal y se retirará en cuanto el bug quede confirmado como resuelto.
 
 ## Cambios 4.8.13-beta.1
 

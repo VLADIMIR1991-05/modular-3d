@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.13-beta.1
+# Versión: 4.8.14-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1465,6 +1465,15 @@ module LPenafiel_GeneradorMueblesExacto
                                   self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
                                     x_puerta_izq, y_puerta, z_min + margen_lateral, 2, 2)
                                 end
+            # DEBUG TEMPORAL (a retirar en cuanto se confirme el fix del bug
+            # "puerta derecha/izq aparece desplazada"): compara la posicion
+            # que se le pidio a crear_pieza contra los bounds reales de la
+            # instancia ya insertada en el modelo. Se ve en Window > Ruby
+            # Console. No cambia ningun comportamiento, solo imprime.
+            if instancia_puerta && instancia_puerta.respond_to?(:bounds)
+              bp = instancia_puerta.bounds
+              puts "[Modular_3D DEBUG puerta] #{nombre_puerta} lado=#{lado_bisagra_puerta} esperado x=#{x_puerta_izq.to_mm.round(1)}mm y=#{y_puerta.to_mm.round(1)}mm z=#{(z_min + margen_lateral).to_mm.round(1)}mm ancho=#{ancho_puerta.to_mm.round(1)}mm alto=#{alto_puerta.to_mm.round(1)}mm | bounds_real min=(#{bp.min.x.to_mm.round(1)}, #{bp.min.y.to_mm.round(1)}, #{bp.min.z.to_mm.round(1)}) max=(#{bp.max.x.to_mm.round(1)}, #{bp.max.y.to_mm.round(1)}, #{bp.max.z.to_mm.round(1)})"
+            end
             self.agregar_interactividad_puerta(instancia_puerta, lado_bisagra_puerta)
             # Solape real de la bisagra sobre el panel de ese lado (lateral
             # izq/der del borde de la puerta contra el borde real del hueco):
