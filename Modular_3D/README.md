@@ -1,7 +1,11 @@
-# Modular_3D 4.8.15-beta.1 · plugin.rb reorganizado en archivos por responsabilidad
+# Modular_3D 4.8.16-beta.1 · CSS/JS de interfaz.html en archivos separados
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.15-beta.1  
+**Versión:** 4.8.16-beta.1  
+
+## Cambios 4.8.16-beta.1
+
+- **`interfaz.html` ya no tiene CSS/JS embebido** (tarea 5/8 de esta ronda): el `<style>` de 188 líneas pasó a `ui/interfaz.css` (cargado con `<link rel="stylesheet">`) y el `<script>` de 660 líneas pasó a `ui/interfaz.js` (cargado con `<script src="interfaz.js">`), igual que ya se hacía con `hierarchical_config.js`, `material_config.js` y `modular3d_view.js`. `interfaz.html` bajó de 1166 a 316 líneas. Cero cambios de comportamiento: se verificó reconstruyendo el archivo original a partir de los 3 archivos nuevos y comparando byte a byte que da idéntico.
 
 ## Cambios 4.8.15-beta.1
 
