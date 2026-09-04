@@ -1,7 +1,11 @@
-# Modular_3D 4.8.11-beta.1 · Travesaños, bisagras por altura ajustadas y panel más compacto
+# Modular_3D 4.8.12-beta.1 · Fuga de cajones igualada a la de puertas (1.5mm)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.11-beta.1  
+**Versión:** 4.8.12-beta.1  
+
+## Cambios 4.8.12-beta.1
+
+- **"Espacio entre cajones" ahora es 1.5mm por defecto** (antes 30mm), la misma fuga que ya usan las puertas — sigue siendo 100% editable por espacio si tu sistema de corredera necesita más holgura mecánica real. Primera de varias tareas de esta ronda (ver tareas en curso más abajo); las siguientes son sobremedida por nodo en la jerarquía, el bug de la puerta desplazada, y una reorganización del código en archivos por responsabilidad.
 
 ## Cambios 4.8.11-beta.1
 

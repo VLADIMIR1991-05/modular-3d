@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.11-beta.1
+# Versión: 4.8.12-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1263,12 +1263,12 @@ module LPenafiel_GeneradorMueblesExacto
               end
             else
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
-            # Espacio entre cajones: propio de los cajones (no el mismo que
-            # la fuga de puertas), 30 mm por defecto entre cajon y cajon, y
-            # entre el primero/ultimo cajon y la base/techo/repisa que los
-            # encierra (misma fuga aplicada antes del primero y despues del
-            # ultimo). Editable por espacio con "Espacio entre cajones".
-            fuga_h = [(node['drawerGap'] || 30).to_f, 1.0].max.mm
+            # Espacio mecanico entre cajones: 1.5mm por defecto (misma fuga
+            # que usan las puertas), aplicado entre cajon y cajon y entre el
+            # primero/ultimo y la base/techo/repisa que los encierra. Editable
+            # por espacio con "Espacio entre cajones" -- si el sistema de
+            # corredera necesita mas holgura mecanica real, se sube ahi.
+            fuga_h = [(node['drawerGap'] || 1.5).to_f, 0.5].max.mm
             holgura = 13.mm
             ancho_caja = ancho_nodo - (holgura * 2)
             # Altura de cajon: automatica (reparte el alto disponible en

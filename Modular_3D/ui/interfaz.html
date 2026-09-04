@@ -225,7 +225,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.11-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.12-beta.1</div>
   </header>
 
   <main>
@@ -329,9 +329,9 @@
                 <div class="row h-shelves"><label for="h_shelves">Cantidad repisas</label><input type="number" id="h_shelves" value="1" min="0" max="20"></div>
                 <details class="h-drawers h-subpanel"><summary>Cajones de este espacio</summary>
                   <div class="row"><label for="h_drawers">Cantidad cajones</label><input type="number" id="h_drawers" value="3" min="0" max="12"></div>
-                  <div class="row"><label for="h_drawer_gap">Espacio entre cajones (mm)</label><input type="number" id="h_drawer_gap" value="30" min="0" step="1"></div>
+                  <div class="row"><label for="h_drawer_gap">Espacio entre cajones (mm)</label><input type="number" id="h_drawer_gap" value="1.5" min="0" step=".5"></div>
                   <div class="row"><label for="h_drawer_height">Altura de cajón (mm)</label><input type="number" id="h_drawer_height" value="0" min="0" step="1"></div>
-                  <small>Espacio entre cajones: por defecto 30 mm entre cajón y cajón, y entre el primero/último y la base, techo o repisa que los encierra. Altura de cajón en 0 = automático (reparte el alto disponible en partes iguales); un valor mayor a 0 fija esa altura para cada cajón.</small>
+                  <small>Espacio entre cajones: por defecto 1.5 mm entre cajón y cajón (misma fuga que usan las puertas), y entre el primero/último y la base, techo o repisa que los encierra. Si tu sistema de corredera necesita más holgura mecánica, subí este valor. Altura de cajón en 0 = automático (reparte el alto disponible en partes iguales); un valor mayor a 0 fija esa altura para cada cajón.</small>
                   <div class="row h-drawer-frentes"><label for="h_drawer_front_style">Frente de cajón</label><select id="h_drawer_front_style"><option value="POR_CAJON">Uno por cajón</option><option value="UNICO_INFERIOR">Único · acoplado al cajón de abajo</option><option value="FALSO">Falso · fijo, sin cajón</option></select></div>
                   <small class="h-drawer-frentes">"Uno por cajón": cada cajón tiene su propio frente. "Único": un solo frente cubre toda la pila de cajones y se desliza junto con el cajón más bajo; los demás cajones de esa columna se siguen abriendo aparte con Interactuar, pero sin frente propio (quedan ocultos detrás del frente único mientras están cerrados). "Falso": un panel fijo que no se abre; en ese espacio no se crea ningún cajón.</small>
                 </details>

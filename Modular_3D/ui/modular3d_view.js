@@ -430,7 +430,7 @@
           // Espacio entre cajones: propio (drawerGap, 30mm por defecto), no
           // el mismo "gap" que usan las puertas. Altura manual si se pidio
           // una y entra junto con las fugas; si no, automatica.
-          var drawerGap = Number(node.drawerGap == null ? 30 : node.drawerGap);
+          var drawerGap = Number(node.drawerGap == null ? 1.5 : node.drawerGap);
           var drawerHeightAuto = Math.max(20, (b.h - drawerGap * (drawerCount + 1)) / drawerCount);
           var drawerHeightManual = Number(node.drawerHeight) || 0;
           var drawerHeightFits = drawerHeightManual > 0 && (drawerHeightManual * drawerCount + drawerGap * (drawerCount + 1)) <= b.h;
