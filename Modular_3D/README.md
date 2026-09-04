@@ -1,7 +1,22 @@
-# Modular_3D 4.8.14-beta.1 · Diagnóstico temporal: puerta desplazada
+# Modular_3D 4.8.15-beta.1 · plugin.rb reorganizado en archivos por responsabilidad
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.14-beta.1  
+**Versión:** 4.8.15-beta.1  
+
+## Cambios 4.8.15-beta.1
+
+- **Reorganización interna de `plugin.rb`** (tarea 4/8 de esta ronda): el archivo tenía más de 3700 líneas con todo mezclado. Se dividió en 9 archivos por responsabilidad dentro de `core/`, sin cambiar ningún comportamiento (mismo código, solo reubicado):
+  - `geometria.rb` — construcción de piezas, materiales, cantos, ingletes, sobremedida por pieza.
+  - `actualizaciones.rb` — comparación de versiones y aviso de actualización disponible.
+  - `jerarquia.rb` — el configurador jerárquico (diálogo + construcción del módulo desde `hierarchy_geometry_json`).
+  - `componentes_dinamicos.rb` — puertas y cajones interactivos (Dynamic Components).
+  - `despiece.rb` — generación, export a Excel/PDF del despiece.
+  - `presupuesto.rb` — cotizador y su export a PDF.
+  - `biblioteca.rb` — biblioteca local, edición por lotes, importar piezas externas.
+  - `esquinero.rb` — módulo esquinero en L.
+  - `habitacion.rb` — constructor de habitación (muros).
+  - `plugin.rb` quedó solo con el núcleo (licencia/manifiesto) y los `require` de todo lo anterior.
+  - Verificado que ningún método se perdió ni se duplicó (mismo listado exacto de 75 métodos antes y después) y que el contenido de código es línea por línea idéntico al original (solo cambió su ubicación de archivo); además se simuló la carga completa fuera de SketchUp para confirmar que no hay errores de referencia entre archivos.
 
 ## Cambios 4.8.14-beta.1
 
