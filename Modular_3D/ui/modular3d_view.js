@@ -447,11 +447,23 @@
           // sale del hueco interno del cajon igual que una puerta vecina, en
           // vez de quedarse angosto dentro de su propio espacio disponible.
           var fb = node.front_box || b;
+          // Fuga ENTRE frentes (y contra una puerta vecina de otro nodo):
+          // valor completo (3mm por defecto), no repartido a la mitad --
+          // front_box ya puso su propio margen de 1.5mm contra el casco o
+          // division, y un nodo vecino pone el suyo; entre los dos suman el
+          // total esperado sin que este calculo lo duplique. Todos los
+          // frentes visibles de esta columna (1 en FALSO/UNICO_INFERIOR,
+          // drawerCount en POR_CAJON) se reparten con la MISMA altura entre
+          // si llenando fb.h de punta a punta, en vez de heredar la altura
+          // mecanica de su propio cajon (que no coincide con el alto de
+          // fachada y hacia que el primero/ultimo salieran mas altos que los
+          // del medio). Igual que en Ruby (jerarquia.rb).
+          var fugaFrenteExt = gap;
           if (frenteCajonActivo && estiloFrenteCajon === 'FALSO') {
-            // Frente falso: un unico panel fijo, sin ningun cajon detras.
-            var fugaFalso = gap / 2;
-            addPiece('Frente falso · ' + nodeLabel, Math.max(1,fb.w-fugaFalso*2), Math.max(1,fb.h-fugaFalso*2), general, fb.x+fugaFalso, fb.z+fugaFalso, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
+            addPiece('Frente falso · ' + nodeLabel, Math.max(1,fb.w), Math.max(1,fb.h), general, fb.x, fb.z, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
           } else {
+            var frentesVisibles = estiloFrenteCajon === 'UNICO_INFERIOR' ? 1 : Math.max(1, drawerCount);
+            var alturaFrenteUniforme = Math.max(1, (fb.h - fugaFrenteExt * Math.max(0, frentesVisibles - 1)) / frentesVisibles);
             for (var hd = 0; hd < drawerCount; hd += 1) {
               var baseZ = b.z + drawerGap + hd * (drawerHeight + drawerGap);
               var construirFrenteEsteCajon = frenteCajonActivo && (estiloFrenteCajon !== 'UNICO_INFERIOR' || hd === 0);
@@ -459,24 +471,10 @@
                 addPiece('Cajón interno · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,b.w-gap*2), drawerHeight, general, b.x+gap, baseZ, b.y+12, COLORS.drawer, 'drawer', false, localMeta('drawer','h_drawers'));
                 continue;
               }
-              // La zona de este frente llega hasta la MITAD de la fuga
-              // mecanica (drawerGap) con el cajon vecino, no hasta el borde de
-              // su propia caja: asi el frente se traga ese hueco mecanico
-              // entero y solo deja una junta fina y fija de 3mm (1.5+1.5)
-              // contra el frente vecino, sin importar cuanta fuga mecanica se
-              // pida entre cajones. Contra el borde real del espacio deja el
-              // mismo 1.5mm. Igual que en Ruby (plugin.rb).
-              var fugaFrenteExt = gap / 2;
-              var zonaInferior, zonaSuperior;
-              if (estiloFrenteCajon === 'UNICO_INFERIOR') {
-                zonaInferior = fb.z; zonaSuperior = fb.z + fb.h;
-              } else {
-                zonaInferior = hd === 0 ? fb.z : (baseZ - drawerGap / 2);
-                zonaSuperior = hd === drawerCount - 1 ? (fb.z + fb.h) : (baseZ + drawerHeight + drawerGap / 2);
-              }
-              var altoFrente = (zonaSuperior - zonaInferior) - fugaFrenteExt * 2;
-              var zFrente = zonaInferior + fugaFrenteExt;
-              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,fb.w-fugaFrenteExt*2), altoFrente, general, fb.x+fugaFrenteExt, zFrente, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
+              var indiceFrente = estiloFrenteCajon === 'UNICO_INFERIOR' ? 0 : hd;
+              var altoFrente = estiloFrenteCajon === 'UNICO_INFERIOR' ? fb.h : alturaFrenteUniforme;
+              var zFrente = fb.z + indiceFrente * (alturaFrenteUniforme + fugaFrenteExt);
+              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,fb.w), altoFrente, general, fb.x, zFrente, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
             }
           }
         }

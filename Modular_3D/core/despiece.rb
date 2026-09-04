@@ -14,6 +14,18 @@ module LPenafiel_GeneradorMueblesExacto
   end
 
   def self.material_pieza(entity)
+    # Las piezas parametricas guardan el nombre "amigable" del material que
+    # el usuario tipeo (p. ej. "Blanco") en LPenafiel/material_configurado;
+    # usarlo tal cual evita mostrar el nombre TECNICO interno de SketchUp
+    # (M3D_Blanco_FFFFFF -- el prefijo M3D_ y el color en hex son solo para
+    # que SketchUp no mezcle dos materiales iguales de color distinto entre
+    # si, no estan pensados para que el usuario los vea). Las piezas sin
+    # este atributo (diseño libre / importadas) siguen con la deteccion por
+    # los materiales reales de sus caras.
+    if entity.respond_to?(:definition) && entity.definition
+      nombre_configurado = entity.definition.get_attribute("LPenafiel", "material_configurado")
+      return nombre_configurado.to_s unless nombre_configurado.to_s.empty?
+    end
     nombres = []
     nombres << entity.material.display_name if entity.respond_to?(:material) && entity.material
 
@@ -38,9 +50,27 @@ module LPenafiel_GeneradorMueblesExacto
     codigo = definicion.get_attribute("LPenafiel", "codigo")
     return nil unless codigo && !codigo.to_s.empty?
     modulo = definicion.get_attribute("LPenafiel", "modulo_despiece") || definicion.get_attribute("LPenafiel", "modulo") || "SIN_MODULO"
+    # modulo_uuid identifica el modulo REAL construido (a diferencia de
+    # "modulo", una firma por dimensiones que puede repetirse si hay dos
+    # modulos identicos): separa el despiece en secciones por modulo real y
+    # no mezcla la foto 3D de uno con la de otro. Las piezas mas viejas sin
+    # este atributo (construidas antes de que existiera) caen de vuelta a
+    # "modulo" tal cual, que sigue siendo unico en la practica para ellas.
+    modulo_uuid = definicion.get_attribute("LPenafiel", "modulo_uuid") || modulo
+
+    # DEBUG TEMPORAL (a retirar en cuanto se confirme el fix del bug de
+    # cantidad de bisagras incorrecta): compara la altura guardada en el
+    # atributo dimension_1_mm (al momento de construir la puerta) contra la
+    # altura medida en vivo via bounds.height (la que usa el calculo de
+    # bisagras). Se ve en Window > Ruby Console. No cambia comportamiento.
+    if codigo.to_s == 'PT'
+      alto_bounds_mm = entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.height) : nil
+      puts "[Modular_3D DEBUG bisagra] pieza=#{definicion.name} dimension_1_mm(guardado)=#{definicion.get_attribute('LPenafiel', 'dimension_1_mm')} dimension_2_mm(guardado)=#{definicion.get_attribute('LPenafiel', 'dimension_2_mm')} bounds.height(vivo)=#{alto_bounds_mm} bounds.width(vivo)=#{entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.width) : nil} bounds.depth(vivo)=#{entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.depth) : nil}"
+    end
 
     {
       :modulo => modulo,
+      :modulo_uuid => modulo_uuid,
       :codigo => codigo.to_s,
       :nombre_legible => etiqueta_despiece_pieza(codigo.to_s),
       # Las piezas parametricas ya muestran una vista 3D del modulo completo
@@ -160,43 +190,95 @@ module LPenafiel_GeneradorMueblesExacto
     UI.messagebox("No se pudo crear el PDF automaticamente. Se abrio con el mismo formato para imprimir o guardar como PDF.")
   end
 
-  def self.filas_html_despiece(filas, editable)
-    por_modulo = filas.group_by { |fila| fila["modulo"].to_s }
+  def self.fila_tr_html_despiece(fila, editable)
     clase_editable = editable ? "editable" : ""
     data_attrs = editable ? " data-campo='nombre'" : ""
+    "<tr>" \
+    "<td>#{fila['miniatura'] ? "<img class='pieza-miniatura' src='#{html_escape(fila['miniatura'])}' alt='Vista 3D de #{html_escape(fila['nombre'])}'>" : ''}</td>" \
+    "<td class='#{clase_editable}'#{data_attrs}>#{html_escape(fila['nombre'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='cantidad'" : ""}>#{html_escape(fila['cantidad'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='medida1'" : ""}>#{html_escape(fila['medida1'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='canto1'" : ""}>#{html_escape(fila['canto1'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='medida2'" : ""}>#{html_escape(fila['medida2'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='canto2'" : ""}>#{html_escape(fila['canto2'])}</td>" \
+    "<td class='#{clase_editable} num'#{editable ? " data-campo='placa'" : ""}>#{html_escape(fila['placa'])}</td>" \
+    "<td class='#{clase_editable}'#{editable ? " data-campo='material'" : ""}>#{html_escape(fila['material'])}</td>" \
+    "<td#{editable ? " data-campo='tipo_canto'" : ""}>#{html_escape(fila['tipo_canto'])}</td>" \
+    "<td#{editable ? " data-campo='color_canto'" : ""}>#{html_escape(fila['color_canto'])}</td>" \
+    "<td#{editable ? " data-campo='inglete'" : ""}>#{html_escape(fila['inglete'])}</td>" \
+    "<td#{editable ? " data-campo='bisagrado'" : ""}>#{html_escape(fila['bisagrado'])}</td>" \
+    "</tr>"
+  end
 
-    por_modulo.keys.sort.map do |modulo|
-      filas_originales = por_modulo[modulo]
-      filas_modulo = filas_originales.map do |fila|
-        "<tr>" \
-        "<td>#{fila['miniatura'] ? "<img class='pieza-miniatura' src='#{html_escape(fila['miniatura'])}' alt='Vista 3D de #{html_escape(fila['nombre'])}'>" : ''}</td>" \
-        "<td class='#{clase_editable}'#{data_attrs}>#{html_escape(fila['nombre'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='cantidad'" : ""}>#{html_escape(fila['cantidad'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='medida1'" : ""}>#{html_escape(fila['medida1'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='canto1'" : ""}>#{html_escape(fila['canto1'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='medida2'" : ""}>#{html_escape(fila['medida2'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='canto2'" : ""}>#{html_escape(fila['canto2'])}</td>" \
-        "<td class='#{clase_editable} num'#{editable ? " data-campo='placa'" : ""}>#{html_escape(fila['placa'])}</td>" \
-        "<td class='#{clase_editable}'#{editable ? " data-campo='material'" : ""}>#{html_escape(fila['material'])}</td>" \
-        "<td#{editable ? " data-campo='tipo_canto'" : ""}>#{html_escape(fila['tipo_canto'])}</td>" \
-        "<td#{editable ? " data-campo='color_canto'" : ""}>#{html_escape(fila['color_canto'])}</td>" \
-        "<td#{editable ? " data-campo='inglete'" : ""}>#{html_escape(fila['inglete'])}</td>" \
-        "<td#{editable ? " data-campo='bisagrado'" : ""}>#{html_escape(fila['bisagrado'])}</td>" \
-        "</tr>"
-      end.join
+  def self.seccion_modulo_html(nombre_export, titulo, subtitulo, foto_html, filas_seccion, editable, clave_uuid = nil)
+    # data-modulo lleva el nombre LEGIBLE (no un UUID interno): filasActuales()
+    # en el HTML lo vuelve a leer al exportar Excel/PDF y termina en la
+    # columna "Modulo" del CSV -- debe quedar entendible ahi, no una clave.
+    # data-modulo-uuid guarda la clave REAL de agrupamiento (para que, al
+    # exportar a PDF, dos modulos con el mismo nombre/medidas no se
+    # vuelvan a mezclar en una sola tabla).
+    filas_html = filas_seccion.map { |fila| fila_tr_html_despiece(fila, editable) }.join
+    "<section class='modulo-page'><div class='modulo-head'>#{foto_html}<div><h3>#{html_escape(titulo)}</h3><p>#{html_escape(subtitulo)}</p></div></div>" \
+    "<table data-modulo='#{html_escape(nombre_export)}' data-modulo-uuid='#{html_escape((clave_uuid || nombre_export).to_s)}'>" \
+    "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th><th>Bisagrado</th></tr></thead>" \
+    "<tbody>#{filas_html}</tbody>" \
+    "</table></section>"
+  end
 
+  # Cada modulo REAL construido (identificado por modulo_uuid, no por la
+  # firma de dimensiones "modulo" -- dos modulos identicos en medidas no
+  # deben pisarse la foto ni mezclarse en una sola seccion) obtiene su
+  # propia seccion con su propia foto 3D guardada al construirlo.
+  def self.filas_html_despiece(filas, editable)
+    por_modulo = filas.group_by { |fila| fila["modulo_uuid"].to_s }
+    # La seccion global (si existe) siempre va al final, como resumen
+    # despues de los modulos individuales, no intercalada alfabeticamente.
+    claves_ordenadas = por_modulo.keys.reject { |clave| clave == '__GLOBAL_TODOS_LOS_MODULOS__' }.sort
+    claves_ordenadas << '__GLOBAL_TODOS_LOS_MODULOS__' if por_modulo.key?('__GLOBAL_TODOS_LOS_MODULOS__')
+
+    claves_ordenadas.map do |modulo_uuid|
+      filas_originales = por_modulo[modulo_uuid]
+      titulo = filas_originales.first["modulo"].to_s
+      es_global = modulo_uuid == '__GLOBAL_TODOS_LOS_MODULOS__'
+      if es_global
+        foto_capturada = captura_vista_actual
+        foto_html = foto_capturada ? "<img class='modulo-view' src='#{html_escape(foto_capturada)}' alt='Vista general de todos los modulos'>" : svg_modulo_despiece(titulo, filas_originales)
+        next seccion_modulo_html(titulo, 'Todos los módulos (global)', 'Cutlist combinado de toda la selección, para mandar a cortar de una sola vez.', foto_html, filas_originales, editable, modulo_uuid)
+      end
       vista_guardada = begin
-        Sketchup.active_model.get_attribute('Modular3DViews', modulo.to_s).to_s
+        Sketchup.active_model.get_attribute('Modular3DViews', modulo_uuid.to_s).to_s
       rescue StandardError
         ''
       end
-      vista_html = vista_guardada.start_with?('data:image/') ? "<img class='modulo-view' src='#{html_escape(vista_guardada)}' alt='Vista 3D guardada de #{html_escape(modulo)}'>" : svg_modulo_despiece(modulo, filas_originales)
-      "<section class='modulo-page'><div class='modulo-head'>#{vista_html}<div><h3>Modulo: #{html_escape(modulo)}</h3><p>Vista 3D sincronizada al construir o actualizar este módulo. Cada módulo conserva su propia cámara.</p></div></div>" \
-      "<table data-modulo='#{html_escape(modulo)}'>" \
-      "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th><th>Bisagrado</th></tr></thead>" \
-      "<tbody>#{filas_modulo}</tbody>" \
-      "</table></section>"
+      # Compatibilidad con modulos guardados antes de que existiera
+      # modulo_uuid: su foto habia quedado guardada con la clave vieja
+      # (la firma de dimensiones).
+      if vista_guardada.empty?
+        vista_guardada = begin
+          Sketchup.active_model.get_attribute('Modular3DViews', titulo).to_s
+        rescue StandardError
+          ''
+        end
+      end
+      foto_html = vista_guardada.start_with?('data:image/') ? "<img class='modulo-view' src='#{html_escape(vista_guardada)}' alt='Vista 3D guardada de #{html_escape(titulo)}'>" : svg_modulo_despiece(titulo, filas_originales)
+      seccion_modulo_html(titulo, "Modulo: #{titulo}", 'Vista 3D sincronizada al construir o actualizar este módulo. Cada módulo conserva su propia cámara.', foto_html, filas_originales, editable, modulo_uuid)
     end.join
+  end
+
+  # Foto de "Todos los modulos": la vista actual del visor 3D en el momento
+  # de generar el despiece (best-effort -- si falla por lo que sea, se cae
+  # de vuelta al icono generico en vez de romper el despiece entero).
+  def self.captura_vista_actual
+    ruta = File.join(Sketchup.temp_dir, "m3d_despiece_global_#{rand(1_000_000_000)}.png")
+    vista = Sketchup.active_model.active_view
+    ok = vista.write_image(:filename => ruta, :width => 640, :height => 480, :antialias => true, :compression => 0.9)
+    return nil unless ok && File.exist?(ruta)
+    binario = File.binread(ruta)
+    "data:image/png;base64,#{[binario].pack('m0')}"
+  rescue StandardError
+    nil
+  ensure
+    File.delete(ruta) if ruta && File.exist?(ruta)
   end
 
   def self.svg_modulo_despiece(modulo, filas)
@@ -278,29 +360,10 @@ module LPenafiel_GeneradorMueblesExacto
       return
     end
 
-    agrupado = {}
-    piezas.each do |pieza|
-      clave = [
-        pieza[:modulo],
-        pieza[:codigo],
-        pieza[:medida_1],
-        pieza[:canto_1],
-        pieza[:medida_2],
-        pieza[:canto_2],
-        pieza[:placa],
-        pieza[:material],
-        pieza[:tipo_canto],
-        pieza[:color_canto],
-        pieza[:inglete],
-        pieza[:tipo_bisagra]
-      ]
-      agrupado[clave] ||= pieza.merge(:cantidad => 0)
-      agrupado[clave][:cantidad] += 1
-    end
-
-    filas_data = agrupado.values.sort_by { |pieza| [pieza[:modulo], pieza[:codigo], pieza[:medida_1], pieza[:medida_2], pieza[:material]] }.map do |pieza|
+    fila_export = lambda do |pieza|
       {
         "modulo" => pieza[:modulo],
+        "modulo_uuid" => pieza[:modulo_uuid],
         "miniatura" => pieza[:miniatura],
         "nombre" => pieza[:nombre_legible] || etiqueta_despiece_pieza(pieza[:codigo]),
         "cantidad" => pieza[:cantidad],
@@ -316,7 +379,64 @@ module LPenafiel_GeneradorMueblesExacto
         "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm], pieza[:tipo_bisagra])
       }
     end
-    filas_html = filas_html_despiece(filas_data, true)
+
+    # Por modulo REAL (modulo_uuid): cada modulo construido, aunque sea
+    # identico en medidas a otro, obtiene su propia seccion y su propia
+    # cantidad de piezas -- no se mezcla con otro modulo solo porque
+    # comparten dimensiones.
+    agrupado_por_modulo = {}
+    piezas.each do |pieza|
+      clave = [
+        pieza[:modulo_uuid],
+        pieza[:codigo],
+        pieza[:medida_1],
+        pieza[:canto_1],
+        pieza[:medida_2],
+        pieza[:canto_2],
+        pieza[:placa],
+        pieza[:material],
+        pieza[:tipo_canto],
+        pieza[:color_canto],
+        pieza[:inglete],
+        pieza[:tipo_bisagra]
+      ]
+      agrupado_por_modulo[clave] ||= pieza.merge(:cantidad => 0)
+      agrupado_por_modulo[clave][:cantidad] += 1
+    end
+    filas_data = agrupado_por_modulo.values.sort_by { |pieza| [pieza[:modulo], pieza[:codigo], pieza[:medida_1], pieza[:medida_2], pieza[:material]] }.map(&fila_export)
+
+    # Global: la MISMA pieza (mismo codigo/medidas/material/etc) se combina
+    # aunque venga de modulos distintos -- pensado para un cutlist unico de
+    # toda la seleccion, sin importar de que modulo salio cada una.
+    agrupado_global = {}
+    piezas.each do |pieza|
+      clave = [
+        pieza[:codigo],
+        pieza[:medida_1],
+        pieza[:canto_1],
+        pieza[:medida_2],
+        pieza[:canto_2],
+        pieza[:placa],
+        pieza[:material],
+        pieza[:tipo_canto],
+        pieza[:color_canto],
+        pieza[:inglete],
+        pieza[:tipo_bisagra]
+      ]
+      agrupado_global[clave] ||= pieza.merge(:cantidad => 0)
+      agrupado_global[clave][:cantidad] += 1
+    end
+    filas_data_global = agrupado_global.values.sort_by { |pieza| [pieza[:codigo], pieza[:medida_1], pieza[:medida_2], pieza[:material]] }.map(&fila_export)
+    # Las filas del cutlist global se marcan con una clave especial: mas
+    # abajo, filas_html_despiece las reconoce y arma con eso una seccion
+    # "Todos los módulos" aparte, con su propia foto de la vista actual.
+    filas_data_global.each do |fila|
+      fila['modulo'] = 'Todos los módulos'
+      fila['modulo_uuid'] = '__GLOBAL_TODOS_LOS_MODULOS__'
+    end
+
+    hay_varios_modulos = filas_data.map { |fila| fila['modulo_uuid'] }.uniq.length > 1
+    filas_html = filas_html_despiece(hay_varios_modulos ? filas_data + filas_data_global : filas_data, true)
 
     html = <<-HTML
 <!DOCTYPE html>
@@ -392,8 +512,9 @@ module LPenafiel_GeneradorMueblesExacto
       var filas = [];
       document.querySelectorAll('table[data-modulo]').forEach(function(tabla) {
         var modulo = tabla.getAttribute('data-modulo') || '';
+        var moduloUuid = tabla.getAttribute('data-modulo-uuid') || modulo;
         tabla.querySelectorAll('tbody tr').forEach(function(tr) {
-          var fila = { modulo: modulo };
+          var fila = { modulo: modulo, modulo_uuid: moduloUuid };
           tr.querySelectorAll('[data-campo]').forEach(function(celda) {
             fila[celda.getAttribute('data-campo')] = celda.textContent.trim();
           });

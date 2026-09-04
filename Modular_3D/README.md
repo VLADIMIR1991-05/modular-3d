@@ -1,7 +1,15 @@
-# Modular_3D 4.8.20-beta.1 · Migración opcional desde formato antiguo a la jerarquía
+# Modular_3D 4.8.21-beta.1 · Frentes de cajón uniformes + despiece por módulo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.20-beta.1  
+**Versión:** 4.8.21-beta.1  
+
+## Cambios 4.8.21-beta.1
+
+- **Fix: los frentes de cajón ahora salen todos de la misma altura y alineados con las puertas.** Antes, el primero y el último frente de una columna salían más altos que los del medio (heredaban el hueco mecánico completo hasta la base/techo) y además quedaban 1.5mm más angostos/metidos que una puerta en el mismo lugar (se les restaba una fuga extra encima de la que ya trae el plano de fachada). Ahora todos los frentes de una misma columna reparten el alto disponible en partes iguales, con 3mm entre uno y otro, y el ancho/margen lateral sale exactamente igual al de una puerta vecina (1.5mm contra el casco o división). Aplica a "Uno por cajón", "Único" y "Falso".
+- **Despiece con una sección y foto por cada módulo real, más un resumen global.** Si construías 2 o 3 módulos idénticos en medidas, el despiece los mezclaba en una sola sección y se quedaba con la foto del último (compartían la misma "firma" por dimensiones). Ahora cada módulo construido tiene su propia identidad real (independiente de sus medidas) y su propia foto guardada; si hay más de un módulo en la selección, se agrega al final una sección **"Todos los módulos (global)"** con el cutlist combinado de todo (para mandar a cortar de una sola vez) y una foto de la vista actual del visor.
+- **Nombre de material más claro en el despiece.** La columna "Material" mostraba el nombre técnico interno de SketchUp (p. ej. `M3D_Blanco_FFFFFF`); ahora usa el nombre que vos escribiste (p. ej. "Blanco"), guardado aparte para este fin.
+- **Diagnóstico temporal para el cálculo de bisagras**: seguís viendo cantidades que no coinciden con la altura real de la puerta (2/3/4/5 según 950/1400/2120mm). Revisé la fórmula a fondo y está bien en aislado, así que agregué una línea de depuración (ver Window > Ruby Console) que compara la altura guardada al construir contra la altura medida en vivo — con esos números puedo encontrar la causa real en vez de seguir revisando a ciegas.
+- Se retiró la instrumentación de depuración de la puerta desplazada (confirmaste que ya salía bien con tus datos de consola).
 
 ## Cambios 4.8.20-beta.1
 

@@ -542,6 +542,13 @@ module LPenafiel_GeneradorMueblesExacto
       instancia.definition.description = cantos
       instancia.definition.set_attribute("LPenafiel", "modulo", modulo_nombre)
       instancia.definition.set_attribute("LPenafiel", "modulo_despiece", @modulo_despiece_actual || modulo_nombre)
+      # UUID real de ESTE modulo construido (a diferencia de modulo_despiece,
+      # que es una firma por dimensiones pensada para agrupar cantidades de
+      # modulos identicos en el despiece global): permite separar el despiece
+      # en secciones por modulo real aunque dos modulos compartan medidas
+      # exactas, y guardar/recuperar la foto 3D de cada uno sin que una
+      # pise la otra.
+      instancia.definition.set_attribute("LPenafiel", "modulo_uuid", @modulo_uuid_actual || @modulo_despiece_actual || modulo_nombre)
       instancia.definition.set_attribute("LPenafiel", "pieza_original", nombre)
       instancia.definition.set_attribute("LPenafiel", "codigo", codigo)
       instancia.definition.set_attribute("LPenafiel", "dimension_1_mm", dimensiones[0])

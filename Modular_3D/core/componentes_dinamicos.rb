@@ -21,6 +21,7 @@ module LPenafiel_GeneradorMueblesExacto
     definicion.description = "2L-2C"
     definicion.set_attribute("LPenafiel", "modulo", modulo_nombre)
     definicion.set_attribute("LPenafiel", "modulo_despiece", @modulo_despiece_actual || modulo_nombre)
+    definicion.set_attribute("LPenafiel", "modulo_uuid", @modulo_uuid_actual || @modulo_despiece_actual || modulo_nombre)
     definicion.set_attribute("LPenafiel", "pieza_original", "PUERTA_#{indice}")
     definicion.set_attribute("LPenafiel", "codigo", "PT")
     definicion.set_attribute("LPenafiel", "dimension_1_mm", dimensiones[0])

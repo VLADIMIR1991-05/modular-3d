@@ -512,25 +512,43 @@ module LPenafiel_GeneradorMueblesExacto
             sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
             frente_cajon_activo = contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
             estilo_frente = frente_cajon_activo ? (node['drawerFrontStyle'] || 'POR_CAJON').to_s.upcase : 'POR_CAJON'
-            fuga_frente_ext = ([(node['gap'] || 3).to_f, 0.5].max / 2.0).mm
+            # Fuga ENTRE frentes (y entre el frente y una puerta vecina de otro
+            # nodo): valor completo, igual que fuga_central entre puertas -- NO
+            # se reparte a la mitad aca porque el reparto ya lo hace front_box
+            # (frontJoint) contra el borde del casco/division, y contra un
+            # nodo vecino cada uno pone su propio frontJoint (1.5mm) y entre
+            # los dos suman los 3mm esperados sin que este codigo lo duplique.
+            fuga_frente_ext = [(node['gap'] || 3).to_f, 0.5].max.mm
             # El frente de cajon se alinea al mismo plano/ancho que tendria una
             # puerta ahi (front_box, calculado en JS con el mismo solape sobre
-            # el casco/division que usan las puertas): asi los frentes salen
-            # del hueco interno del cajon y solapan los laterales igual que
-            # una puerta vecina, en vez de quedarse angostos dentro de su
-            # propio espacio disponible.
+            # el casco/division que usan las puertas), y se usa TAL CUAL --
+            # sin restarle una fuga extra -- para que salga exactamente del
+            # mismo ancho y con el mismo margen de 1.5mm que tendria una
+            # puerta en ese lugar (front_box ya trae ese margen incluido via
+            # frontJoint; una puerta tampoco le resta nada mas encima).
             frente_box_cajon = node['front_box'].is_a?(Hash) ? node['front_box'] : nil
             frente_x_min = frente_box_cajon ? frente_box_cajon['x'].to_f.mm : x_min
             frente_ancho = frente_box_cajon ? frente_box_cajon['w'].to_f.mm : ancho_nodo
             frente_z_min = frente_box_cajon ? frente_box_cajon['z'].to_f.mm : z_min
             frente_alto = frente_box_cajon ? frente_box_cajon['h'].to_f.mm : alto_nodo
+            # Todos los frentes visibles de esta columna (1 en FALSO/UNICO_
+            # INFERIOR, "cantidad" en POR_CAJON) se reparten con la MISMA
+            # altura entre si, llenando frente_alto de punta a punta con
+            # fuga_frente_ext (3mm por defecto) entre cada uno -- en vez de
+            # heredar la altura mecanica del cajon (altura_caja), que no
+            # coincide con el alto visible de fachada y hacia que el primero
+            # y el ultimo salieran mas altos que los del medio.
+            cantidad_frentes_visibles = estilo_frente == 'UNICO_INFERIOR' ? 1 : [[node['drawers'].to_i, 1].max, 12].min
+            altura_frente_uniforme = if cantidad_frentes_visibles.positive?
+                                       (frente_alto - (fuga_frente_ext * [cantidad_frentes_visibles - 1, 0].max)) / cantidad_frentes_visibles
+                                     else
+                                       0.mm
+                                     end
 
             if frente_cajon_activo && estilo_frente == 'FALSO'
-              ancho_falso = frente_ancho - (fuga_frente_ext * 2)
-              alto_falso = frente_alto - (fuga_frente_ext * 2)
-              if ancho_falso > 0.mm && alto_falso > 0.mm
-                self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", ancho_falso, espesor, alto_falso,
-                  frente_x_min + fuga_frente_ext, -espesor, frente_z_min + fuga_frente_ext, 2, 2)
+              if frente_ancho > 0.mm && frente_alto > 0.mm
+                self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", frente_ancho, espesor, frente_alto,
+                  frente_x_min, -espesor, frente_z_min, 2, 2)
               end
             else
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
@@ -594,34 +612,22 @@ module LPenafiel_GeneradorMueblesExacto
                 # frente unico mientras estan cerrados.
                 construir_frente_este_cajon = frente_cajon_activo && (estilo_frente != 'UNICO_INFERIOR' || ci == 1)
                 if construir_frente_este_cajon
-                  # La zona que le toca cubrir a ESTE frente va hasta la MITAD
-                  # de la fuga mecanica (fuga_h, hoy 30mm por defecto) con el
-                  # cajon vecino -- no hasta el borde de su propia caja -- para
-                  # que el frente se trague ese hueco mecanico por completo y
-                  # solo deje una junta fina y fija de 3mm (1.5+1.5) contra el
-                  # frente vecino, sin importar cuanta fuga mecanica se pida
-                  # entre cajones. Contra el borde real del espacio (arriba del
-                  # todo o abajo del todo) deja el mismo 1.5mm, igual que
-                  # contra una puerta vecina en otro nodo. UNICO_INFERIOR
-                  # siempre usa el espacio completo, ignorando las cajas
-                  # intermedias que tapa.
-                  # Los bordes exteriores (arriba del primero, abajo del
-                  # ultimo) llegan hasta frente_z_min/frente_alto -- el mismo
-                  # plano que tendria una puerta ahi -- en vez de quedarse en
-                  # el borde del hueco interno del cajon.
-                  if estilo_frente == 'UNICO_INFERIOR'
-                    zona_inferior = frente_z_min
-                    zona_superior = frente_z_min + frente_alto
-                  else
-                    zona_inferior = ci == 1 ? frente_z_min : (base_z - (fuga_h / 2.0))
-                    zona_superior = ci == cantidad ? (frente_z_min + frente_alto) : (base_z + altura_caja + (fuga_h / 2.0))
-                  end
-                  ancho_frente_ext = frente_ancho - (fuga_frente_ext * 2)
-                  alto_frente_ext = (zona_superior - zona_inferior) - (fuga_frente_ext * 2)
-                  z_frente_local = (zona_inferior - base_z) + fuga_frente_ext
-                  if ancho_frente_ext > 0.mm && alto_frente_ext > 0.mm
-                    self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", ancho_frente_ext, espesor, alto_frente_ext,
-                      (frente_x_min + fuga_frente_ext) - base_x, -espesor - y_min, z_frente_local, 2, 2)
+                  # Todos los frentes de esta columna salen con la MISMA
+                  # altura (altura_frente_uniforme, calculada mas arriba
+                  # repartiendo frente_alto en partes iguales) en vez de
+                  # heredar la altura mecanica de su propio cajon -- por eso
+                  # el primero y el ultimo ya no salian mas altos que los del
+                  # medio. UNICO_INFERIOR usa un solo frente con el alto
+                  # completo. El ancho sale igual que frente_ancho, sin
+                  # restarle nada mas: front_box ya trae el margen de 1.5mm
+                  # contra el casco/division, igual que una puerta ahi.
+                  indice_frente = estilo_frente == 'UNICO_INFERIOR' ? 0 : (ci - 1)
+                  alto_frente_ext = estilo_frente == 'UNICO_INFERIOR' ? frente_alto : altura_frente_uniforme
+                  z_frente_abs = frente_z_min + (indice_frente * (altura_frente_uniforme + fuga_frente_ext))
+                  z_frente_local = z_frente_abs - base_z
+                  if frente_ancho > 0.mm && alto_frente_ext > 0.mm
+                    self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", frente_ancho, espesor, alto_frente_ext,
+                      frente_x_min - base_x, -espesor - y_min, z_frente_local, 2, 2)
                   end
                 end
                 @offset_creacion = offset_guardado
@@ -716,15 +722,6 @@ module LPenafiel_GeneradorMueblesExacto
                                   self.crear_pieza(entities, modulo_nombre, nombre_puerta, ancho_puerta, grosor_puerta, alto_puerta,
                                     x_puerta_izq, y_puerta, z_min + margen_lateral, 2, 2)
                                 end
-            # DEBUG TEMPORAL (a retirar en cuanto se confirme el fix del bug
-            # "puerta derecha/izq aparece desplazada"): compara la posicion
-            # que se le pidio a crear_pieza contra los bounds reales de la
-            # instancia ya insertada en el modelo. Se ve en Window > Ruby
-            # Console. No cambia ningun comportamiento, solo imprime.
-            if instancia_puerta && instancia_puerta.respond_to?(:bounds)
-              bp = instancia_puerta.bounds
-              puts "[Modular_3D DEBUG puerta] #{nombre_puerta} lado=#{lado_bisagra_puerta} esperado x=#{x_puerta_izq.to_mm.round(1)}mm y=#{y_puerta.to_mm.round(1)}mm z=#{(z_min + margen_lateral).to_mm.round(1)}mm ancho=#{ancho_puerta.to_mm.round(1)}mm alto=#{alto_puerta.to_mm.round(1)}mm | bounds_real min=(#{bp.min.x.to_mm.round(1)}, #{bp.min.y.to_mm.round(1)}, #{bp.min.z.to_mm.round(1)}) max=(#{bp.max.x.to_mm.round(1)}, #{bp.max.y.to_mm.round(1)}, #{bp.max.z.to_mm.round(1)})"
-            end
             self.agregar_interactividad_puerta(instancia_puerta, lado_bisagra_puerta)
             # Solape real de la bisagra sobre el panel de ese lado (lateral
             # izq/der del borde de la puerta contra el borde real del hueco):
@@ -974,8 +971,11 @@ module LPenafiel_GeneradorMueblesExacto
         model.selection.add(contenedor)
       end
       unless datos['view_snapshot'].to_s.empty?
-        model.set_attribute('Modular3DViews', @modulo_despiece_actual.to_s, datos['view_snapshot'].to_s)
-        model.set_attribute('Modular3DViewCameras', @modulo_despiece_actual.to_s, datos['view_camera_json'].to_s)
+        # Se guarda con la clave del modulo REAL (modulo_uuid), no la firma
+        # por dimensiones (modulo_despiece): dos modulos identicos en medidas
+        # pisaban la misma foto entre si con la clave vieja.
+        model.set_attribute('Modular3DViews', @modulo_uuid_actual.to_s, datos['view_snapshot'].to_s)
+        model.set_attribute('Modular3DViewCameras', @modulo_uuid_actual.to_s, datos['view_camera_json'].to_s)
       end
       @piezas_modulo_actual = nil
       @offset_creacion = nil
