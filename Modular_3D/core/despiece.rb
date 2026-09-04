@@ -58,16 +58,6 @@ module LPenafiel_GeneradorMueblesExacto
     # "modulo" tal cual, que sigue siendo unico en la practica para ellas.
     modulo_uuid = definicion.get_attribute("LPenafiel", "modulo_uuid") || modulo
 
-    # DEBUG TEMPORAL (a retirar en cuanto se confirme el fix del bug de
-    # cantidad de bisagras incorrecta): compara la altura guardada en el
-    # atributo dimension_1_mm (al momento de construir la puerta) contra la
-    # altura medida en vivo via bounds.height (la que usa el calculo de
-    # bisagras). Se ve en Window > Ruby Console. No cambia comportamiento.
-    if codigo.to_s == 'PT'
-      alto_bounds_mm = entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.height) : nil
-      puts "[Modular_3D DEBUG bisagra] pieza=#{definicion.name} dimension_1_mm(guardado)=#{definicion.get_attribute('LPenafiel', 'dimension_1_mm')} dimension_2_mm(guardado)=#{definicion.get_attribute('LPenafiel', 'dimension_2_mm')} bounds.height(vivo)=#{alto_bounds_mm} bounds.width(vivo)=#{entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.width) : nil} bounds.depth(vivo)=#{entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.depth) : nil}"
-    end
-
     {
       :modulo => modulo,
       :modulo_uuid => modulo_uuid,
@@ -83,7 +73,13 @@ module LPenafiel_GeneradorMueblesExacto
       # orden mayor/menor de medida_1/medida_2 (esos se ordenan para el
       # listado de corte y no siempre coinciden con la altura). Se usa para
       # calcular cuántas bisagras necesita cada puerta según su altura real.
-      :alto_real_mm => entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.height) : 0,
+      # OJO: BoundingBox#height de SketchUp NO es el alto en Z (es el eje Y);
+      # el alto en Z real es #depth. Encontrado con datos de consola reales
+      # (una puerta de 2117mm de alto daba bounds.height=15 -- su grosor -- y
+      # bounds.depth=2117). Para no depender de esa nomenclatura confusa, se
+      # calcula directo desde min/max en Z, igual que ya se hizo para
+      # verificar la posicion de las puertas.
+      :alto_real_mm => entity.respond_to?(:bounds) ? dimension_mm(entity.bounds.max.z - entity.bounds.min.z) : 0,
       :tipo_bisagra => definicion.get_attribute("LPenafiel", "tipo_bisagra"),
       :placa => definicion.get_attribute("LPenafiel", "placa_mm").to_i,
       :canto_1 => definicion.get_attribute("LPenafiel", "cantos_largos").to_i,

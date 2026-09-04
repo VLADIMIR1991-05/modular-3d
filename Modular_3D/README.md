@@ -1,7 +1,12 @@
-# Modular_3D 4.8.22-beta.1 · Diagnóstico ampliado: bisagras (geometría real de la puerta)
+# Modular_3D 4.8.23 · Fix definitivo: cantidad de bisagras
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.22-beta.1  
+**Versión:** 4.8.23  
+
+## Cambios 4.8.23
+
+- **Fix real del bug de cantidad de bisagras.** Causa encontrada: `Sketchup::BoundingBox#height` **no** devuelve el alto en el eje Z como parece indicar su nombre — devuelve la medida en el eje Y (`#depth` es la que da el eje Z). El cálculo de bisagras leía `bounds.height` pensando que era el alto real de la puerta, así que para una puerta de 2117mm terminaba usando 15mm (su grosor) en su lugar, dando 2 bisagras en vez de 4. La geometría de la puerta en sí siempre estuvo bien — nunca fue un problema de construcción, solo de qué medida se leía después para las bisagras. Ahora se calcula directo desde las coordenadas Z reales de la pieza (igual que ya se hacía para verificar la posición de las puertas), sin depender de esa nomenclatura confusa de la API de SketchUp.
+- Se retiraron las dos instrumentaciones de depuración temporal (bisagras y geometría), ya no hacen falta.
 
 ## Cambios 4.8.22-beta.1
 
