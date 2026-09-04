@@ -1,7 +1,13 @@
-# Modular_3D 4.8.12-beta.1 · Fuga de cajones igualada a la de puertas (1.5mm)
+# Modular_3D 4.8.13-beta.1 · Sobremedida por espacio en la jerarquía
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.12-beta.1  
+**Versión:** 4.8.13-beta.1  
+
+## Cambios 4.8.13-beta.1
+
+- **Sobremedida por espacio (nodo) en el configurador jerárquico**: cada espacio con lateral izq./der., base o cierre superior (techo completo) activados ahora tiene su propio panel "Sobremedida de este espacio" con 8 campos (frontal/trasera para cada uno de esos 4 paneles), igual en concepto a la sobremedida del casco general — un valor positivo hace que ese panel sobresalga hacia adelante o atrás; negativo lo retranquea. No aplica a "2 travesaños" (son listones, no un panel) ni al respaldo.
+  - Mismo cálculo en Ruby (construcción real), en la vista previa 3D y en las reglas de validación (límite proporcional a la profundidad del propio espacio, igual que el casco general).
+  - Tarea 2/8 de esta ronda. Sigue pendiente que la puerta de un espacio "se adapte" automáticamente cuando la sobremedida frontal de su base/techo/laterales la sobrepase — se hará junto con la tarea 3/8 (diagnóstico de la puerta desplazada), porque ambas tocan el mismo cálculo de posición Y de la puerta y conviene resolverlas juntas para no arriesgar una regresión.
 
 ## Cambios 4.8.12-beta.1
 

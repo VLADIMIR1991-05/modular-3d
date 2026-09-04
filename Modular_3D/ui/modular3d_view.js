@@ -410,16 +410,20 @@
         var isLeaf = !(node.children || []).length, enclosure = node.enclosure || {};
         var nid = stableHierarchyId(node.id, 'IDX' + (nodeIndex + 1));
         var localMeta=function(role,field,suffix){var prefixes={'local-left':'H_CIERRE_IZQ_','local-right':'H_CIERRE_DER_','local-bottom':'H_BASE_','local-top':'H_TECHO_','local-back':'H_RESP_','local-shelf':'H_REP_LOCAL_','door':'H_PUERTA_','drawer-front':'H_CJ_'};return{pieceId:role+'_'+node.id+(suffix||''),materialKey:(prefixes[role]||('H_'+role.toUpperCase().replace(/-/g,'_')+'_'))+nid+(suffix||''),role:role,ownerSpaceId:node.id,parentSpaceId:node.id,sourceField:field};};
-        if (enclosure.left) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-left','h_left'));
-        if (enclosure.right) addPiece('Lateral local · '+nodeLabel,general,b.h,b.d,b.x+b.w-general,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-right','h_right'));
-        if (enclosure.bottom) addPiece('Base local · '+nodeLabel,b.w,general,b.d,b.x,b.z,b.y,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
+        var sob = node.sobremedida || {};
+        var retFrontal = function(clave){ return -(Number(sob['frontal'+clave]) || 0); };
+        var retTrasera = function(clave){ return -(Number(sob['trasera'+clave]) || 0); };
+        if (enclosure.left) { var rfI=retFrontal('Izq'), rtI=retTrasera('Izq'); addPiece('Lateral local · '+nodeLabel,general,b.h,b.d-rfI-rtI,b.x,b.z,b.y+rfI,COLORS.interior,'interior',false,localMeta('local-left','h_left')); }
+        if (enclosure.right) { var rfD=retFrontal('Der'), rtD=retTrasera('Der'); addPiece('Lateral local · '+nodeLabel,general,b.h,b.d-rfD-rtD,b.x+b.w-general,b.z,b.y+rfD,COLORS.interior,'interior',false,localMeta('local-right','h_right')); }
+        if (enclosure.bottom) { var rfB=retFrontal('Inferior'), rtB=retTrasera('Inferior'); addPiece('Base local · '+nodeLabel,b.w,general,b.d-rfB-rtB,b.x,b.z,b.y+rfB,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom')); }
         if (enclosure.top) {
           if (String(enclosure.topMode || 'FULL').toUpperCase() === 'TRAVESANOS') {
             var anchoTrav = Math.max(20, Number(enclosure.topTravesano) || 70);
             addPiece('Travesaño delantero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_del'));
             addPiece('Travesaño trasero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y+b.d-anchoTrav, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_tras'));
           } else {
-            addPiece('Techo local · '+nodeLabel,b.w,general,b.d,b.x,b.z+b.h-general,b.y,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
+            var rfT=retFrontal('Superior'), rtT=retTrasera('Superior');
+            addPiece('Techo local · '+nodeLabel,b.w,general,b.d-rfT-rtT,b.x,b.z+b.h-general,b.y+rfT,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
           }
         }
         if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));

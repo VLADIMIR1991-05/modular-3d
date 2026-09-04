@@ -15,7 +15,7 @@ Sketchup.require 'Modular_3D/core/license'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.8.12-beta.1
+# Versión: 4.8.13-beta.1
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -1192,19 +1192,39 @@ module LPenafiel_GeneradorMueblesExacto
           box = node['box']; enc = node['enclosure']; x = box['x'].to_f.mm; y = box['y'].to_f.mm; z = box['z'].to_f.mm
           w = box['w'].to_f.mm; d = box['d'].to_f.mm; h = box['h'].to_f.mm
           nid = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
-          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{nid}", espesor, d, h, x, y, z, 1, 1) if enc['left']
-          self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{nid}", espesor, d, h, x + w - espesor, y, z, 1, 1) if enc['right']
-          self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", w, d, espesor, x, y, z, 1, 0) if enc['bottom']
+          # Sobremedida por nodo: mismo mecanismo que la sobremedida del
+          # casco general (retranqueo = 0.mm - sobremedida), pero aplicado
+          # panel por panel dentro de este espacio de la jerarquia. Un valor
+          # positivo hace que ese panel sobresalga hacia adelante/atras;
+          # negativo lo retranquea. Solo afecta cierres laterales, base y
+          # techo (modo completo) -- travesanos y respaldo quedan fuera.
+          sob = node['sobremedida'].is_a?(Hash) ? node['sobremedida'] : {}
+          ret_frontal_de = lambda { |clave| 0.mm - (sob["frontal#{clave}"] || 0).to_f.mm }
+          ret_trasera_de = lambda { |clave| 0.mm - (sob["trasera#{clave}"] || 0).to_f.mm }
+          if enc['left']
+            rf = ret_frontal_de.call('Izq'); rt = ret_trasera_de.call('Izq')
+            self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{nid}", espesor, d - rf - rt, h, x, y + rf, z, 1, 1)
+          end
+          if enc['right']
+            rf = ret_frontal_de.call('Der'); rt = ret_trasera_de.call('Der')
+            self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{nid}", espesor, d - rf - rt, h, x + w - espesor, y + rf, z, 1, 1)
+          end
+          if enc['bottom']
+            rf = ret_frontal_de.call('Inferior'); rt = ret_trasera_de.call('Inferior')
+            self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", w, d - rf - rt, espesor, x, y + rf, z, 1, 0)
+          end
           if enc['top']
             if enc['topMode'].to_s.upcase == 'TRAVESANOS'
               # Cierre superior alternativo: 2 travesaños (adelante y atras) en
               # vez de un techo completo -- ahorra material cuando no hace
               # falta un panel entero encima (p. ej. debajo de una encimera).
+              # No aplica sobremedida: son listones angostos, no un panel.
               ancho_trav = [(enc['topTravesano'] || 70).to_f, 20.0].max.mm
               self.crear_pieza(entities, modulo_nombre, "H_TRAV_DEL_#{nid}", w, ancho_trav, espesor, x, y, z + h - espesor, 1, 0)
               self.crear_pieza(entities, modulo_nombre, "H_TRAV_TRAS_#{nid}", w, ancho_trav, espesor, x, y + d - ancho_trav, z + h - espesor, 1, 0)
             else
-              self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d, espesor, x, y, z + h - espesor, 1, 0)
+              rf = ret_frontal_de.call('Superior'); rt = ret_trasera_de.call('Superior')
+              self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d - rf - rt, espesor, x, y + rf, z + h - espesor, 1, 0)
             end
           end
           self.crear_pieza(entities, modulo_nombre, "H_RESP_#{nid}", w, grosor_resp, h, x, y + d - grosor_resp, z, 0, 0) if enc['back']

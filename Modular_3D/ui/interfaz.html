@@ -225,7 +225,7 @@
       <span id="license_identity"></span>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.12-beta.1</div>
+    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.13-beta.1</div>
   </header>
 
   <main>
@@ -323,6 +323,17 @@
                 <div class="checks-grid"><label><input type="checkbox" id="h_left"> Lateral izq.</label><label><input type="checkbox" id="h_right"> Lateral der.</label><label><input type="checkbox" id="h_bottom"> Base</label><label><input type="checkbox" id="h_top"> Cierre superior</label><label><input type="checkbox" id="h_back"> Respaldo</label></div>
                 <div class="row h-top-mode"><label for="h_top_mode">Tipo de cierre superior</label><select id="h_top_mode"><option value="FULL">Techo completo</option><option value="TRAVESANOS">2 travesaños</option></select></div>
                 <div class="row h-top-mode" id="h_top_travesano_row"><label for="h_top_travesano">Ancho travesaño (mm)</label><input type="number" id="h_top_travesano" value="70" min="20" step="1"></div>
+                <details class="h-sob-panel h-subpanel"><summary>Sobremedida de este espacio</summary>
+                  <small>Igual que la sobremedida del casco general: un valor positivo hace que ese panel sobresalga hacia adelante o atrás; negativo lo retranquea. Solo aplica a los paneles activados arriba (no a travesaños ni respaldo).</small>
+                  <div class="row h-sob-izq"><label for="h_sob_frontal_izq">Lateral izq. · sobremedida frontal (mm)</label><input type="number" id="h_sob_frontal_izq" value="0" step="1"></div>
+                  <div class="row h-sob-izq"><label for="h_sob_trasera_izq">Lateral izq. · sobremedida trasera (mm)</label><input type="number" id="h_sob_trasera_izq" value="0" step="1"></div>
+                  <div class="row h-sob-der"><label for="h_sob_frontal_der">Lateral der. · sobremedida frontal (mm)</label><input type="number" id="h_sob_frontal_der" value="0" step="1"></div>
+                  <div class="row h-sob-der"><label for="h_sob_trasera_der">Lateral der. · sobremedida trasera (mm)</label><input type="number" id="h_sob_trasera_der" value="0" step="1"></div>
+                  <div class="row h-sob-inferior"><label for="h_sob_frontal_inferior">Base · sobremedida frontal (mm)</label><input type="number" id="h_sob_frontal_inferior" value="0" step="1"></div>
+                  <div class="row h-sob-inferior"><label for="h_sob_trasera_inferior">Base · sobremedida trasera (mm)</label><input type="number" id="h_sob_trasera_inferior" value="0" step="1"></div>
+                  <div class="row h-sob-superior"><label for="h_sob_frontal_superior">Techo · sobremedida frontal (mm)</label><input type="number" id="h_sob_frontal_superior" value="0" step="1"></div>
+                  <div class="row h-sob-superior"><label for="h_sob_trasera_superior">Techo · sobremedida trasera (mm)</label><input type="number" id="h_sob_trasera_superior" value="0" step="1"></div>
+                </details>
               </details>
               <details open><summary>Interior y frente</summary>
                 <div class="row"><label for="h_content">Contenido</label><select id="h_content"><option value="VACIO">Vacío</option><option value="REPISAS">Repisas internas</option><option value="CAJONES_INTERNOS">Cajones internos</option><option value="CAJONES_FRENTES">Cajones con frentes</option><option value="CAJONES_PUERTA">Cajones internos + puerta</option></select></div>

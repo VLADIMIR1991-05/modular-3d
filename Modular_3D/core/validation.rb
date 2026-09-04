@@ -241,6 +241,28 @@ module Modular3D
           valido = false
         end
         errores << 'No se pudo leer la configuracion de espacios (jerarquia). No se va a construir una caja vacia: cierra y vuelve a abrir el editor del modulo antes de reintentar.' unless valido
+
+        # Sobremedida por nodo: mismo limite proporcional a la profundidad
+        # que la sobremedida del casco general (linea 180 mas arriba), pero
+        # evaluado con la profundidad propia de cada espacio de la jerarquia.
+        if valido
+          hierarchy_geometry['nodes'].each do |node|
+            next unless node.is_a?(Hash) && node['sobremedida'].is_a?(Hash) && node['box'].is_a?(Hash)
+            sob = node['sobremedida']
+            profundidad_nodo = node['box']['d'].to_f
+            next unless profundidad_nodo.positive?
+            maximo_sobremedida_nodo = [profundidad_nodo * 0.4, 200.0].min
+            nombre_nodo = (node['display_name'] || node['name'] || node['id'] || 'espacio').to_s
+            %w[Izq Der Inferior Superior].each do |panel|
+              frontal = sob["frontal#{panel}"].to_f
+              trasero = sob["trasera#{panel}"].to_f
+              [["sobremedida frontal #{panel}", frontal], ["sobremedida trasera #{panel}", trasero]].each do |etiqueta, valor|
+                errores << "#{nombre_nodo}: #{etiqueta} no puede sobresalir mas de #{maximo_sobremedida_nodo.round} mm." if valor > maximo_sobremedida_nodo
+              end
+              errores << "#{nombre_nodo}: la sobremedida del panel #{panel.downcase} lo deja sin profundidad util." if (frontal + trasero) <= (30 - profundidad_nodo)
+            end
+          end
+        end
       end
 
       { errores: errores, avisos: avisos }
