@@ -1,0 +1,11 @@
+{
+  "textures": [
+    { "id": "blanco_liso", "name": "Blanco liso", "file": "blanco_liso.png", "defaultScale": 600, "defaultColor": "#f6f6f4" },
+    { "id": "blanco_nube", "name": "Blanco nube", "file": "blanco_nube.png", "defaultScale": 600, "defaultColor": "#f2f2f0" },
+    { "id": "negro_mate", "name": "Negro mate", "file": "negro_mate.png", "defaultScale": 600, "defaultColor": "#1c1c1e" },
+    { "id": "gris_antracita", "name": "Gris antracita", "file": "gris_antracita.png", "defaultScale": 600, "defaultColor": "#46494e" },
+    { "id": "roble_claro", "name": "Roble claro", "file": "roble_claro.png", "defaultScale": 300, "defaultColor": "#d6b586" },
+    { "id": "nogal_oscuro", "name": "Nogal oscuro", "file": "nogal_oscuro.png", "defaultScale": 300, "defaultColor": "#5c3c28" },
+    { "id": "wengue", "name": "Wengué", "file": "wengue.png", "defaultScale": 300, "defaultColor": "#362a22" }
+  ]
+}

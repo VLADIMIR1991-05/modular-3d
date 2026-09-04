@@ -1,7 +1,14 @@
-# Modular_3D 4.8.17-beta.1 · Validación de cajones/repisas/puertas por espacio
+# Modular_3D 4.8.18-beta.1 · Biblioteca de texturas incluidas
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.17-beta.1  
+**Versión:** 4.8.18-beta.1  
+
+## Cambios 4.8.18-beta.1
+
+- **Nueva biblioteca de texturas incluidas con el plugin** (tarea 8/8 de esta ronda — se saltó la 7/8 por ahora, ver abajo): 7 acabados genéricos (blanco liso, blanco nube, negro mate, gris antracita, roble claro, nogal oscuro, wengué) que viven dentro del propio plugin en `Modular_3D/textures/`, sin depender de Internet ni de que subas un archivo. Son imágenes genéricas/procedurales, no fotografías reales de un proveedor — un punto de partida rápido, no un catálogo de materiales reales.
+  - Nuevo selector "Textura incluida" en el material general, en el editor de material por grupo, y en el editor de una pieza individual.
+  - En Ruby, se agregó soporte para resolver una referencia `INCLUDED:<id>` (guardada en `material_textures_json`) al archivo real dentro de `Modular_3D/textures/`, usando el mismo mecanismo que ya existía para texturas subidas o por URL.
+- **Nota sobre la tarea 7/8** (retirar el código de las generaciones antiguas de construcción): se pausó a pedido tuyo, porque no hay forma de probarla con un .skp real guardado con una versión vieja del plugin en este entorno, y borrar ese código sin poder verificarlo tiene riesgo real de romper algún módulo viejo al abrirlo. Queda pendiente en la lista de tareas para cuando quieras retomarla (por ejemplo, si me pasás un .skp viejo para probar la migración antes de borrar nada).
 
 ## Cambios 4.8.17-beta.1
 

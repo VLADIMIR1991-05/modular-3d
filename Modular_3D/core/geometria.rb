@@ -258,8 +258,29 @@ module LPenafiel_GeneradorMueblesExacto
     [grupo, color, material_nombre, textura, meta]
   end
 
+  # Biblioteca de texturas incluidas con el plugin (Modular_3D/textures/):
+  # imagenes genericas/procedurales, no fotografias reales, para tener
+  # variedad basica sin depender de internet ni de que el usuario suba algo.
+  # Referenciadas en material_textures_json como "INCLUDED:<id>".
+  def self.manifiesto_texturas_incluidas
+    return @manifiesto_texturas_incluidas if defined?(@manifiesto_texturas_incluidas)
+    ruta = File.expand_path('../textures/manifest.json', __dir__)
+    @manifiesto_texturas_incluidas = begin
+      datos = JSON.parse(File.read(ruta))
+      (datos['textures'] || []).each_with_object({}) { |item, memo| memo[item['id'].to_s] = item if item.is_a?(Hash) && item['id'] }
+    rescue StandardError
+      {}
+    end
+  end
+
   def self.archivo_textura(textura, material_nombre)
     return nil if textura.to_s.empty?
+    if textura.start_with?('INCLUDED:')
+      item = manifiesto_texturas_incluidas[textura.sub('INCLUDED:', '')]
+      return nil unless item
+      ruta = File.expand_path("../textures/#{item['file']}", __dir__)
+      return File.exist?(ruta) ? ruta : nil
+    end
     if textura.start_with?('data:image/') && textura.include?(';base64,')
       cabecera, contenido = textura.split(',', 2)
       extension = cabecera.include?('png') ? 'png' : 'jpg'
