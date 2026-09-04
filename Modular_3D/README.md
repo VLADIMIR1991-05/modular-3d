@@ -1,7 +1,16 @@
-# Modular_3D 4.8.19 · Fix crítico: crash al abrir el configurador + puerta bisagra derecha
+# Modular_3D 4.8.20-beta.1 · Migración opcional desde formato antiguo a la jerarquía
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.19  
+**Versión:** 4.8.20-beta.1  
+
+## Cambios 4.8.20-beta.1
+
+- **Migración opcional de módulos antiguos al configurador jerárquico** (tarea 7/8 de esta ronda). Al editar un módulo guardado con una versión anterior del plugin (grid de nichos/columnas vía `spaces_json`, o el formato más viejo con solo puerta+cajones sueltos, sin ninguna jerarquía todavía), aparece un aviso en la pestaña "Configuración" con un botón **"Convertir a configurador jerárquico"**.
+  - Se optó por la opción segura en vez de retirar directamente el código que construye esos formatos viejos: no hay forma de probar la conversión contra un `.skp` real guardado con una versión vieja en este entorno (sin SketchUp), así que borrar ese código a ciegas tenía riesgo real de romper módulos existentes. En cambio:
+    - El código Ruby que construye los formatos antiguos **no se tocó ni se retiró** — un módulo viejo sigue abriendo y reconstruyéndose exactamente igual que siempre si no usás el botón nuevo.
+    - La conversión es 100% opcional y reversible: se puede deshacer con "Deshacer" (Ctrl-like, el botón de la pestaña) si el resultado no queda bien, y no se guarda nada hasta que vos decidís actualizar el módulo.
+    - Se avisa explícitamente que es "una primera aproximación, no un reemplazo exacto" — cubre grids de nichos/columnas (con cajoneras, puertas simples/dobles, repisas) y el formato más viejo de puerta+cajones sueltos; no reproduce "maletera" (poco común, y ya no tiene forma de activarse desde la interfaz actual).
+  - Probado con 5 casos sintéticos (grid 2×2 con contenido mixto, formato más viejo sin grid, fila única de 3 columnas, columna única con 1 espacio, aviso de maletera) verificando que el árbol resultante tiene la forma y los valores esperados.
 
 ## Cambios 4.8.19
 

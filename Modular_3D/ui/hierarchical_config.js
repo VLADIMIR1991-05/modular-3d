@@ -45,6 +45,84 @@
   function toggleFields(){var c=id('h_content').value,front=String(id('h_front').value||''),external=front!=='NINGUNO'&&front.indexOf('INTERNA')<0,esFrentes=c==='CAJONES_FRENTES',hayTop=!!(id('h_top')&&id('h_top').checked),esTravesanos=hayTop&&id('h_top_mode')&&id('h_top_mode').value==='TRAVESANOS';document.querySelectorAll('.h-top-mode').forEach(function(x){x.style.display=hayTop?'grid':'none';});if(id('h_top_travesano_row'))id('h_top_travesano_row').style.display=esTravesanos?'grid':'none';document.querySelectorAll('.h-shelves').forEach(function(x){x.style.display=c==='REPISAS'?'grid':'none';});document.querySelectorAll('.h-drawers').forEach(function(x){x.style.display=c.indexOf('CAJONES')===0?'grid':'none';});document.querySelectorAll('.h-drawer-frentes').forEach(function(x){x.style.display=esFrentes?'grid':'none';});document.querySelectorAll('.h-front-puerta').forEach(function(x){x.style.display=esFrentes?'none':'grid';});document.querySelectorAll('.h-external-fit').forEach(function(x){x.style.display=external?'grid':'none';});document.querySelectorAll('.h-front-overlays').forEach(function(x){x.style.display=external&&id('h_front_fit').value==='CUSTOM'?'block':'none';});var hayIzq=!!(id('h_left')&&id('h_left').checked),hayDer=!!(id('h_right')&&id('h_right').checked),hayInf=!!(id('h_bottom')&&id('h_bottom').checked),haySup=hayTop&&!esTravesanos;document.querySelectorAll('.h-sob-izq').forEach(function(x){x.style.display=hayIzq?'grid':'none';});document.querySelectorAll('.h-sob-der').forEach(function(x){x.style.display=hayDer?'grid':'none';});document.querySelectorAll('.h-sob-inferior').forEach(function(x){x.style.display=hayInf?'grid':'none';});document.querySelectorAll('.h-sob-superior').forEach(function(x){x.style.display=haySup?'grid':'none';});var haySobremedida=hayIzq||hayDer||hayInf||haySup;document.querySelectorAll('.h-sob-panel').forEach(function(x){x.style.display=haySobremedida?'block':'none';});}
   function split(){var n=nodeById(selectedId);if(!n)return;var axis=id('hierarchy_axis').value,physical=id('hierarchy_physical').value==='FISICA',expr=id('hierarchy_expr').value,box=n.box||bounds(),total=axis==='X'?box.w:(axis==='Z'?box.h:box.d),sizes;try{sizes=parse(expr,total,physical?num('espesor',15):0);}catch(e){[id('hierarchy_status'),id('review_status')].forEach(function(s){if(s){s.className='hierarchy-status error';s.textContent=e.message;}});return;}n.split={axis:axis,expr:expr,physical:physical,thickness:num('espesor',15)};n.children=sizes.map(function(){return{id:'space_'+counter++,content:'VACIO',front:'NINGUNO',frontCount:'AUTO',frontFit:'AUTO',frontJoint:1.5,overlayLeft:13.5,overlayRight:13.5,overlayTop:13.5,overlayBottom:13.5,drawers:0,shelves:0,gap:3,gapCenter:3,drawerGap:1.5,drawerHeight:0,drawerFrontStyle:'POR_CAJON',enclosure:{},sobremedida:freshSobremedida(),children:[]};});expanded[n.id]=true;selectedId=n.children[0].id;render();}
   function apply(){var n=nodeById(selectedId);if(!n)return;n.enclosure=n.enclosure||{};['left','right','bottom','top','back'].forEach(function(k){n.enclosure[k]=id('h_'+k).checked;});n.enclosure.topMode=id('h_top_mode')?id('h_top_mode').value:'FULL';n.enclosure.topTravesano=Math.max(20,num('h_top_travesano',70));n.content=id('h_content').value;n.shelves=Math.min(20,Math.max(0,parseInt(id('h_shelves').value,10)||0));n.drawers=Math.min(12,Math.max(0,parseInt(id('h_drawers').value,10)||0));n.front=id('h_front').value;n.frontCount=id('h_front_count').value||'AUTO';n.frontFit=id('h_front_fit').value||'AUTO';n.frontJoint=Math.max(0,num('h_front_joint',1.5));n.overlayLeft=Math.max(0,num('h_overlay_left',13.5));n.overlayRight=Math.max(0,num('h_overlay_right',13.5));n.overlayTop=Math.max(0,num('h_overlay_top',13.5));n.overlayBottom=Math.max(0,num('h_overlay_bottom',13.5));if(n.content==='CAJONES_PUERTA'&&n.front==='NINGUNO')n.front='PUERTA_UNICA';n.drawerFrontStyle=id('h_drawer_front_style')?id('h_drawer_front_style').value:'POR_CAJON';if(n.content==='CAJONES_FRENTES')n.front='NINGUNO';if(isExternalFront(n.front)){clearExternalDescendants(n);var ancestor=parentOf(n.id);while(ancestor){if(isExternalFront(ancestor.front))ancestor.front='NINGUNO';ancestor=parentOf(ancestor.id);}}n.hinge=id('h_hinge').value;n.gap=Math.max(0,num('h_gap',3));n.gapCenter=Math.max(0,num('h_gap_center',n.gap));n.drawerGap=Math.max(0,num('h_drawer_gap',1.5));n.drawerHeight=Math.max(0,num('h_drawer_height',0));n.sobremedida=n.sobremedida||freshSobremedida();['frontalIzq','traseraIzq','frontalDer','traseraDer','frontalInferior','traseraInferior','frontalSuperior','traseraSuperior'].forEach(function(k){var fieldId='h_sob_'+k.replace(/([A-Z])/g,function(m){return '_'+m.toLowerCase();}),v=num(fieldId,0);n.sobremedida[k]=Math.max(-200,Math.min(200,v));});render();}
+  // --- Migracion opcional desde el formato plano/generaciones antiguas ---
+  // Convierte un modulo guardado ANTES de que existiera la jerarquia (grid
+  // de nichos x columnas via spaces_json, o el formato mas viejo todavia
+  // con solo crear_puerta+cajones_por_nicho) a un arbol equivalente. Nunca
+  // se ejecuta sola: el usuario la dispara con un boton, revisa el
+  // resultado en la vista 3D y recien despues decide guardar -- el codigo
+  // Ruby que construye el formato viejo no se toca ni se retira, sigue
+  // siendo el que abre esos modulos si esta conversion no se usa.
+  function childDefaults(){return {content:'VACIO',front:'NINGUNO',frontCount:'AUTO',frontFit:'AUTO',frontJoint:1.5,overlayLeft:13.5,overlayRight:13.5,overlayTop:13.5,overlayBottom:13.5,drawers:0,shelves:0,gap:3,gapCenter:3,drawerGap:1.5,drawerHeight:0,drawerFrontStyle:'POR_CAJON',enclosure:{},sobremedida:freshSobremedida(),children:[]};}
+  function nodeFromSpaceFlat(space,hingeGlobal){
+    var n=childDefaults(),contenido=String((space&&space.content)||'VACIO').toUpperCase();
+    if(contenido==='CAJONERA'){n.content=(space.front_type==='FRENTES')?'CAJONES_FRENTES':'CAJONES_INTERNOS';n.drawers=Math.max(1,parseInt(space.drawers,10)||3);if(space.gap)n.drawerGap=Number(space.gap)||1.5;}
+    else if(contenido==='REPISAS'){n.content='REPISAS';n.shelves=Math.max(1,parseInt(space.shelves,10)||1);}
+    else if(contenido.indexOf('PUERTA')===0){n.content='VACIO';n.front=contenido.indexOf('DOBLE')>=0?'PUERTA_DOBLE':'PUERTA_UNICA';if(space.gap)n.gap=Number(space.gap)||3;if(hingeGlobal)n.hinge=hingeGlobal;}
+    else{n.content='VACIO';}
+    return n;
+  }
+  function migrarDesdeFormatoPlano(){
+    var d=window.__modular3dInitial||{};
+    var warnings=[];
+    if(String(d.lleva_maletera||'NO')==='SI')warnings.push('El módulo original tenía "maletera" (repisa retraída superior): esta conversión no la reproduce, agregala a mano en la jerarquía si hace falta.');
+    var espesor=Number(d.espesor)||15;
+    var numDiv=parseInt(d.num_divisiones,10)||0,numRep=parseInt(d.num_repisas,10)||0;
+    var paramXExpr=String(d.param_x_expr||'').trim(),paramZExpr=String(d.param_z_expr||'').trim();
+    var paramXVirtual=String(d.param_x_type||'').toUpperCase()==='VIRTUAL',paramZVirtual=String(d.param_z_type||'').toUpperCase()==='VIRTUAL';
+    var hingeGlobal=d.puerta_bisagra||null;
+    var spaces={};
+    try{var raw=typeof d.spaces_json==='string'?JSON.parse(d.spaces_json||'[]'):(d.spaces_json||[]);raw.forEach(function(sp){spaces[String(sp.niche)+':'+String(sp.column)]=sp;});}catch(_e){}
+    var hasGrid=numDiv>0||numRep>0||paramXExpr||paramZExpr||Object.keys(spaces).length>0;
+    var root=fresh();
+    if(!hasGrid){
+      if(String(d.crear_puerta||'NO')==='SI'){
+        var cajonesRoot=String(d.cajones_por_nicho||'').split(',').map(function(v){return parseInt(v,10)||0;})[0]||0;
+        root.content=cajonesRoot>0?'CAJONES_PUERTA':'VACIO';
+        if(cajonesRoot>0)root.drawers=cajonesRoot;
+        root.front=String(d.tipo_puerta||'UNICA').toUpperCase()==='DOBLE'?'PUERTA_DOBLE':'PUERTA_UNICA';
+        if(hingeGlobal)root.hinge=hingeGlobal;
+      }else{
+        warnings.push('No se encontraron divisiones, repisas ni puerta en los datos originales: el resultado es un módulo vacío de una sola pieza.');
+      }
+      return {tree:root,warnings:warnings};
+    }
+    var rows=numRep+1,cols=numDiv+1;
+    var rowExpr=paramZExpr||Array(rows).fill('1').join(':');
+    var colExpr=paramXExpr||Array(cols).fill('1').join(':');
+    if(rows===1&&cols===1){
+      var only=spaces['0:0'];
+      if(only){var applied=nodeFromSpaceFlat(only,hingeGlobal);Object.assign(root,applied);}
+    }else if(rows===1){
+      root.split={axis:'X',expr:colExpr,physical:!paramXVirtual,thickness:espesor};
+      root.children=[];
+      for(var c0=0;c0<cols;c0++){var leafC=nodeFromSpaceFlat(spaces['0:'+c0],hingeGlobal);leafC.id='space_'+(counter++);root.children.push(leafC);}
+    }else if(cols===1){
+      root.split={axis:'Z',expr:rowExpr,physical:!paramZVirtual,thickness:espesor};
+      root.children=[];
+      for(var r0=0;r0<rows;r0++){var leafR=nodeFromSpaceFlat(spaces[r0+':0'],hingeGlobal);leafR.id='space_'+(counter++);root.children.push(leafR);}
+    }else{
+      root.split={axis:'Z',expr:rowExpr,physical:!paramZVirtual,thickness:espesor};
+      root.children=[];
+      for(var r=0;r<rows;r++){
+        var rowNode=childDefaults();rowNode.id='space_'+(counter++);
+        rowNode.split={axis:'X',expr:colExpr,physical:!paramXVirtual,thickness:espesor};
+        rowNode.children=[];
+        for(var c=0;c<cols;c++){var leaf=nodeFromSpaceFlat(spaces[r+':'+c],hingeGlobal);leaf.id='space_'+(counter++);rowNode.children.push(leaf);}
+        root.children.push(rowNode);
+      }
+    }
+    return {tree:root,warnings:warnings};
+  }
+  function ofrecerMigracionSiAplica(d){
+    var notice=id('hierarchy_legacy_migrate_notice');if(!notice)return;
+    var yaTieneJerarquia=!!(d&&d.hierarchy_json&&d.hierarchy_json!=='{}');
+    var esEdicion=d&&d.__edit_mode==='SI';
+    var numDiv=parseInt(d&&d.num_divisiones,10)||0,numRep=parseInt(d&&d.num_repisas,10)||0;
+    var tieneSpaces=(function(){try{var raw=typeof (d&&d.spaces_json)==='string'?JSON.parse(d.spaces_json||'[]'):((d&&d.spaces_json)||[]);return raw.length>0;}catch(_e){return false;}})();
+    var tienePuertaVieja=d&&d.crear_puerta==='SI';
+    notice.style.display=(esEdicion&&!yaTieneJerarquia&&(numDiv>0||numRep>0||tieneSpaces||tienePuertaVieja))?'block':'none';
+  }
   function sync(){var json=JSON.stringify(tree);window.__hierarchyJSON=json;try{var d=window.datosFormulario?window.datosFormulario():null;if(d&&window.Modular3DView)window.Modular3DView.update(d);}catch(_e){}}
   function bind(){tree=fresh();id('hierarchy_split').onclick=split;id('hierarchy_unsplit').onclick=function(){var n=nodeById(selectedId);n.split=null;n.children=[];render();};id('hierarchy_parent').onclick=function(){var p=parentOf(selectedId);if(p)select(p.id);};id('hierarchy_duplicate').onclick=function(){var n=nodeById(selectedId),p=parentOf(selectedId);if(!p)return;p.children.forEach(function(s){if(s.id!==n.id){['content','front','frontCount','frontFit','frontJoint','overlayLeft','overlayRight','overlayTop','overlayBottom','drawers','shelves','gap','gapCenter','drawerGap','drawerHeight','drawerFrontStyle','hinge'].forEach(function(k){s[k]=n[k];});s.enclosure=JSON.parse(JSON.stringify(n.enclosure||{}));s.sobremedida=JSON.parse(JSON.stringify(n.sobremedida||freshSobremedida()));}});render();};id('hierarchy_reset').onclick=function(){tree=fresh();selectedId='root';expanded={root:true};render();};id('h_content').onchange=toggleFields;['h_left','h_right','h_bottom','h_top','h_back'].forEach(function(key){id(key).addEventListener('change',function(){remember();apply();});});['h_content','h_front','h_front_count','h_front_fit','h_front_joint','h_overlay_left','h_overlay_right','h_overlay_top','h_overlay_bottom','h_hinge','h_shelves','h_drawers','h_gap','h_gap_center','h_drawer_gap','h_drawer_height','h_drawer_front_style','h_top_mode','h_top_travesano','h_sob_frontal_izq','h_sob_trasera_izq','h_sob_frontal_der','h_sob_trasera_der','h_sob_frontal_inferior','h_sob_trasera_inferior','h_sob_frontal_superior','h_sob_trasera_superior'].forEach(function(key){var field=id(key);if(field)field.addEventListener(field.tagName==='SELECT'?'change':'input',function(){remember();apply();});});
     ['external_front_scope','montaje_puerta','global_front_count_mode','global_front_count','global_front_auto_width','global_front_gap_left','global_front_gap_right','global_front_gap_top','global_front_gap_bottom','global_front_gap_center','global_front_hinge'].forEach(function(key){var field=id(key);if(field)field.addEventListener(field.tagName==='SELECT'?'change':'input',function(){var controls=id('global_front_controls');if(controls)controls.style.display=id('external_front_scope').value==='GLOBAL'?'block':'none';sync();});});
@@ -54,6 +132,16 @@
     window.addEventListener('modular3d:pieceSelected',function(event){var detail=event.detail||{},role=String(detail.role||''),shell=role.indexOf('shell-')===0,page=(shell||detail.category==='back'||detail.category==='adjustment')?'paneles':'interior',active=document.querySelector('.page.active');if(!active||active.id!=='diseno')showEditorPage(page);if(detail.ownerSpaceId&&nodeById(detail.ownerSpaceId)){selectedPieceOwnerId=detail.ownerSpaceId;selectedId=detail.ownerSpaceId;render(true);document.querySelectorAll('.hierarchy-node[data-node="'+detail.ownerSpaceId+'"]').forEach(function(node){node.classList.add('piece-owner');});}document.querySelectorAll('.hierarchy-plan').forEach(function(plan){if(shell)plan.classList.add('piece-'+role);});if(role.indexOf('separator-')===0){var separatorIndex=parseInt(String(detail.pieceId||'').replace('separator_',''),10),separators=document.querySelectorAll('.hierarchy-separator');if(isFinite(separatorIndex)&&separators[separatorIndex])separators[separatorIndex].classList.add('piece-selected');}setTimeout(function(){var field=detail.sourceField&&id(detail.sourceField),row=field&&field.closest&&field.closest('.row');if(row){row.classList.add('editor-focus');setTimeout(function(){row.classList.remove('editor-focus');},1600);}},40);});
     window.addEventListener('modular3d:editPieceSource',function(event){var detail=event.detail||{},shell=String(detail.role||'').indexOf('shell-')===0,page=(shell||detail.category==='back'||detail.category==='adjustment')?'paneles':'interior';showEditorPage(page);if(detail.ownerSpaceId&&nodeById(detail.ownerSpaceId)){selectedId=detail.ownerSpaceId;render(true);}setTimeout(function(){var field=detail.sourceField&&id(detail.sourceField);if(field){field.focus();field.scrollIntoView({behavior:'smooth',block:'center'});var row=field.closest&&field.closest('.row');if(row){row.classList.add('editor-focus');setTimeout(function(){row.classList.remove('editor-focus');},1800);}}},40);});
     document.querySelectorAll('[data-page]').forEach(function(tab){tab.addEventListener('click',function(){setTimeout(function(){moveInspector();render(true);},0);});});['step_prev','step_next'].forEach(function(buttonId){var button=id(buttonId);if(button)button.addEventListener('click',function(){setTimeout(function(){moveInspector();render(true);},0);});});
-    var oldLoad=window.Modular3DLoadInitial;window.Modular3DLoadInitial=function(data){oldLoad(data);try{if(data.hierarchy_json){tree=typeof data.hierarchy_json==='string'?JSON.parse(data.hierarchy_json):data.hierarchy_json;selectedId=data.selected_space_id&&nodeById(data.selected_space_id)?data.selected_space_id:'root';expanded={root:true};resolveFrontConflicts(tree,false);walk(tree,function(n){var match=String(n.id||'').match(/(\d+)$/);if(match)counter=Math.max(counter,+match[1]+1);return false;});}}catch(_e){tree=fresh();}var controls=id('global_front_controls');if(controls)controls.style.display=id('external_front_scope').value==='GLOBAL'?'block':'none';render();};var controls=id('global_front_controls');if(controls)controls.style.display=id('external_front_scope').value==='GLOBAL'?'block':'none';render();if(window.__modular3dInitial)window.Modular3DLoadInitial(window.__modular3dInitial);}
+    if(id('hierarchy_legacy_migrate_btn'))id('hierarchy_legacy_migrate_btn').addEventListener('click',function(){
+      if(!confirm('Esto reemplaza la configuración jerárquica actual por una versión convertida desde el formato antiguo. Podés revisarla y deshacerla (Ctrl+Z) si no queda bien. ¿Continuar?'))return;
+      remember();
+      var resultado=migrarDesdeFormatoPlano();
+      tree=resultado.tree;selectedId='root';expanded={root:true};selectedPieceOwnerId=null;
+      render();
+      var notice=id('hierarchy_legacy_migrate_notice');if(notice)notice.style.display='none';
+      var mensaje='Conversión aplicada. Revisá cada espacio en la vista 3D antes de guardar -- es una primera aproximación, no un reemplazo exacto.'+(resultado.warnings.length?'\n\n'+resultado.warnings.join('\n'):'');
+      alert(mensaje);
+    });
+    var oldLoad=window.Modular3DLoadInitial;window.Modular3DLoadInitial=function(data){oldLoad(data);try{if(data.hierarchy_json){tree=typeof data.hierarchy_json==='string'?JSON.parse(data.hierarchy_json):data.hierarchy_json;selectedId=data.selected_space_id&&nodeById(data.selected_space_id)?data.selected_space_id:'root';expanded={root:true};resolveFrontConflicts(tree,false);walk(tree,function(n){var match=String(n.id||'').match(/(\d+)$/);if(match)counter=Math.max(counter,+match[1]+1);return false;});}}catch(_e){tree=fresh();}ofrecerMigracionSiAplica(data);var controls=id('global_front_controls');if(controls)controls.style.display=id('external_front_scope').value==='GLOBAL'?'block':'none';render();};var controls=id('global_front_controls');if(controls)controls.style.display=id('external_front_scope').value==='GLOBAL'?'block':'none';render();if(window.__modular3dInitial)window.Modular3DLoadInitial(window.__modular3dInitial);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(bind,0);});else setTimeout(bind,0);
 }());
