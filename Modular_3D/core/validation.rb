@@ -242,30 +242,82 @@ module Modular3D
         end
         errores << 'No se pudo leer la configuracion de espacios (jerarquia). No se va a construir una caja vacia: cierra y vuelve a abrir el editor del modulo antes de reintentar.' unless valido
 
-        # Sobremedida por nodo: mismo limite proporcional a la profundidad
-        # que la sobremedida del casco general (linea 180 mas arriba), pero
-        # evaluado con la profundidad propia de cada espacio de la jerarquia.
+        # Reglas por espacio (nodo) de la jerarquia: una funcion por regla,
+        # igual que las reglas del sistema plano de mas arriba, para que
+        # quede centralizado aqui en vez de repetirse como clamps mudos en
+        # el codigo de construccion (core/jerarquia.rb).
         if valido
           hierarchy_geometry['nodes'].each do |node|
-            next unless node.is_a?(Hash) && node['sobremedida'].is_a?(Hash) && node['box'].is_a?(Hash)
-            sob = node['sobremedida']
-            profundidad_nodo = node['box']['d'].to_f
-            next unless profundidad_nodo.positive?
-            maximo_sobremedida_nodo = [profundidad_nodo * 0.4, 200.0].min
-            nombre_nodo = (node['display_name'] || node['name'] || node['id'] || 'espacio').to_s
-            %w[Izq Der Inferior Superior].each do |panel|
-              frontal = sob["frontal#{panel}"].to_f
-              trasero = sob["trasera#{panel}"].to_f
-              [["sobremedida frontal #{panel}", frontal], ["sobremedida trasera #{panel}", trasero]].each do |etiqueta, valor|
-                errores << "#{nombre_nodo}: #{etiqueta} no puede sobresalir mas de #{maximo_sobremedida_nodo.round} mm." if valor > maximo_sobremedida_nodo
-              end
-              errores << "#{nombre_nodo}: la sobremedida del panel #{panel.downcase} lo deja sin profundidad util." if (frontal + trasero) <= (30 - profundidad_nodo)
-            end
+            next unless node.is_a?(Hash)
+            validar_sobremedida_nodo(node, errores)
+            validar_cajones_nodo(node, errores, avisos)
+            validar_repisas_nodo(node, errores)
+            validar_puertas_nodo(node, errores)
           end
         end
       end
 
       { errores: errores, avisos: avisos }
+    end
+
+    def nombre_nodo_jerarquia(node)
+      (node['display_name'] || node['name'] || node['id'] || 'espacio').to_s
+    end
+
+    # Sobremedida por nodo: mismo limite proporcional a la profundidad que
+    # la sobremedida del casco general (ver mas arriba en validar), pero
+    # evaluado con la profundidad propia de cada espacio de la jerarquia.
+    def validar_sobremedida_nodo(node, errores)
+      return unless node['sobremedida'].is_a?(Hash) && node['box'].is_a?(Hash)
+      sob = node['sobremedida']
+      profundidad_nodo = node['box']['d'].to_f
+      return unless profundidad_nodo.positive?
+      maximo = [profundidad_nodo * 0.4, 200.0].min
+      nombre_nodo = nombre_nodo_jerarquia(node)
+      %w[Izq Der Inferior Superior].each do |panel|
+        frontal = sob["frontal#{panel}"].to_f
+        trasero = sob["trasera#{panel}"].to_f
+        [["sobremedida frontal #{panel}", frontal], ["sobremedida trasera #{panel}", trasero]].each do |etiqueta, valor|
+          errores << "#{nombre_nodo}: #{etiqueta} no puede sobresalir mas de #{maximo.round} mm." if valor > maximo
+        end
+        errores << "#{nombre_nodo}: la sobremedida del panel #{panel.downcase} lo deja sin profundidad util." if (frontal + trasero) <= (30 - profundidad_nodo)
+      end
+    end
+
+    # Mismo limite de 1..12 cajones que ya exige el sistema plano para una
+    # CAJONERA (ver arriba); core/jerarquia.rb hoy solo recorta el valor en
+    # silencio a ese mismo rango, sin avisar al usuario que lo pidio afuera.
+    def validar_cajones_nodo(node, errores, avisos)
+      return unless node['content'].to_s.upcase.start_with?('CAJONES')
+      cajones = node['drawers'].to_i
+      nombre_nodo = nombre_nodo_jerarquia(node)
+      errores << "#{nombre_nodo}: cada espacio con cajones debe tener entre 1 y 12 cajones." unless cajones.between?(1, 12)
+      box = node['box'].is_a?(Hash) ? node['box'] : {}
+      alto_espacio = box['h'].to_f
+      avisos << "#{nombre_nodo}: menos de 45 mm por cajon puede no dejar espacio para las correderas." if cajones.positive? && alto_espacio.positive? && (alto_espacio / cajones) < 45
+    end
+
+    # core/jerarquia.rb permite hasta 20 repisas internas por espacio (mas
+    # que las 12 del sistema plano, a proposito: un espacio de la jerarquia
+    # puede ser mucho mas alto que un nicho fijo); se valida contra ese
+    # mismo limite en vez de repetir el numero como un clamp mudo.
+    def validar_repisas_nodo(node, errores)
+      return unless node['content'].to_s.upcase == 'REPISAS'
+      repisas = node['shelves'].to_i
+      nombre_nodo = nombre_nodo_jerarquia(node)
+      errores << "#{nombre_nodo}: cada espacio con repisas debe tener entre 1 y 20 repisas internas." unless repisas.between?(1, 20)
+    end
+
+    # Misma regla que ya exige el sistema plano para una puerta doble
+    # (ver arriba, "Una puerta doble necesita al menos 500 mm").
+    def validar_puertas_nodo(node, errores)
+      frente = node['front'].to_s.upcase
+      return if frente.empty? || frente == 'NINGUNO' || !frente.include?('DOBLE')
+      box = node['box'].is_a?(Hash) ? node['box'] : {}
+      ancho_espacio = box['w'].to_f
+      return unless ancho_espacio.positive?
+      nombre_nodo = nombre_nodo_jerarquia(node)
+      errores << "#{nombre_nodo}: una puerta doble necesita al menos 500 mm de ancho." if ancho_espacio < 500
     end
   end
 end

@@ -1,7 +1,12 @@
-# Modular_3D 4.8.16-beta.1 · CSS/JS de interfaz.html en archivos separados
+# Modular_3D 4.8.17-beta.1 · Validación de cajones/repisas/puertas por espacio
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.16-beta.1  
+**Versión:** 4.8.17-beta.1  
+
+## Cambios 4.8.17-beta.1
+
+- **Nuevas validaciones para cada espacio del configurador jerárquico** (tarea 6/8 de esta ronda): antes, si un espacio de la jerarquía pedía, por ejemplo, 15 cajones o una puerta doble en una celda muy angosta, el código simplemente lo recortaba en silencio (a 12 cajones, etc.) sin avisar nada — el sistema plano/antiguo sí tenía ese aviso, pero la jerarquía no. Ahora la jerarquía valida lo mismo, con el mismo mensaje: cajones fuera de 1-12, repisas internas fuera de 1-20, puerta doble en una celda de menos de 500mm de ancho, y un aviso si quedan menos de 45mm de alto por cajón.
+- **Reglas de validación reorganizadas en `validation.rb`**: cada regla de la jerarquía (sobremedida, cajones, repisas, puertas) ahora es una función propia (`validar_sobremedida_nodo`, `validar_cajones_nodo`, `validar_repisas_nodo`, `validar_puertas_nodo`) en vez de un bloque de código mezclado, para que sea más fácil de mantener y de ubicar cuándo haga falta ajustar un límite.
 
 ## Cambios 4.8.16-beta.1
 

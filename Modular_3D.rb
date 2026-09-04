@@ -11,7 +11,7 @@ unless file_loaded?(__FILE__)
 
   extension.creator = 'Lenin Vladimir Peñafiel Buestan'
   extension.description = 'Configurador paramétrico de mobiliario, despiece y optimización de tableros para SketchUp.'
-  extension.version = '4.8.16-beta.1'
+  extension.version = '4.8.17-beta.1'
   extension.copyright = '© 2026 Lenin Vladimir Peñafiel Buestan. Todos los derechos reservados.'
 
   Sketchup.register_extension(extension, true)
