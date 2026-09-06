@@ -141,7 +141,6 @@ module LPenafiel_GeneradorMueblesExacto
   <input class="titulo-editable" id="presupuesto_titulo" type="text" placeholder="Nombre del proyecto o cliente (opcional, ej. Presupuesto Familia Pérez)">
   <p>#{datos_costo[:total_piezas]} piezas · #{datos_costo[:puertas]} puerta(s) · #{datos_costo[:bisagras_total]} bisagra(s) estimadas · #{datos_costo[:cajones]} cajón(es) estimados</p>
   <div class="acciones">
-    <button onclick="recalcular()">Recalcular</button>
     <button class="secondary" onclick="exportarPdf()">Descargar PDF</button>
   </div>
 

@@ -286,6 +286,18 @@
       var cantidad = cantidadAjustes(datosFormulario());
       var hint = el('ajustes_hint');
       if (hint) hint.textContent = grosor >= 15 ? 'Respaldo estructural de ' + grosor + ' mm: ajustes posteriores apagados automáticamente.' : 'Desde atrás: ' + numero('distancia_plano_posterior',0) + ' mm libres + ajuste ' + numero('grosor_ajuste',15) + ' mm + separación ' + numero('separacion_ajuste_respaldo',2) + ' mm + respaldo ' + grosor + ' mm. Ajustes activos: ' + cantidad + '.';
+      toggleCascadaCasco();
+    }
+    // Activación en cascada: si el respaldo/ajuste está apagado, sus campos
+    // de detalle no aportan nada y solo amontonan la pantalla -- se ocultan
+    // hasta que la opción que los habilita esté encendida.
+    function toggleCascadaCasco() {
+      var hayRespaldo = el('lleva_respaldo') && el('lleva_respaldo').value !== 'NO';
+      document.querySelectorAll('.casco-respaldo-detalle').forEach(function(row) { row.style.display = hayRespaldo ? '' : 'none'; });
+      var hayAjustePost = el('cantidad_ajustes') && el('cantidad_ajustes').value !== '0';
+      document.querySelectorAll('.casco-ajuste-post').forEach(function(row) { row.style.display = hayAjustePost ? '' : 'none'; });
+      var hayAjusteFront = el('ajuste_frontal_activo') && el('ajuste_frontal_activo').value === 'SI';
+      document.querySelectorAll('.casco-ajuste-front').forEach(function(row) { row.style.display = hayAjusteFront ? '' : 'none'; });
     }
     function setCajonesNichos(valores, tipos) {
       actualizarNichos();
@@ -371,6 +383,7 @@
       } catch (e) { spaceState = {}; }
       mostrarPagina('inicial');
       actualizarVista();
+      sincronizarReglasRespaldo();
       if(datos.view_camera_json&&window.Modular3DView&&window.Modular3DView.restoreCamera)window.setTimeout(function(){window.Modular3DView.restoreCamera(datos.view_camera_json);},60);
     };
     function spaceKey(niche, column) { return String(niche) + ':' + String(column); }
@@ -663,7 +676,7 @@
       markManualThickness(event.target.id || '');
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
-      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior') sincronizarReglasRespaldo();
+      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo') sincronizarReglasRespaldo();
       // Laterales (izq/der) y horizontales (superior/inferior) nunca pueden
       // llegar los dos "de punta a punta" a la misma esquina: cada uno es
       // una sola pieza de punta a punta, asi que si uno abraza la esquina por
@@ -682,15 +695,15 @@
       actualizarVista();
     });
     document.addEventListener('click', function(event) {
-      var panelCard = event.target.closest && event.target.closest('.panel-card[data-editor-card]');
+      var panelCard = event.target.closest && event.target.closest('[data-editor-card]');
       if (panelCard && !event.target.matches('input,select,option')) {
-        var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO',adjustments:'AJUSTE_SUPERIOR'};
+        var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO'};
         if(window.Modular3DView&&map[panelCard.dataset.editorCard])window.Modular3DView.selectPieceByKey(map[panelCard.dataset.editorCard]);
       }
     });
     document.addEventListener('focusin',function(event){
-      var panelCard=event.target.closest&&event.target.closest('.panel-card[data-editor-card]');
-      var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO',adjustments:'AJUSTE_SUPERIOR'};
+      var panelCard=event.target.closest&&event.target.closest('[data-editor-card]');
+      var map={izq:'LAT_IZQ',der:'LAT_DER',inferior:'BASE',superior:'TECHO',back:'RESPALDO'};
       if(panelCard&&window.Modular3DView&&map[panelCard.dataset.editorCard])window.Modular3DView.selectPieceByKey(map[panelCard.dataset.editorCard]);
     });
     document.querySelectorAll('[data-page]').forEach(function(t) { t.addEventListener('click', function() { mostrarPagina(t.dataset.page); }); });
@@ -713,6 +726,7 @@
     el('license_logout').addEventListener('click', function() { if (window.sketchup && sketchup.licenciaLogout) sketchup.licenciaLogout(); });
     if (window.Modular3DPreview) window.Modular3DPreview.init();
     actualizarVista();
+    sincronizarReglasRespaldo();
     updateStepStatus('inicial');
     if (window.__modular3dInitial) window.Modular3DLoadInitial(window.__modular3dInitial);
     window.Modular3DLicense.check();

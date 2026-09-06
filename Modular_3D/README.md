@@ -1,7 +1,26 @@
-# Modular_3D 4.8.26 · Fix: visor en negro y cubo aplanado
+# Modular_3D 4.8.27 · Rediseño: visor 3D central + activación en cascada
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.26  
+**Versión:** 4.8.27  
+
+## Cambios 4.8.27
+
+A partir de las capturas de referencia que mandaste (un configurador de cuerpos de mueble con árbol a la izquierda, visor grande al centro y panel de propiedades a la derecha) y del informe de auditoría de la ronda anterior, se rediseñó la pantalla principal en una sola versión — sin dejar nada a mitad de camino.
+
+- **El visor 3D pasa a ser el protagonista.** Antes el configurador ocupaba la mitad ancha de la pantalla y el visor quedaba angosto a la derecha; ahora se invirtió: el configurador es una columna angosta de 330px a la izquierda (como un panel de propiedades) y el visor 3D toma todo el resto del ancho disponible, igual que en la referencia.
+- **Las pestañas del configurador pasan de una fila horizontal a una lista vertical** ("1 Medidas", "2 Casco", "3 Configuración", "4 Materiales" uno debajo del otro), ya que ahora viven en una columna angosta en vez de una franja ancha.
+- **Activación en cascada — lo que no aplica, no se muestra:**
+  - En **Casco**: si "Sin respaldo" está elegido, se ocultan grosor y profundidad de ranura (no aportan nada sin respaldo). Si "Cantidad posterior" es "Sin ajustes", se ocultan las 5 opciones de detalle del ajuste posterior. Si "Ajuste frontal" está apagado, se oculta su fila de orientación.
+  - En **Materiales**: los campos de color/textura de "Material único" ahora están escondidos hasta que marcás ese checkbox. Cada grupo (Casco, Interior, Frentes, etc.) esconde su selector de color hasta que marcás "Material propio del grupo" — antes se veía siempre aunque estuviera heredando del casco. Al editar una pieza individual, todo el bloque de color/textura/canto/sobremedida/inglete queda oculto hasta que elegís "Usar material propio" en vez de "Heredar del grupo".
+  - Esto ya existía parcialmente en el configurador jerárquico (el contenido de cada espacio ya ocultaba lo que no aplicaba); ahora se extendió el mismo criterio al resto de la interfaz.
+- **Limpieza de la auditoría anterior, aplicada de una vez:**
+  - Se sacaron los 7 botones de vista (Isométrica, Frontal, Posterior, etc.) que llevaban años escondidos por CSS sin que nada los volviera a mostrar — el cubo de navegación ya cubre exactamente lo mismo.
+  - Se sacó el checkbox "Heredar automáticamente el color de cada pieza", que no tenía ningún efecto real.
+  - "Aplicar a todo el módulo" y "Restaurar materiales por grupo" se sacaron — eran alias del mismo checkbox "Material único" que ya estaba dos líneas arriba.
+  - Se sacó el botón "Recalcular" del presupuesto — cada cambio ya recalcula solo.
+  - Se corrigió el clic para seleccionar en 3D desde las tarjetas "Sistema posterior" (antes no hacía nada por un desajuste de clases CSS); la de "Ajustes" se dejó sin ese atajo porque un módulo puede tener varias piezas de ajuste a la vez y no hay una sola pieza "correcta" para seleccionar ahí.
+- Los hallazgos de la auditoría que **no** se tocaron en esta ronda (por ser cambios de fondo a la geometría o requerir una decisión tuya primero, no algo que se limpia sin más): el parser de medidas triplicado, la geometría del casco duplicada en Ruby/JS, "Validar módulo" no cubriendo la jerarquía, "Abierto" sin destapar frentes de cajón, y el resto de los puntos B/C/D del informe — siguen ahí, documentados, esperando prioridad tuya.
+
 
 ## Cambios 4.8.26
 

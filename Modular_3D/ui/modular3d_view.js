@@ -1030,12 +1030,9 @@
     var doorsToggle = byId('view_doors_open');
     if (doorsToggle) doorsToggle.addEventListener('change', function () { doorsOpen = doorsToggle.checked; applyDoorsOpenState(); requestRender(); });
     buildNavCube();
-    bind('view_home', frameModel); bind('view_iso', function(){ setView('iso'); });
+    bind('view_home', frameModel);
     bind('view_mode_space',function(){setSelectionMode('space');});bind('view_mode_piece',function(){setSelectionMode('piece');});
     bind('view_piece_focus',focusSelected);bind('view_piece_isolate',isolateSelected);bind('view_piece_visibility',toggleSelectedVisibility);bind('view_piece_edit',editSelected);
-    bind('view_front', function(){ setView('front'); }); bind('view_back', function(){ setView('back'); });
-    bind('view_left', function(){ setView('left'); }); bind('view_right', function(){ setView('right'); });
-    bind('view_top', function(){ setView('top'); }); bind('view_bottom', function(){ setView('bottom'); });
     bind('view_projection', function(){ switchProjection(!orthographic); });
     bind('view_transparency', function(){ transparent = !transparent; byId('view_transparency').classList.toggle('active', transparent); applyVisualState(); });
     bind('view_edges', function(){ edgesVisible = !edgesVisible; byId('view_edges').classList.toggle('active', edgesVisible); applyVisualState(); });
