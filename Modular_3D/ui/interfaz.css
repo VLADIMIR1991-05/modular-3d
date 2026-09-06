@@ -173,12 +173,12 @@
     .hierarchy-inspector{max-height:none;overflow:visible;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}.hierarchy-inspector>h3{font-size:14px;text-transform:none;color:#334955}.space-summary{padding:7px;margin-bottom:6px;border-left:3px solid var(--brand);background:#fff5ef;font-weight:700}
     .hierarchy-inspector details{margin:5px 0;border:1px solid var(--line);border-radius:6px;padding:6px}.hierarchy-inspector summary{cursor:pointer;color:#394d5a;font-weight:800}.hierarchy-inspector .row{grid-template-columns:1fr 125px;margin:4px 0}.hierarchy-inspector input,.hierarchy-inspector select{padding:6px}.hierarchy-inspector button{padding:8px}
     .checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0}.checks-grid label{display:flex;gap:5px;align-items:center}.checks-grid input{width:auto}.hierarchy-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .view-navigator{--nav-size:66px;--cube-size:32px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:2px auto 0;display:grid;grid-template:10px 1fr 10px/10px 1fr 10px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45));user-select:none;touch-action:none}
+    .view-navigator{--nav-size:66px;--cube-size:32px;position:relative;z-index:2;width:var(--nav-size);height:var(--nav-size);margin:2px auto 0;display:grid;grid-template:10px 1fr 10px/10px 1fr 10px;user-select:none;touch-action:none}
     .view-navigator button{min-width:0;padding:0;border:0;border-radius:4px;color:#eef2f5;background:rgba(38,45,52,.9);font-size:9px;line-height:1;cursor:pointer;transition:background .12s,transform .12s,color .12s}
     .view-navigator button:hover,.view-navigator button.active{background:var(--brand);color:#161a1d}
     .view-navigator button:active{transform:scale(.92)}
     .nav-arrow-up{grid-area:1/2}.nav-arrow-down{grid-area:3/2}.nav-arrow-left{grid-area:2/1}.nav-arrow-right{grid-area:2/3}
-    .nav-face{grid-area:2/2;display:grid;place-items:center;perspective:280px;cursor:grab}
+    .nav-face{grid-area:2/2;display:grid;place-items:center;perspective:195px;cursor:grab}
     .nav-face:active{cursor:grabbing}
     .nav-cube{position:relative;width:var(--cube-size);height:var(--cube-size);transform-style:preserve-3d;transition:transform .1s linear}
     .nav-cube-face{position:absolute;inset:0;display:grid;grid-template-columns:18% 64% 18%;grid-template-rows:18% 64% 18%;gap:0;padding:0;border:1px solid rgba(255,255,255,.52);background:rgba(24,29,34,.96);backface-visibility:hidden}

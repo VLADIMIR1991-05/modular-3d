@@ -1,7 +1,17 @@
-# Modular_3D 4.8.25 · Cubo flotante, navegación libre, tiradera por espacio e Inglete de montaje
+# Modular_3D 4.8.26 · Fix: visor en negro y cubo aplanado
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.25  
+**Versión:** 4.8.26  
+
+## Cambios 4.8.26
+
+Reportaste que en 4.8.25 el visualizador 3D se puso en negro y el cubo dejó de verse como un cubo (una especie de rombo aplanado). No pude reproducirlo en este entorno (no tengo SketchUp real para abrir el diálogo), así que hice lo siguiente:
+
+- **Encontré y corregí una causa real y concreta del cubo aplanado**: al achicar el cubo en la ronda anterior (46px → 38px → 32px) dejé el `perspective` fijo en 280px sin ajustarlo. En CSS 3D, `perspective` y el tamaño del objeto tienen que guardar una proporción — si el objeto se achica y la perspectiva se queda igual, el efecto de profundidad se debilita y el cubo se ve cada vez más plano. Ajusté `perspective` a 195px para mantener la misma proporción que tenía la versión que sí se veía bien (280px con un cubo de 46px).
+- **Quité el `filter: drop-shadow` de la sombra del cubo**: es un patrón conocido que en versiones de Chromium más viejas (el navegador embebido de SketchUp no siempre es el más reciente) puede romper el contexto de transformaciones 3D de los elementos hijos — exactamente el tipo de síntoma que describiste. Era puramente decorativo, así que se saca sin perder funcionalidad.
+- **Agregué un reporte de errores directo en el panel**: si el visualizador se pone en negro de nuevo (por esto o por cualquier otra causa), el texto que dice "Render local" abajo del visor va a cambiar automáticamente a algo como "Error JS: mensaje (archivo:línea)" en vez de quedarse en silencio. Si vuelve a pasar, copiame exactamente ese texto — con eso puedo ir directo a la causa real en vez de seguir adivinando a ciegas.
+
+**Sobre tus otros pedidos de este mensaje** (puertas/cajones que se abran de verdad a 90° en vez de solo ocultarse, la barra de licencia más ancha/doble grosor ocupando todo el ancho, y reorganizar el encabezado en dos filas): los dejo pendientes a propósito, porque pediste una revisión completa del plugin antes de seguir incorporando cosas — te la mando aparte en un informe.
 
 ## Cambios 4.8.25
 

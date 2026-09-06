@@ -1,6 +1,17 @@
 (function () {
   'use strict';
 
+  /* Diagnostico: si algo revienta en este archivo (viewport en negro, cubo
+     roto, etc.) sin esto no hay forma de saber la causa real sin abrir las
+     DevTools de Chromium dentro del dialogo de SketchUp -- que no todos
+     saben abrir. Cualquier excepcion no atrapada, en vez de morir en
+     silencio, se muestra directo en el propio panel (reemplazando el texto
+     "Render local") para poder leer el error exacto y la linea. */
+  window.addEventListener('error', function (event) {
+    var salud = document.getElementById('view_health');
+    if (salud) salud.textContent = 'Error JS: ' + (event.message || 'desconocido') + ' (' + (event.filename || '?').split('/').pop() + ':' + event.lineno + ')';
+  });
+
   var scene, camera, renderer, controls, model, grid, floor, selected, selectionBox, spaceSelection;
   var meshes = [], spaceMeshes = [], selectedSpaceId = null, currentData = {}, needsRender = true, orthographic = false;
   var selectionMode = 'space', isolated = false;
