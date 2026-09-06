@@ -34,9 +34,13 @@
     <div class="brand">Modular_3D</div>
     <div class="license-session" id="license_session">
       <span id="license_identity"></span>
+      <div class="license-days" id="license_days" hidden title="Días restantes de la licencia">
+        <div class="license-days-track"><div class="license-days-fill" id="license_days_fill"></div></div>
+        <span id="license_days_text"></span>
+      </div>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Configuración jerárquica + MODULAR-3D VIEW · v4.8.23</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v4.8.25</div>
   </header>
 
   <main>
@@ -159,6 +163,8 @@
                   <div class="row"><label for="h_drawer_gap">Espacio entre cajones (mm)</label><input type="number" id="h_drawer_gap" value="1.5" min="0" step=".5"></div>
                   <div class="row"><label for="h_drawer_height">Altura de cajón (mm)</label><input type="number" id="h_drawer_height" value="0" min="0" step="1"></div>
                   <small>Espacio entre cajones: por defecto 1.5 mm entre cajón y cajón (misma fuga que usan las puertas), y entre el primero/último y la base, techo o repisa que los encierra. Si tu sistema de corredera necesita más holgura mecánica, subí este valor. Altura de cajón en 0 = automático (reparte el alto disponible en partes iguales); un valor mayor a 0 fija esa altura para cada cajón.</small>
+                  <label class="check-line"><input type="checkbox" id="h_tiradera"> Lleva tiradera</label>
+                  <small>Por defecto: SÍ en "Cajones con frentes" (frente externo), NO en "Cajones internos"/"Cajones internos + puerta" (quedan detrás de una puerta). Editable en cualquier caso; afecta el conteo de jaladores del presupuesto.</small>
                   <div class="row h-drawer-frentes"><label for="h_drawer_front_style">Frente de cajón</label><select id="h_drawer_front_style"><option value="POR_CAJON">Uno por cajón</option><option value="UNICO_INFERIOR">Único · acoplado al cajón de abajo</option><option value="FALSO">Falso · fijo, sin cajón</option></select></div>
                   <small class="h-drawer-frentes">"Uno por cajón": cada cajón tiene su propio frente. "Único": un solo frente cubre toda la pila de cajones y se desliza junto con el cajón más bajo; los demás cajones de esa columna se siguen abriendo aparte con Interactuar, pero sin frente propio (quedan ocultos detrás del frente único mientras están cerrados). "Falso": un panel fijo que no se abre; en ese espacio no se crea ningún cajón.</small>
                 </details>
@@ -275,19 +281,16 @@
     </section>
 
     <aside class="card m3dv-panel">
-      <div class="m3dv-head"><h2>MODULAR-3D VIEW</h2><span>INTEGRADO</span></div>
+      <div class="m3dv-head"><h2>MODULAR-3D VIEW</h2><div class="m3dv-head-actions"><label class="m3dv-doors-toggle" title="Vuelve las puertas invisibles en tiempo real para ver qué hay construido dentro del módulo"><input type="checkbox" id="view_doors_open"> Abierto</label><button type="button" id="view_fullscreen" class="m3dv-fullscreen-btn" title="Ampliar el visualizador 3D a pantalla completa">⛶ Ampliar</button></div></div>
       <div class="m3dv-stage" id="view_stage">
         <button type="button" class="update-badge" id="btn_actualizar_modulo">Actualizar módulo</button>
         <div class="m3dv-dimensions">
-          <strong>DIMENSIONES DEL MÓDULO</strong>
           <span>Ancho<b id="view_module_width">600 mm</b></span>
           <span>Alto<b id="view_module_height">760 mm</b></span>
           <span>Fondo<b id="view_module_depth">580 mm</b></span>
         </div>
-        <div class="m3dv-space-badge" id="view_space_badge"><b>ESPACIO ACTIVO</b><span id="view_space_text"></span></div>
-      </div>
-      <div class="m3dv-navigator-panel" aria-label="Cubo profesional de navegación">
-        <div class="m3dv-navigator" id="m3dv_navigator">
+        <div class="m3dv-space-badge" id="view_space_badge"><span id="view_space_text"></span></div>
+        <div class="m3dv-navigator" id="m3dv_navigator" aria-label="Cubo profesional de navegación">
           <div class="view-navigator" id="view_navigator" aria-label="Cubo de navegación 3D">
             <button type="button" class="nav-arrow-up" data-orbit="up" title="Girar hacia arriba">▲</button>
             <button type="button" class="nav-arrow-left" data-orbit="left" title="Girar hacia la izquierda">◀</button>
@@ -306,6 +309,11 @@
       </div>
       <div class="m3dv-select-mode"><button type="button" id="view_mode_space" class="active">Seleccionar espacios</button><button type="button" id="view_mode_piece">Seleccionar piezas</button></div>
       <label class="m3dv-explosion">Explosión <input id="view_explosion" type="range" min="0" max="350" value="0" step="5"></label>
+      <div class="m3dv-explosion m3dv-autorotate-row">
+        <span>Velocidad de giro</span>
+        <input id="view_autorotate_speed" type="range" min="2" max="90" value="24" step="2" title="Velocidad del giro automático">
+        <button type="button" id="view_autorotate" title="Activar/desactivar giro automático del módulo desde su centro total">⟳ Girar</button>
+      </div>
       <div class="m3dv-body">
         <div class="m3dv-card"><h3>Árbol de piezas</h3><input id="view_search" class="m3dv-search" type="search" placeholder="Buscar pieza"><div id="view_tree" class="m3dv-tree"></div></div>
         <div class="m3dv-card"><h3>Propiedades técnicas</h3><div id="view_piece_panel" class="m3dv-piece" hidden><strong id="view_piece_name"></strong><div><span>Largo</span><b id="view_piece_length"></b></div><div><span>Ancho</span><b id="view_piece_width"></b></div><div><span>Espesor</span><b id="view_piece_thickness"></b></div><div><span>Tipo</span><b id="view_piece_category"></b></div><div><span>Canto</span><b id="view_piece_edge"></b></div><div><span>Color canto</span><b id="view_piece_edge_color"></b></div><small id="view_piece_owner" class="piece-selection-note"></small><div class="m3dv-piece-actions"><button type="button" id="view_piece_edit">Editar origen</button><button type="button" id="view_piece_focus">Encuadrar</button><button type="button" id="view_piece_isolate">Aislar</button><button type="button" id="view_piece_visibility">Ocultar/mostrar</button></div></div><small id="editing_hint" class="editing-hint"></small></div>

@@ -9,6 +9,8 @@
   var raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   var pointerStart = null;
   var originalCenter = new THREE.Vector3(), originalSize = new THREE.Vector3();
+  var autoRotating = false, autoRotateSpeed = 24, lastFrameTime = null;
+  var doorsOpen = false;
   var COLORS = {
     lateral: 0xc99258, horizontal: 0xe0b37c, interior: 0xd7a66e,
     back: 0xcdbda8, front: 0xf06424, drawer: 0xb87543,
@@ -307,6 +309,16 @@
     var mountRight = String(data.montaje_der || 'EXTERIOR').toUpperCase();
     var mountTop = String(data.montaje_superior || 'INTERIOR').toUpperCase();
     var mountBottom = String(data.montaje_inferior || 'INTERIOR').toUpperCase();
+    // Misma red de seguridad que jerarquia.rb: lateral y horizontal nunca
+    // pueden llegar los dos de punta a punta a la misma esquina (EXTERIOR o
+    // cualquiera de los INGLETE_*, que tambien llegan al alto total). Gana
+    // el lateral por default historico. El corte a 45° en si (INGLETE_*) es
+    // geometria real de SketchUp -- este visor web solo replica las
+    // dimensiones, no dibuja el bisel.
+    if (mountLeft !== 'INTERIOR' || mountRight !== 'INTERIOR') {
+      if (mountTop === 'EXTERIOR') mountTop = 'INTERIOR';
+      if (mountBottom === 'EXTERIOR') mountBottom = 'INTERIOR';
+    }
     var hasLeft = String(data.lleva_lateral_izq || 'SI') !== 'NO';
     var hasRight = String(data.lleva_lateral_der || 'SI') !== 'NO';
     var hasBottom = String(data.lleva_base || 'SI') !== 'NO';
@@ -428,7 +440,14 @@
         }
         if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));
         var shelfCount = isLeaf && content === 'REPISAS' ? Math.min(20, Math.max(1, parseInt(node.shelves, 10) || 1)) : 0;
-        for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, b.d, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));
+        // Si este espacio tiene puerta interna, esta ocupa su propio grosor
+        // pegada al frente (ver bloque de puertas mas abajo): la repisa se
+        // recorta ese mismo grosor para no chocar contra ella (igual que en
+        // jerarquia.rb).
+        var tienePuertaInternaLocal = String(node.front || '').toUpperCase().indexOf('INTERNA') >= 0;
+        var grosorPuertaLocal = tienePuertaInternaLocal ? Math.max(number(data, 'puerta_grosor', general), 3) : 0;
+        var fondoRepisa = b.d - grosorPuertaLocal;
+        if (fondoRepisa > 0) for (var hs = 1; hs <= shelfCount; hs += 1) addPiece('Repisa interna · ' + nodeLabel + ' ' + hs, b.w, general, fondoRepisa, b.x, b.z + b.h * hs / (shelfCount + 1) - general / 2, b.y + grosorPuertaLocal, COLORS.interior, 'interior',false,localMeta('local-shelf','h_shelves','_'+hs));
         if (isLeaf && content.indexOf('CAJONES') === 0) {
           drawerCount = Math.min(12, Math.max(1, drawerCount || 3));
           // Espacio entre cajones: propio (drawerGap, 30mm por defecto), no
@@ -554,6 +573,7 @@
     meshes.forEach(function(mesh){ mesh.userData.original.copy(mesh.position); });
     buildDimensionLabels();
     applyVisualState();
+    applyDoorsOpenState();
     applyBackdropState();
     if(hadModel&&priorPosition&&priorTarget){camera.position.copy(priorPosition);controls.target.copy(priorTarget);camera.lookAt(priorTarget);controls.update();}else frameModel();
     buildTree();
@@ -590,6 +610,20 @@
     });
     updateDimensionLabels();
     requestRender();
+  }
+
+  /* "Abierto": pensado para ver que hay construido dentro del modulo en
+     tiempo real. La bisagra real (con su lado y giro) solo existe como
+     Dynamic Component dentro de SketchUp -- este visor web es una maqueta
+     aparte que nunca tuvo esa informacion por pieza, y armar un giro de
+     puerta con pivote correcto sin poder probarlo en vivo tiene riesgo real
+     de verse mal (puerta girando desde el lado equivocado). En vez de
+     arriesgar eso, esta version oculta las puertas (rol 'door') para dejar
+     el interior completamente a la vista, que es el objetivo pedido. */
+  function applyDoorsOpenState() {
+    meshes.forEach(function (mesh) {
+      if (mesh.userData.role === 'door') mesh.visible = !doorsOpen;
+    });
   }
 
   /* Aparte de applyVisualState a propósito: cleanSnapshot() manipula grid/
@@ -820,6 +854,14 @@
       button.addEventListener('click', function () { orbitStep(button.dataset.orbit); });
     });
   }
+  function setAutoRotate(active) {
+    autoRotating = !!active;
+    if (controls) controls.enabled = !autoRotating;
+    var toggle = byId('view_autorotate');
+    if (toggle) { toggle.classList.toggle('active', autoRotating); toggle.textContent = autoRotating ? '⟳ Detener' : '⟳ Girar'; }
+    lastFrameTime = null;
+    requestRender();
+  }
   function orbitStep(action, angle) {
     if (!camera || !controls) return;
     angle = angle || Math.PI / 8;
@@ -907,8 +949,33 @@
     stage.appendChild(renderer.domElement);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.08;
-    controls.screenSpacePanning = true; controls.minDistance = 20; controls.maxDistance = 20000;
+    controls.screenSpacePanning = true; controls.minDistance = 5; controls.maxDistance = 60000;
     controls.addEventListener('change', function(){ requestRender(); syncNavigator(); });
+    /* Navegación libre: por defecto OrbitControls siempre hace zoom hacia
+       controls.target (el centro del módulo), aunque el cursor esté sobre
+       otro punto — se siente como si el zoom estuviera "atado" al centro.
+       Antes de que OrbitControls calcule su dolly, desplazamos el target
+       un poco hacia el punto bajo el cursor (raycast contra las piezas, o
+       contra el plano del piso si no hay impacto), así sucesivos scrolls
+       van acercando el pivote real de zoom hacia donde mira el usuario. */
+    stage.addEventListener('wheel', function (event) {
+      if (!camera || !controls) return;
+      if (autoRotating) { setAutoRotate(false); return; }
+      var targets = meshes.length ? meshes : spaceMeshes;
+      var rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      var anchor = null;
+      var hit = targets.length ? raycaster.intersectObjects(targets, false)[0] : null;
+      if (hit) anchor = hit.point;
+      else {
+        var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -originalCenter.y);
+        var planeHit = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(plane, planeHit)) anchor = planeHit;
+      }
+      if (anchor) controls.target.lerp(anchor, 0.18);
+    }, { capture: true, passive: true });
     scene.add(new THREE.HemisphereLight(0xffffff, 0x26313b, 1.65));
     var key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(1200, 1600, 900); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); key.shadow.camera.near = 1; key.shadow.camera.far = 5000;
@@ -920,15 +987,37 @@
     floor.rotation.x = -Math.PI / 2; floor.position.y = -2; floor.receiveShadow = true; scene.add(floor);
     sky = buildStudioSky(); scene.add(sky);
     clearModel();
-    renderer.domElement.addEventListener('pointerdown',function(event){pointerStart={x:event.clientX,y:event.clientY};});
+    renderer.domElement.addEventListener('pointerdown',function(event){pointerStart={x:event.clientX,y:event.clientY};if(autoRotating)setAutoRotate(false);});
     renderer.domElement.addEventListener('pointerup', hitPiece);
-    window.addEventListener('resize', function(){
+    function handleViewportResize(){
       var w = stage.clientWidth, h = stage.clientHeight;
       if (!w || !h) return;
       if (camera.isPerspectiveCamera) camera.aspect = w / h;
       else { var span = modelMaxSize() * 0.72; camera.left = -span * w / h; camera.right = span * w / h; camera.top = span; camera.bottom = -span; }
       camera.updateProjectionMatrix(); renderer.setSize(w, h, false); requestRender();
-    });
+    }
+    window.addEventListener('resize', handleViewportResize);
+    /* El botón "Ampliar" solo expande el visualizador 3D (el panel entero
+       .m3dv-panel pasa a position:fixed cubriendo toda la ventana del
+       diálogo) sin tocar el resto de la interfaz; se hace vía CSS en vez
+       de la Fullscreen API del navegador porque el diálogo embebido de
+       SketchUp (UI::HtmlDialog) no siempre la soporta de forma confiable
+       en todas las plataformas. Tras el cambio de layout hace falta un
+       resize real de cámara/renderer (doble rAF para esperar a que el
+       navegador termine de recalcular el tamaño del panel) para que el
+       módulo no se vea estirado/deformado con la nueva proporción del
+       visor.  */
+    function toggleFullscreen(){
+      var panel = stage.closest('.m3dv-panel');
+      if (!panel) return;
+      var active = panel.classList.toggle('is-fullscreen');
+      var btn = byId('view_fullscreen');
+      if (btn) { btn.textContent = active ? '✕ Cerrar' : '⛶ Ampliar'; btn.title = active ? 'Volver al tamaño normal' : 'Ampliar el visualizador 3D a pantalla completa'; }
+      requestAnimationFrame(function(){ requestAnimationFrame(handleViewportResize); });
+    }
+    bind('view_fullscreen', toggleFullscreen);
+    var doorsToggle = byId('view_doors_open');
+    if (doorsToggle) doorsToggle.addEventListener('change', function () { doorsOpen = doorsToggle.checked; applyDoorsOpenState(); requestRender(); });
     buildNavCube();
     bind('view_home', frameModel); bind('view_iso', function(){ setView('iso'); });
     bind('view_mode_space',function(){setSelectionMode('space');});bind('view_mode_piece',function(){setSelectionMode('piece');});
@@ -944,9 +1033,26 @@
     bind('view_technical', function(){ technical = !technical; byId('view_technical').classList.toggle('active', technical); applyVisualState(); applyBackdropState(); });
     bind('view_dimensions', function(){ dimensionsVisible = !dimensionsVisible; byId('view_dimensions').classList.toggle('active', dimensionsVisible); if (dimensionsVisible && !dimensionGroup) buildDimensionLabels(); updateDimensionLabels(); requestRender(); });
     var explosion = byId('view_explosion'); if (explosion) explosion.addEventListener('input', function(){ exploded = Number(explosion.value) || 0; applyVisualState(); });
+    var autorotateSpeedInput = byId('view_autorotate_speed');
+    if (autorotateSpeedInput) { autoRotateSpeed = Number(autorotateSpeedInput.value) || autoRotateSpeed; autorotateSpeedInput.addEventListener('input', function(){ autoRotateSpeed = Number(autorotateSpeedInput.value) || 0; }); }
+    bind('view_autorotate', function(){ setAutoRotate(!autoRotating); });
     var search = byId('view_search'); if (search) search.addEventListener('input', function(){ buildTree(search.value); });
     renderer.setAnimationLoop(function(){
       if (document.hidden) return;
+      if (autoRotating && camera && controls) {
+        var now = performance.now();
+        var dt = lastFrameTime ? Math.min((now - lastFrameTime) / 1000, 0.25) : 0;
+        lastFrameTime = now;
+        if (dt > 0) {
+          var offset = camera.position.clone().sub(originalCenter);
+          offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(autoRotateSpeed * dt));
+          camera.position.copy(originalCenter).add(offset);
+          controls.target.copy(originalCenter);
+          camera.lookAt(originalCenter);
+          syncNavigator();
+          needsRender = true;
+        }
+      }
       var changed = controls.update();
       if (!changed && !needsRender) return;
       renderer.render(scene, camera); needsRender = false;

@@ -18,6 +18,7 @@ module LPenafiel_GeneradorMueblesExacto
     "CJ_LAT_DER" => "COS",
     "CJ_FRENTE_EXTERIOR" => "FC",
     "CJ_FRENTE_EXT" => "FC",
+    "CJ_FRENTE_FALSO" => "FCF",
     "CJ_FRENTE" => "FCC",
     "CJ_POSTERIOR" => "POS",
     "CJ_POST" => "POS",
@@ -41,14 +42,14 @@ module LPenafiel_GeneradorMueblesExacto
   ETIQUETAS_CODIGO_PIEZA = {
     "LAT" => "Lateral", "BAS" => "Base", "TEC" => "Techo", "AJ" => "Ajuste posterior",
     "RES" => "Respaldo", "DIV" => "División", "REP" => "Repisa", "PT" => "Puerta",
-    "COS" => "Cajón · costado", "FC" => "Cajón · frente exterior", "FCC" => "Cajón · frente interno",
+    "COS" => "Cajón · costado", "FC" => "Cajón · frente exterior", "FCC" => "Cajón · frente interno", "FCF" => "Cajón · frente falso",
     "POS" => "Cajón · trasero", "FON" => "Cajón · fondo",
     "TRAVD" => "Travesaño delantero", "TRAVT" => "Travesaño trasero"
   }.freeze
 
   def self.codigo_pieza(nombre)
     nombre_base = nombre.to_s.upcase.sub(/\A[HG]_/, "")
-    nombre_base = nombre_base.sub(/\ACJ_.*?_(LAT_IZQ|LAT_DER|FRENTE_EXTERIOR|FRENTE_EXT|FRENTE|POSTERIOR|POST|FONDO)\z/) { "CJ_#{Regexp.last_match(1)}" }
+    nombre_base = nombre_base.sub(/\ACJ_.*?_(LAT_IZQ|LAT_DER|FRENTE_EXTERIOR|FRENTE_EXT|FRENTE_FALSO|FRENTE|POSTERIOR|POST|FONDO)\z/) { "CJ_#{Regexp.last_match(1)}" }
     codigo = CODIGOS_PIEZAS.find { |clave, _valor| nombre_base.start_with?(clave) }
     codigo ? codigo[1] : nombre_base
   end

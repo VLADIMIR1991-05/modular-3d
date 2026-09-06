@@ -88,6 +88,19 @@ module LPenafiel_GeneradorMueblesExacto
       montaje_inferior = (datos['montaje_inferior'] || "INTERIOR").to_s
       montaje_izq = (datos['montaje_izq'] || "EXTERIOR").to_s
       montaje_der = (datos['montaje_der'] || "EXTERIOR").to_s
+      # Red de seguridad server-side (la UI ya evita esto en vivo): un
+      # lateral y un horizontal nunca pueden llegar los dos "de punta a
+      # punta" a la misma esquina (EXTERIOR/sobrepuesto, o cualquiera de los
+      # INGLETE_*, que tambien llegan al alto total) -- si los dos abrazaran
+      # la misma esquina por fuera, ocuparian el mismo espacio o competirian
+      # por el mismo corte a 45°. Si llega una combinacion asi (manifiesto
+      # viejo, plantilla, etc.), gana el lateral (es el default historico de
+      # este plugin) y el horizontal en conflicto se fuerza a montaje
+      # interior.
+      if montaje_izq != "INTERIOR" || montaje_der != "INTERIOR"
+        montaje_superior = "INTERIOR" if montaje_superior == "EXTERIOR"
+        montaje_inferior = "INTERIOR" if montaje_inferior == "EXTERIOR"
+      end
       # Sobremedida delantera/trasera: delta directo sobre el fondo de ESE
       # panel (positivo = panel mas grande hacia ese lado, negativo = mas
       # chico), igual convencion de signo que la sobremedida por pieza en
@@ -212,6 +225,27 @@ module LPenafiel_GeneradorMueblesExacto
       @modulo_uuid_actual = @datos_modulo_actual['module_uuid'].to_s if @modulo_uuid_actual.to_s.empty? && !@datos_modulo_actual['module_uuid'].to_s.empty?
       @modulo_uuid_actual = SecureRandom.uuid if @modulo_uuid_actual.to_s.empty?
       @datos_modulo_actual['module_uuid'] = @modulo_uuid_actual
+      # Montaje "Inglete" (arriba o abajo, no los dos a la vez todavia -- un
+      # lateral solo puede tener un corte a 45° por llamada a crear_pieza) en
+      # LAT_IZQ/LAT_DER: aplica automaticamente el mismo corte que ya existia
+      # como ajuste manual por pieza (miter_overrides_json), sin pisar un
+      # override que el usuario ya haya puesto a mano para esa pieza puntual.
+      miter_overrides_auto = begin
+        raw_miter = @datos_modulo_actual['miter_overrides_json']
+        parseado = raw_miter.is_a?(Hash) ? raw_miter : JSON.parse(raw_miter.to_s)
+        parseado.is_a?(Hash) ? parseado : {}
+      rescue JSON::ParserError
+        {}
+      end
+      { 'LAT_IZQ' => montaje_izq, 'LAT_DER' => montaje_der }.each do |nombre_lateral, montaje_lateral|
+        next if miter_overrides_auto.key?(nombre_lateral) || miter_overrides_auto.key?(nombre_lateral.upcase)
+        esquina_auto = case montaje_lateral
+                        when 'INGLETE_SUPERIOR' then 'top_outer'
+                        when 'INGLETE_INFERIOR' then 'bottom_outer'
+                        end
+        miter_overrides_auto[nombre_lateral] = { 'corner' => esquina_auto, 'size' => espesor.to_mm } if esquina_auto
+      end
+      @datos_modulo_actual['miter_overrides_json'] = JSON.generate(miter_overrides_auto)
       @datos_modulo_actual['module_base_offset'] = [
         @offset_creacion.x.to_mm, @offset_creacion.y.to_mm, @offset_creacion.z.to_mm
       ]
@@ -489,12 +523,23 @@ module LPenafiel_GeneradorMueblesExacto
           next if ancho_nodo <= 0 || fondo_nodo <= 0 || alto_nodo <= 0
           nid = id_pieza_jerarquia(node['id'], "IDX#{node_index + 1}")
           contenido = node['content'].to_s.upcase
+          # Si este mismo espacio tiene puerta interna, esta ocupa su propio
+          # grosor pegada al frente (ver mas abajo, y_puerta = box.y + 2mm):
+          # una repisa que llegara al ras del frente (y_min) chocaria contra
+          # ese panel. Se recorta la repisa por ese mismo grosor, dejandola
+          # empezar justo donde termina la puerta -- nunca se entrelazan.
+          tiene_puerta_interna_local = node['front'].to_s.upcase.include?('INTERNA')
+          grosor_puerta_local = tiene_puerta_interna_local ? [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm : 0.mm
           if contenido == 'REPISAS'
             cantidad = [[node['shelves'].to_i, 1].max, 20].min
             distancia = (alto_nodo - (cantidad * espesor)) / (cantidad + 1)
-            (1..cantidad).each do |ri|
-              z_rep = z_min + (ri * distancia) + ((ri - 1) * espesor)
-              self.crear_pieza(entities, modulo_nombre, "H_REP_LOCAL_#{nid}_#{ri}", ancho_nodo, fondo_nodo, espesor, x_min, y_min, z_rep, 1, 0)
+            fondo_repisa = fondo_nodo - grosor_puerta_local
+            y_repisa = y_min + grosor_puerta_local
+            if fondo_repisa > 0.mm
+              (1..cantidad).each do |ri|
+                z_rep = z_min + (ri * distancia) + ((ri - 1) * espesor)
+                self.crear_pieza(entities, modulo_nombre, "H_REP_LOCAL_#{nid}_#{ri}", ancho_nodo, fondo_repisa, espesor, x_min, y_repisa, z_rep, 1, 0)
+              end
             end
           end
           if contenido.start_with?('CAJONES')
@@ -511,6 +556,13 @@ module LPenafiel_GeneradorMueblesExacto
             #   espacio; no se crea ningun cajon real detras.
             sin_puerta_propia = node['front'].to_s.empty? || node['front'].to_s.upcase == 'NINGUNO'
             frente_cajon_activo = contenido == 'CAJONES_FRENTES' && alcance_frentes != 'GLOBAL' && sin_puerta_propia
+            # Tiradera (jalador) por espacio de cajones: por defecto SI solo en
+            # "Cajones con frentes" (frente externo, visible) y NO en
+            # "Cajones internos"/"Cajones internos + puerta" (quedan detras de
+            # una puerta, no hace falta agarradera). Editable con el checkbox
+            # "Lleva tiradera" de la jerarquia -- una vez que node['tiradera']
+            # llega explicito (true/false) desde ahi, gana sobre el default.
+            lleva_tiradera = node['tiradera'].nil? ? (contenido == 'CAJONES_FRENTES') : !!node['tiradera']
             estilo_frente = frente_cajon_activo ? (node['drawerFrontStyle'] || 'POR_CAJON').to_s.upcase : 'POR_CAJON'
             # Fuga ENTRE frentes (y entre el frente y una puerta vecina de otro
             # nodo): valor completo, igual que fuga_central entre puertas -- NO
@@ -547,8 +599,9 @@ module LPenafiel_GeneradorMueblesExacto
 
             if frente_cajon_activo && estilo_frente == 'FALSO'
               if frente_ancho > 0.mm && frente_alto > 0.mm
-                self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", frente_ancho, espesor, frente_alto,
+                pieza_frente_falso = self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", frente_ancho, espesor, frente_alto,
                   frente_x_min, -espesor, frente_z_min, 2, 2)
+                pieza_frente_falso.definition.set_attribute('LPenafiel', 'lleva_tiradera', lleva_tiradera ? 'SI' : 'NO') if pieza_frente_falso.respond_to?(:definition)
               end
             else
             cantidad = [[node['drawers'].to_i, 1].max, 12].min
@@ -597,7 +650,8 @@ module LPenafiel_GeneradorMueblesExacto
                 @offset_creacion = nil
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_LAT_IZQ", espesor, fondo_caja, altura_caja, 0.mm, 0.mm, 0.mm, 1, 0)
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_LAT_DER", espesor, fondo_caja, altura_caja, ancho_caja - espesor, 0.mm, 0.mm, 1, 0)
-                self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, 0.mm, 0.mm, 1, 0)
+                pieza_frente_interno = self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, 0.mm, 0.mm, 1, 0)
+                pieza_frente_interno.definition.set_attribute('LPenafiel', 'lleva_tiradera', lleva_tiradera ? 'SI' : 'NO') if pieza_frente_interno.respond_to?(:definition)
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_POST", ancho_caja - (espesor * 2), espesor, altura_caja, espesor, fondo_caja - espesor, 0.mm, 1, 0)
                 self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FONDO", ancho_caja - (espesor * 2), fondo_caja - (espesor * 2), espesor, espesor, espesor, 0.mm, 0, 0)
                 # El frente exterior (a la altura de la puerta) solo tiene
@@ -626,8 +680,9 @@ module LPenafiel_GeneradorMueblesExacto
                   z_frente_abs = frente_z_min + (indice_frente * (altura_frente_uniforme + fuga_frente_ext))
                   z_frente_local = z_frente_abs - base_z
                   if frente_ancho > 0.mm && alto_frente_ext > 0.mm
-                    self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", frente_ancho, espesor, alto_frente_ext,
+                    pieza_frente_ext = self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", frente_ancho, espesor, alto_frente_ext,
                       frente_x_min - base_x, -espesor - y_min, z_frente_local, 2, 2)
+                    pieza_frente_ext.definition.set_attribute('LPenafiel', 'lleva_tiradera', lleva_tiradera ? 'SI' : 'NO') if pieza_frente_ext.respond_to?(:definition)
                   end
                 end
                 @offset_creacion = offset_guardado

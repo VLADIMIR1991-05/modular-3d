@@ -89,7 +89,8 @@ module LPenafiel_GeneradorMueblesExacto
       :material => material_pieza(entity),
       :tipo_canto => definicion.get_attribute("LPenafiel", "tipo_canto") || "PVC",
       :color_canto => definicion.get_attribute("LPenafiel", "color_canto_nombre") || definicion.get_attribute("LPenafiel", "color_canto") || definicion.get_attribute("LPenafiel", "color_configurado"),
-      :inglete => etiqueta_inglete(definicion.get_attribute("LPenafiel", "inglete_esquina"), definicion.get_attribute("LPenafiel", "inglete_medida_mm"))
+      :inglete => etiqueta_inglete(definicion.get_attribute("LPenafiel", "inglete_esquina"), definicion.get_attribute("LPenafiel", "inglete_medida_mm")),
+      :lleva_tiradera => definicion.get_attribute("LPenafiel", "lleva_tiradera")
     }
   end
 

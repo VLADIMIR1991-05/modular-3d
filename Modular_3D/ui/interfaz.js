@@ -1,3 +1,53 @@
+    // Barra de "dias restantes" de la licencia: 100% (azul) al activarse,
+    // bajando de color hacia verde-amarillo-naranja-rojo (mezclando, no un
+    // salto brusco) a medida que se acerca el vencimiento. Depende de que
+    // el servidor de licencias mande dias_restantes/days_left o una fecha
+    // de vencimiento (expires_at/subscription_ends_at/vencimiento) en la
+    // respuesta de login/heartbeat; si no manda ninguno de esos campos
+    // todavia, la barra simplemente se queda oculta (nada roto, solo no se
+    // muestra hasta que el backend la soporte).
+    function colorPorPorcentajeLicencia(pct) {
+      var paradas = [
+        { p: 100, c: [37, 99, 235] },
+        { p: 75, c: [34, 197, 94] },
+        { p: 50, c: [234, 179, 8] },
+        { p: 25, c: [249, 115, 22] },
+        { p: 0, c: [239, 68, 68] }
+      ];
+      var clamped = Math.max(0, Math.min(100, pct));
+      for (var i = 0; i < paradas.length - 1; i += 1) {
+        var a = paradas[i], b = paradas[i + 1];
+        if (clamped <= a.p && clamped >= b.p) {
+          var t = a.p === b.p ? 0 : (a.p - clamped) / (a.p - b.p);
+          var mezcla = a.c.map(function (canal, idx) { return Math.round(canal + (b.c[idx] - canal) * t); });
+          return 'rgb(' + mezcla.join(',') + ')';
+        }
+      }
+      return 'rgb(' + paradas[paradas.length - 1].c.join(',') + ')';
+    }
+    function actualizarBarraLicencia(result) {
+      var barra = document.getElementById('license_days');
+      var relleno = document.getElementById('license_days_fill');
+      var texto = document.getElementById('license_days_text');
+      if (!barra || !relleno || !texto) return;
+      var totalDias = Number(result.total_days || result.plan_days || result.dias_totales || 30) || 30;
+      var diasRestantes = null;
+      if (result.days_left != null && isFinite(Number(result.days_left))) diasRestantes = Number(result.days_left);
+      else if (result.dias_restantes != null && isFinite(Number(result.dias_restantes))) diasRestantes = Number(result.dias_restantes);
+      else {
+        var fechaVencimiento = result.expires_at || result.subscription_ends_at || result.vencimiento;
+        if (fechaVencimiento) {
+          var msRestantes = new Date(fechaVencimiento).getTime() - Date.now();
+          if (isFinite(msRestantes)) diasRestantes = Math.max(0, Math.ceil(msRestantes / 86400000));
+        }
+      }
+      if (diasRestantes == null) { barra.hidden = true; return; }
+      barra.hidden = false;
+      var pct = Math.max(0, Math.min(100, (diasRestantes / totalDias) * 100));
+      relleno.style.width = pct + '%';
+      relleno.style.background = colorPorPorcentajeLicencia(pct);
+      texto.textContent = diasRestantes + (diasRestantes === 1 ? ' día' : ' días');
+    }
     window.Modular3DLicense = {
       busy: false,
       receive: function(result) {
@@ -14,6 +64,7 @@
           document.getElementById('license_session').classList.add('show');
           document.getElementById('license_identity').textContent = result.email || document.getElementById('license_email').value || 'Licencia activa';
           message.classList.remove('show');
+          actualizarBarraLicencia(result);
           return;
         }
 
@@ -125,8 +176,10 @@
       var thickness = Math.max(3, numero('espesor', 15));
       el('panel_grid').innerHTML = paneles.map(function(panel) {
         var category = panel[0] === 'superior' ? 'top' : (panel[0] === 'inferior' ? 'horizontal' : 'lateral');
+        var esLateral = panel[0] === 'izq' || panel[0] === 'der';
+        var opcionesInglete = esLateral ? '<option value="INGLETE_SUPERIOR">Inglete 45° (con techo)</option><option value="INGLETE_INFERIOR">Inglete 45° (con base)</option>' : '';
         return '<div class="panel-card" data-editor-card="' + panel[0] + '" data-editor-category="' + category + '"><h3>' + panel[1] + '</h3>' +
-          '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + ((panel[0] === 'izq' || panel[0] === 'der') ? ' selected' : '') + '>Sobrepuesto exterior</option></select></div>' +
+          '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + (esLateral ? ' selected' : '') + '>Sobrepuesto exterior</option>' + opcionesInglete + '</select></div>' +
           '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
           '<div class="row"><label>Sobremedida delantera (mm)</label><input type="number" id="sobremedida_frontal_' + panel[0] + '" value="0" step=".5"></div>' +
           '<div class="row"><label>Sobremedida trasera (mm)</label><input type="number" id="sobremedida_trasera_' + panel[0] + '" value="0" step=".5"></div>' +
@@ -611,6 +664,21 @@
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
       if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior') sincronizarReglasRespaldo();
+      // Laterales (izq/der) y horizontales (superior/inferior) nunca pueden
+      // llegar los dos "de punta a punta" a la misma esquina: cada uno es
+      // una sola pieza de punta a punta, asi que si uno abraza la esquina por
+      // fuera (Sobrepuesto exterior, o Inglete -- tambien llega al alto/
+      // ancho total) el otro tiene que meterse por dentro (si los dos
+      // abrazaran por fuera, chocarian ocupando el mismo espacio). Cambiar
+      // cualquiera de los dos grupos fuera de "Montaje interior" adapta
+      // automaticamente al otro grupo hacia "Montaje interior" para que
+      // nunca se entrelacen.
+      if ((event.target.id === 'montaje_izq' || event.target.id === 'montaje_der') && event.target.value !== 'INTERIOR') {
+        ['montaje_superior', 'montaje_inferior'].forEach(function (id) { if (el(id) && el(id).value === 'EXTERIOR') el(id).value = 'INTERIOR'; });
+      }
+      if ((event.target.id === 'montaje_superior' || event.target.id === 'montaje_inferior') && event.target.value === 'EXTERIOR') {
+        ['montaje_izq', 'montaje_der'].forEach(function (id) { if (el(id) && el(id).value !== 'INTERIOR') el(id).value = 'INTERIOR'; });
+      }
       actualizarVista();
     });
     document.addEventListener('click', function(event) {

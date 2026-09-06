@@ -37,6 +37,7 @@ module LPenafiel_GeneradorMueblesExacto
     puertas = 0
     bisagras_total = 0
     piezas_cos = 0
+    jaladores = 0
 
     piezas.each do |pieza|
       grupo = por_material[pieza[:material].to_s]
@@ -55,9 +56,26 @@ module LPenafiel_GeneradorMueblesExacto
         bisagras_total += bisagras_por_altura(pieza[:alto_real_mm])
       end
       piezas_cos += 1 if pieza[:codigo].to_s == 'COS'
+      # Jaladores: 1 por frente de cajon que realmente lleve tiradera. El
+      # atributo lleva_tiradera (SI/NO) viene del checkbox por espacio en la
+      # jerarquia; las piezas mas viejas sin ese atributo (construidas antes
+      # de que existiera) caen al default historico -- SI en el frente
+      # exterior/falso (FC/FCF, visible, es lo que ya se contaba antes) y NO
+      # en el frente interno (FCC, detras de una puerta, no llevaba jalador
+      # de verdad aunque antes se contaba igual por error).
+      codigo_frente = pieza[:codigo].to_s
+      if %w[FC FCC FCF].include?(codigo_frente)
+        segun_atributo = pieza[:lleva_tiradera].to_s.upcase
+        lleva = if %w[SI NO].include?(segun_atributo)
+                  segun_atributo == 'SI'
+                else
+                  codigo_frente != 'FCC'
+                end
+        jaladores += 1 if lleva
+      end
     end
 
-    { :por_material => por_material, :puertas => puertas, :bisagras_total => bisagras_total, :cajones => (piezas_cos / 2.0).ceil, :total_piezas => piezas.length }
+    { :por_material => por_material, :puertas => puertas, :bisagras_total => bisagras_total, :cajones => (piezas_cos / 2.0).ceil, :jaladores => jaladores, :total_piezas => piezas.length }
   end
 
   def self.mostrar_presupuesto
@@ -149,7 +167,7 @@ module LPenafiel_GeneradorMueblesExacto
     <tbody>
       <tr><td>Bisagras (según altura de cada puerta)</td><td class="num" id="cant_bisagras">#{datos_costo[:bisagras_total]}</td><td><input id="precio_bisagra" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_bisagras">0.00</td></tr>
       <tr><td>Juegos de corredera (1 por cajón)</td><td class="num" id="cant_correderas">#{datos_costo[:cajones]}</td><td><input id="precio_corredera" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_correderas">0.00</td></tr>
-      <tr><td>Jaladores/tiradores (1 por puerta/cajón)</td><td class="num" id="cant_jaladores">#{datos_costo[:puertas] + datos_costo[:cajones]}</td><td><input id="precio_jalador" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_jaladores">0.00</td></tr>
+      <tr><td>Jaladores/tiradores (puertas + cajones con tiradera habilitada)</td><td class="num" id="cant_jaladores">#{datos_costo[:puertas] + datos_costo[:jaladores]}</td><td><input id="precio_jalador" type="number" step="0.01" value="0"></td><td class="num" id="subtotal_jaladores">0.00</td></tr>
     </tbody>
   </table>
 
