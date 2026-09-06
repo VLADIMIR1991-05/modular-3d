@@ -1,7 +1,16 @@
-# Modular_3D 4.8.27 · Rediseño: visor 3D central + activación en cascada
+# Modular_3D 4.8.28 · Visor 3D fijo, layout reorganizado
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.27  
+**Versión:** 4.8.28  
+
+## Cambios 4.8.28
+
+La v4.8.27 no gustó: la columna de configuración quedó demasiado angosta con las pestañas verticales, se sentía amontonada. Se rehizo el layout completo en base al feedback puntual.
+
+- **El visor 3D ahora queda fijo de verdad.** Antes, si el árbol de piezas o la lista de materiales tenían mucho contenido, todo el panel derecho (incluido el visor) se desplazaba al hacer scroll, tapando el 3D. Ahora el panel del visor es una columna fija dividida en dos zonas: arriba, la cabecera + el visor 3D + la barra de vistas + explosión/giro automático **nunca se mueven ni se ocultan** (siguen mostrando el módulo actualizándose en tiempo real pase lo que pase); abajo, solo el árbol de piezas y las propiedades técnicas se desplazan en su propio espacio acotado, sin arrastrar el visor con ellos.
+- **Se deshizo la columna angosta de 330px y las pestañas verticales** de la v4.8.27 — vuelven las pestañas horizontales de siempre y el configurador recupera un ancho cómodo (flexible, ~480px o más según el tamaño de la ventana) para que las etiquetas y campos no queden apretados.
+- **Se restauraron las grillas de varias columnas** que se habían aplastado a una sola columna la ronda pasada para "caber" en el espacio angosto: la grilla de materiales, el editor de pieza individual y el panel de jerarquía (plano + inspector lado a lado) vuelven a repartirse en 2-3 columnas cuando hay espacio, con su propio resguardo para pantallas angostas.
+- Se conserva todo lo bueno de la v4.8.27 que no tenía que ver con el ancho de columna: la activación en cascada en Casco y Materiales, y la limpieza de botones muertos/redundantes de la auditoría.
 
 ## Cambios 4.8.27
 
