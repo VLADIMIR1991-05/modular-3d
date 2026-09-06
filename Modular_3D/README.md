@@ -1,7 +1,16 @@
-# Modular_3D 4.8.23 · Fix definitivo: cantidad de bisagras
+# Modular_3D 4.8.24 · Cubo de navegación separado y compacto
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.23  
+**Versión:** 4.8.24  
+
+## Cambios 4.8.24
+
+- **El cubo de navegación ya no flota encima del visor 3D.** Antes era un panel `position:absolute` metido dentro del mismo contenedor del canvas 3D, por eso se superponía visualmente al modelo. Ahora vive en su propia franja separada (con línea divisoria propia), entre el visor y la barra de vistas — nunca se dibuja encima del 3D.
+- **Cubo más pequeño y compacto**, como pediste: 78px de marco (antes 96px) y 38px de cubo (antes 46px).
+- **Corregido el "desfase" visual del cubo**: el `perspective` se había subido a 900px en una ronda anterior como prueba y no arregló nada (tu captura lo seguía mostrando distorsionado); lo volví al valor 280px, que es el que usa MODULAR-3D-VIEW y da la profundidad isométrica correcta en vez de aplanar el cubo.
+- **Revisé a fondo si el frente/atrás del cubo estaban invertidos** (una pista real que encontré comparando contra MODULAR-3D-VIEW, donde esa asignación CSS está al revés de la nuestra). Hice el álgebra completa de las 6 caras contra la fórmula que ya usa el cubo para orientarse según la cámara (`rotateX(pitch) rotateY(-yaw)`) y confirmé que nuestra versión ya es la correcta para el sistema de ejes que usa este visor — el cubo de referencia solo la tiene al revés porque su propia escena usa el eje contrario para "frente". No se tocó ese CSS: tocarlo a ciegas habría roto la orientación.
+- **Etiquetas de las caras más cortas** (FREN/POST/DER/IZQ/SUP/INF en vez de FRENTE/ATRÁS/DER./IZQ./ARRIBA/ABAJO) para que entren sin amontonarse en el cubo más chico — esto es lo que probablemente causaba el texto encimado ("FREN E"/"DER") que se veía en tu captura, ya que antes las palabras completas no entraban en el recuadro central de una cara tan pequeña.
+- Sigue pendiente del mismo pedido (rondas siguientes, una por una): navegación 3D libre sin límite de zoom al centro del módulo, giro automático con slider de velocidad, checkbox de tiradera en cajones internos, recorte de repisas/divisiones donde pasa una puerta interna, que laterales/base/techo nunca se solapen entre sí, y la nueva opción de montaje "Inglete".
 
 ## Cambios 4.8.23
 

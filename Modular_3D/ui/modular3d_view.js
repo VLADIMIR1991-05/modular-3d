@@ -767,12 +767,12 @@
      lógica de movimiento).
    */
   var NAV_CUBE_FACES = [
-    { name: 'front', label: 'FRENTE', dir: [0, 0, 1], right: [1, 0, 0], up: [0, 1, 0] },
-    { name: 'back', label: 'ATRÁS', dir: [0, 0, -1], right: [-1, 0, 0], up: [0, 1, 0] },
-    { name: 'right', label: 'DER.', dir: [1, 0, 0], right: [0, 0, -1], up: [0, 1, 0] },
-    { name: 'left', label: 'IZQ.', dir: [-1, 0, 0], right: [0, 0, 1], up: [0, 1, 0] },
-    { name: 'top', label: 'ARRIBA', dir: [0, 1, 0], right: [1, 0, 0], up: [0, 0, -1] },
-    { name: 'bottom', label: 'ABAJO', dir: [0, -1, 0], right: [1, 0, 0], up: [0, 0, 1] }
+    { name: 'front', label: 'FRENTE', short: 'FREN', dir: [0, 0, 1], right: [1, 0, 0], up: [0, 1, 0] },
+    { name: 'back', label: 'ATRÁS', short: 'POST', dir: [0, 0, -1], right: [-1, 0, 0], up: [0, 1, 0] },
+    { name: 'right', label: 'DERECHA', short: 'DER', dir: [1, 0, 0], right: [0, 0, -1], up: [0, 1, 0] },
+    { name: 'left', label: 'IZQUIERDA', short: 'IZQ', dir: [-1, 0, 0], right: [0, 0, 1], up: [0, 1, 0] },
+    { name: 'top', label: 'ARRIBA', short: 'SUP', dir: [0, 1, 0], right: [1, 0, 0], up: [0, 0, -1] },
+    { name: 'bottom', label: 'ABAJO', short: 'INF', dir: [0, -1, 0], right: [1, 0, 0], up: [0, 0, 1] }
   ];
   var navigatorDragging = false;
   function buildNavCube() {
@@ -790,7 +790,7 @@
           var button = document.createElement('button');
           button.type = 'button';
           button.dataset.view = direction.toArray().join(',');
-          if (row === 0 && column === 0) { button.className = 'nav-center'; button.textContent = face.label; button.title = 'Vista ' + face.label.toLowerCase(); }
+          if (row === 0 && column === 0) { button.className = 'nav-center'; button.textContent = face.short; button.title = 'Vista ' + face.label.toLowerCase(); }
           else button.title = 'Vista oblicua desde ' + face.label.toLowerCase();
           button.addEventListener('click', function () {
             if (navigatorDragging) return;
