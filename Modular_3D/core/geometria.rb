@@ -260,8 +260,10 @@ module LPenafiel_GeneradorMueblesExacto
   end
 
   # Biblioteca de texturas incluidas con el plugin (Modular_3D/textures/):
-  # imagenes genericas/procedurales, no fotografias reales, para tener
-  # variedad basica sin depender de internet ni de que el usuario suba algo.
+  # 7 genericas de siempre mas las fotos reales de fabricante agregadas por
+  # marca (Modular_3D/textures/<MARCA>/..., con o sin subcarpetas de
+  # coleccion) -- manifest.json se genera escaneando esas carpetas
+  # (generar_manifiesto.py) e indexa cualquier nivel de subcarpeta.
   # Referenciadas en material_textures_json como "INCLUDED:<id>".
   def self.manifiesto_texturas_incluidas
     return @manifiesto_texturas_incluidas if defined?(@manifiesto_texturas_incluidas)

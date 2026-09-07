@@ -1,7 +1,17 @@
-# Modular_3D 4.8.28 · Visor 3D fijo, layout reorganizado
+# Modular_3D 4.9.0 · Biblioteca de texturas de fabricantes
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 4.8.28  
+**Versión:** 4.9.0  
+
+## Cambios 4.9.0
+
+Se incorporó la biblioteca completa de texturas de fabricantes (`Texturas.zip`, ~244MB, enviada en 12 partes) tal como estaba organizada, con lectura recursiva de colores incluso en subcarpetas.
+
+- **8 marcas, 423 fotos de melamina/color reales**, agregadas en `Modular_3D/textures/<MARCA>/...` respetando la estructura original: DURAPLAC, FABLAC, FIBRAPLAC, GUARARAPES, MASISA, PELIKANO, TABLEROS HISPANOS y VESTO (esta última con sus 5 colecciones como subcarpetas: Clásico, Innovación, Sinkronía, Tendencias, Unicolores). Los 7 colores curados que ya existían (blanco liso, roble claro, wengué, etc.) se conservan igual que antes.
+- **Lectura recursiva de cualquier profundidad de subcarpetas**: no se limitó a un solo nivel "marca → archivo" — funciona igual si una marca tiene colecciones intermedias (como VESTO) o no.
+- **El selector de textura ahora agrupa por marca** (y colección, cuando aplica) en vez de mostrar una lista plana de 430 nombres — se ve "MASISA · Santorini" dentro de un grupo "MASISA", no una lista interminable sin organizar.
+- **Cómo funciona por dentro:** las fotos no se leen en vivo desde Ruby/SketchUp en cada apertura (ahí no hay forma de calcular un color promedio real sin una librería de imágenes) — hay un script nuevo, `Modular_3D/textures/generar_manifiesto.py`, que se corre una sola vez (o cada vez que agregues/quites carpetas de marcas) y genera `manifest.json` con el nombre, la ruta, un color promedio calculado de cada foto real y la marca/colección de cada textura. Ese `manifest.json` es el único lugar que hay que tocar para sumar o sacar texturas — no hace falta tocar Ruby ni JS.
+- **Aviso de tamaño:** esto agrega ~244MB de imágenes al repositorio de git de forma permanente (no se usó Git LFS ni hosting externo, para mantenerlo simple como un solo paquete instalable). Si en algún momento el repositorio se vuelve incómodo de clonar/descargar por este motivo, se puede migrar a Git LFS más adelante sin perder ninguna textura.
 
 ## Cambios 4.8.28
 

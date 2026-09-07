@@ -1,11 +1,3860 @@
 {
   "textures": [
-    { "id": "blanco_liso", "name": "Blanco liso", "file": "blanco_liso.png", "defaultScale": 600, "defaultColor": "#f6f6f4" },
-    { "id": "blanco_nube", "name": "Blanco nube", "file": "blanco_nube.png", "defaultScale": 600, "defaultColor": "#f2f2f0" },
-    { "id": "negro_mate", "name": "Negro mate", "file": "negro_mate.png", "defaultScale": 600, "defaultColor": "#1c1c1e" },
-    { "id": "gris_antracita", "name": "Gris antracita", "file": "gris_antracita.png", "defaultScale": 600, "defaultColor": "#46494e" },
-    { "id": "roble_claro", "name": "Roble claro", "file": "roble_claro.png", "defaultScale": 300, "defaultColor": "#d6b586" },
-    { "id": "nogal_oscuro", "name": "Nogal oscuro", "file": "nogal_oscuro.png", "defaultScale": 300, "defaultColor": "#5c3c28" },
-    { "id": "wengue", "name": "Wengué", "file": "wengue.png", "defaultScale": 300, "defaultColor": "#362a22" }
+    {
+      "id": "blanco_liso",
+      "name": "Blanco liso",
+      "file": "blanco_liso.png",
+      "defaultScale": 600,
+      "defaultColor": "#f6f6f4"
+    },
+    {
+      "id": "blanco_nube",
+      "name": "Blanco nube",
+      "file": "blanco_nube.png",
+      "defaultScale": 600,
+      "defaultColor": "#f2f2f0"
+    },
+    {
+      "id": "negro_mate",
+      "name": "Negro mate",
+      "file": "negro_mate.png",
+      "defaultScale": 600,
+      "defaultColor": "#1c1c1e"
+    },
+    {
+      "id": "gris_antracita",
+      "name": "Gris antracita",
+      "file": "gris_antracita.png",
+      "defaultScale": 600,
+      "defaultColor": "#46494e"
+    },
+    {
+      "id": "roble_claro",
+      "name": "Roble claro",
+      "file": "roble_claro.png",
+      "defaultScale": 300,
+      "defaultColor": "#d6b586"
+    },
+    {
+      "id": "nogal_oscuro",
+      "name": "Nogal oscuro",
+      "file": "nogal_oscuro.png",
+      "defaultScale": 300,
+      "defaultColor": "#5c3c28"
+    },
+    {
+      "id": "wengue",
+      "name": "Wengué",
+      "file": "wengue.png",
+      "defaultScale": 300,
+      "defaultColor": "#362a22"
+    },
+    {
+      "id": "duraplac_alamo_duraplac",
+      "name": "DURAPLAC · Alamo",
+      "file": "DURAPLAC/Alamo DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b19c87",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_alaska_duraplac",
+      "name": "DURAPLAC · Alaska",
+      "file": "DURAPLAC/Alaska DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ebeae6",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_aluminio_duraplac",
+      "name": "DURAPLAC · Aluminio",
+      "file": "DURAPLAC/Aluminio DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#81858a",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_canela_duraplac",
+      "name": "DURAPLAC · Canela",
+      "file": "DURAPLAC/Canela DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#99673b",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_carvalho_duraplac",
+      "name": "DURAPLAC · Carvalho",
+      "file": "DURAPLAC/Carvalho DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d4c7bc",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_casta_fume_duraplac",
+      "name": "DURAPLAC · Casta Fumé",
+      "file": "DURAPLAC/Casta fumé DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3e312b",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_cedro_merak_duraplac",
+      "name": "DURAPLAC · Cedro Merak",
+      "file": "DURAPLAC/Cedro merak DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ad927a",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_cerezo_duraplac",
+      "name": "DURAPLAC · Cerezo",
+      "file": "DURAPLAC/Cerezo DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7b320c",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_encimo_marron_duraplac",
+      "name": "DURAPLAC · Encimo Marrón",
+      "file": "DURAPLAC/Encimo marrón DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#866148",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_gris_claro_duraplac",
+      "name": "DURAPLAC · Gris Claro",
+      "file": "DURAPLAC/Gris claro DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#abafb2",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_gris_epico_duraplac",
+      "name": "DURAPLAC · Gris Épico",
+      "file": "DURAPLAC/Gris épico DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#958d8a",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_haya_duraplac",
+      "name": "DURAPLAC · Haya",
+      "file": "DURAPLAC/Haya DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dea66d",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_lienzo_duraplac",
+      "name": "DURAPLAC · Lienzo",
+      "file": "DURAPLAC/Lienzo DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e2dfd3",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_maple_duraplac",
+      "name": "DURAPLAC · Maple",
+      "file": "DURAPLAC/Maple DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f9e4bb",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_morocco_duraplac",
+      "name": "DURAPLAC · Morocco",
+      "file": "DURAPLAC/Morocco DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#886d43",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_negro_duraplac",
+      "name": "DURAPLAC · Negro",
+      "file": "DURAPLAC/Negro DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#000000",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_nogal_mondo_duraplac",
+      "name": "DURAPLAC · Nogal Mondo",
+      "file": "DURAPLAC/Nogal mondo DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#261e1e",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_nogal_pariz_wood_duraplac",
+      "name": "DURAPLAC · Nogal Pariz Wood",
+      "file": "DURAPLAC/Nogal pariz wood DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#694933",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_nuez_duraplac",
+      "name": "DURAPLAC · Nuez",
+      "file": "DURAPLAC/Nuez DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ac8562",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_olmo_mangata_duraplac",
+      "name": "DURAPLAC · Olmo Mangata",
+      "file": "DURAPLAC/Olmo mangata DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8f8676",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_petra_duraplac",
+      "name": "DURAPLAC · Petra",
+      "file": "DURAPLAC/Petra DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#918072",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_roble_miel_duraplac",
+      "name": "DURAPLAC · Roble Miel",
+      "file": "DURAPLAC/Roble miel DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8c551b",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_roble_naz_duraplac",
+      "name": "DURAPLAC · Roble Naz",
+      "file": "DURAPLAC/Roble naz DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b6a69e",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_sacro_duraplac",
+      "name": "DURAPLAC · Sacro",
+      "file": "DURAPLAC/Sacro DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#675d57",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_sapelli_duraplac",
+      "name": "DURAPLAC · Sapelli",
+      "file": "DURAPLAC/Sapelli DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7e3b0d",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_sesamo_duraplac",
+      "name": "DURAPLAC · Sesamo",
+      "file": "DURAPLAC/Sesamo DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#947d61",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_terra_duraplac",
+      "name": "DURAPLAC · Terra",
+      "file": "DURAPLAC/Terra DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#664633",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_titanio_duraplac",
+      "name": "DURAPLAC · Titanio",
+      "file": "DURAPLAC/Titanio DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#75767b",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "duraplac_yute_duraplac",
+      "name": "DURAPLAC · Yute",
+      "file": "DURAPLAC/Yute DURAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d5c1a4",
+      "brand": "DURAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_almendra_faplac",
+      "name": "FABLAC · Almendra",
+      "file": "FABLAC/Almendra-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fff6d7",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_aluminio_faplac",
+      "name": "FABLAC · Aluminio",
+      "file": "FABLAC/Aluminio-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b6b6b6",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_amberes_faplac",
+      "name": "FABLAC · Amberes",
+      "file": "FABLAC/Amberes-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3b3a3f",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_azullago_faplac",
+      "name": "FABLAC · Azul Lago",
+      "file": "FABLAC/AzulLago-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4875b6",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_baltiko_faplac",
+      "name": "FABLAC · Baltiko",
+      "file": "FABLAC/Baltiko-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9a8b7c",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_blanconature_faplac",
+      "name": "FABLAC · Blanco Nature",
+      "file": "FABLAC/BlancoNature-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f8f6f5",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_blancotundra_faplac",
+      "name": "FABLAC · Blanco Tundra",
+      "file": "FABLAC/BlancoTundra-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fdfcfa",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_caju_faplac",
+      "name": "FABLAC · Caju",
+      "file": "FABLAC/Caju-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c2ad8f",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_carvalhoaserrado_faplac",
+      "name": "FABLAC · Carvalho Aserrado",
+      "file": "FABLAC/CarvalhoAserrado-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5a4f41",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_carvalhomezzo_faplac",
+      "name": "FABLAC · Carvalho Mezzo",
+      "file": "FABLAC/CarvalhoMezzo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#83694f",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_cedronature_faplac",
+      "name": "FABLAC · Cedro Nature",
+      "file": "FABLAC/CedroNature-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#985c32",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_cedrowoodtext_faplac",
+      "name": "FABLAC · Cedro Woodtext",
+      "file": "FABLAC/CedroWoodtext-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#985c32",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_ceniza_faplac",
+      "name": "FABLAC · Ceniza",
+      "file": "FABLAC/Ceniza-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e5e6e0",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_coliseo_faplac",
+      "name": "FABLAC · Coliseo",
+      "file": "FABLAC/Coliseo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#796e66",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_ebanonegro_faplac",
+      "name": "FABLAC · Ebano Negro",
+      "file": "FABLAC/EbanoNegro-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#212121",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_everest_faplac",
+      "name": "FABLAC · Everest",
+      "file": "FABLAC/Everest-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fdfcfa",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_gaudi_faplac",
+      "name": "FABLAC · Gaudi",
+      "file": "FABLAC/Gaudi-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b19888",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_grafito_faplac",
+      "name": "FABLAC · Grafito",
+      "file": "FABLAC/Grafito-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4d4d4d",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_grishumo_faplac",
+      "name": "FABLAC · Gris Humo",
+      "file": "FABLAC/GrisHumo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c9c9c9",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_haya_faplac",
+      "name": "FABLAC · Haya",
+      "file": "FABLAC/Haya-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c0854c",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_helsinki_faplac",
+      "name": "FABLAC · Helsinki",
+      "file": "FABLAC/Helsinki-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cac1b1",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_himalaya_faplac",
+      "name": "FABLAC · Himalaya",
+      "file": "FABLAC/Himalaya-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d8b9a7",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_home_faplac",
+      "name": "FABLAC · Home",
+      "file": "FABLAC/Home-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cdbeb5",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_linoblanco_faplac",
+      "name": "FABLAC · Lino Blanco",
+      "file": "FABLAC/LinoBlanco-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#efedf0",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_linochiaro_faplac",
+      "name": "FABLAC · Lino Chiaro",
+      "file": "FABLAC/LinoChiaro-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e0dad2",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_linonegro_faplac",
+      "name": "FABLAC · Lino Negro",
+      "file": "FABLAC/LinoNegro-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#212126",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_linoterra_faplac",
+      "name": "FABLAC · Lino Terra",
+      "file": "FABLAC/LinoTerra-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6e6257",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_linosacinza_faplac",
+      "name": "FABLAC · Linosa Cinza",
+      "file": "FABLAC/LinosaCinza-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#64605f",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_litio_faplac",
+      "name": "FABLAC · Litio",
+      "file": "FABLAC/Litio-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cbbeae",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_montblanc_faplac",
+      "name": "FABLAC · Mont Blanc",
+      "file": "FABLAC/MontBlanc-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d6ccbc",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_moscu_faplac",
+      "name": "FABLAC · Moscu",
+      "file": "FABLAC/Moscu-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#554741",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_negroprofundo_faplac",
+      "name": "FABLAC · Negro Profundo",
+      "file": "FABLAC/NegroProfundo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#050306",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_noccemilano_faplac",
+      "name": "FABLAC · Nocce Milano",
+      "file": "FABLAC/NocceMilano-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6a4532",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_nogalterracota_faplac",
+      "name": "FABLAC · Nogal Terracota",
+      "file": "FABLAC/NogalTerracota-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#855c33",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_olmofinlandes_faplac",
+      "name": "FABLAC · Olmo Finlandes",
+      "file": "FABLAC/OlmoFinlandes-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b68259",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_praga_faplac",
+      "name": "FABLAC · Praga",
+      "file": "FABLAC/Praga-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b39f90",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_robleamericano_faplac",
+      "name": "FABLAC · Roble Americano",
+      "file": "FABLAC/RobleAmericano-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c0a370",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_robledakar_faplac",
+      "name": "FABLAC · Roble Dakar",
+      "file": "FABLAC/RobleDakar-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#503f31",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_robledakarwood_faplac",
+      "name": "FABLAC · Roble Dakar Wood",
+      "file": "FABLAC/RobleDakarWood-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#503f31",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_robleescand_faplac",
+      "name": "FABLAC · Roble Escand",
+      "file": "FABLAC/RobleEscand-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c9baa3",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_roblesupermate_faplac",
+      "name": "FABLAC · Roble Supermate",
+      "file": "FABLAC/RobleSupermate-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c0a370",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_rojo_faplac",
+      "name": "FABLAC · Rojo",
+      "file": "FABLAC/Rojo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c6231c",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_safari_faplac",
+      "name": "FABLAC · Safari",
+      "file": "FABLAC/Safari-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#66664c",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_sahara_faplac",
+      "name": "FABLAC · Sahara",
+      "file": "FABLAC/Sahara-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c4b3a1",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_sedaazzurra_faplac",
+      "name": "FABLAC · Seda Azzurra",
+      "file": "FABLAC/SedaAzzurra-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#032732",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_sedagiorno_faplac",
+      "name": "FABLAC · Seda Giorno",
+      "file": "FABLAC/SedaGiorno-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#beb4a6",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_sedanotte_faplac",
+      "name": "FABLAC · Seda Notte",
+      "file": "FABLAC/SedaNotte-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8f857c",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_street_faplac",
+      "name": "FABLAC · Street",
+      "file": "FABLAC/Street-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a5978f",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_tanganicatabaco_faplac",
+      "name": "FABLAC · Tanganica Tabaco",
+      "file": "FABLAC/TanganicaTabaco-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#60371d",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_tekaartiko_faplac",
+      "name": "FABLAC · Teka Artiko",
+      "file": "FABLAC/TekaArtiko-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#eae6e1",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_tekaoslo_faplac",
+      "name": "FABLAC · Teka Oslo",
+      "file": "FABLAC/TekaOslo-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#573a26",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_terrarum_faplac",
+      "name": "FABLAC · Terrarum",
+      "file": "FABLAC/Terrarum-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#755f48",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_tribal_faplac",
+      "name": "FABLAC · Tribal",
+      "file": "FABLAC/Tribal-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#92847b",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_tuareg_faplac",
+      "name": "FABLAC · Tuareg",
+      "file": "FABLAC/Tuareg-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#022a32",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_venezia_faplac",
+      "name": "FABLAC · Venezia",
+      "file": "FABLAC/Venezia-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ede8e1",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fablac_viena_faplac",
+      "name": "FABLAC · Viena",
+      "file": "FABLAC/Viena-FAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c0baa9",
+      "brand": "FABLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_aspen_fibraplac",
+      "name": "FIBRAPLAC · Aspen",
+      "file": "FIBRAPLAC/Aspen-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e0d9cc",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_auris_fibraplac",
+      "name": "FIBRAPLAC · Auris",
+      "file": "FIBRAPLAC/Auris-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#74523b",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_blanco_fibraplac",
+      "name": "FIBRAPLAC · Blanco",
+      "file": "FIBRAPLAC/Blanco-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fefefe",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_carvalo_fibraplac",
+      "name": "FIBRAPLAC · Carvalo",
+      "file": "FIBRAPLAC/Carvalo-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bcac92",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_carvalolatino_fibraplac",
+      "name": "FIBRAPLAC · Carvalo Latino",
+      "file": "FIBRAPLAC/CarvaloLatino-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cfc4b0",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_cinza_fibraplac",
+      "name": "FIBRAPLAC · Cinza",
+      "file": "FIBRAPLAC/Cinza-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d1cec9",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_ebano_fibraplac",
+      "name": "FIBRAPLAC · Ebano",
+      "file": "FIBRAPLAC/Ebano-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2f2523",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_lino_fibraplac",
+      "name": "FIBRAPLAC · Lino",
+      "file": "FIBRAPLAC/Lino-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a7a1a3",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_linocacao_fibraplac",
+      "name": "FIBRAPLAC · Lino Cacao",
+      "file": "FIBRAPLAC/LinoCacao-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6a543d",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_linofendi_fibraplac",
+      "name": "FIBRAPLAC · Lino Fendi",
+      "file": "FIBRAPLAC/LinoFendi-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ddd3c9",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_linun_fibraplac",
+      "name": "FIBRAPLAC · Linun",
+      "file": "FIBRAPLAC/Linun-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#998773",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_mocaccino_fibraplac",
+      "name": "FIBRAPLAC · Mocaccino",
+      "file": "FIBRAPLAC/Mocaccino-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5e411f",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_murano_fibraplac",
+      "name": "FIBRAPLAC · Murano",
+      "file": "FIBRAPLAC/Murano-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bfa48b",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_nacre_fibraplac",
+      "name": "FIBRAPLAC · Nacre",
+      "file": "FIBRAPLAC/Nacre-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d3c7be",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_narita_fibraplac",
+      "name": "FIBRAPLAC · Narita",
+      "file": "FIBRAPLAC/Narita-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d5cdc1",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_nogueira_fibraplac",
+      "name": "FIBRAPLAC · Nogueira",
+      "file": "FIBRAPLAC/Nogueira-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9f7a55",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "fibraplac_sienanatural_fibraplac",
+      "name": "FIBRAPLAC · Siena Natural",
+      "file": "FIBRAPLAC/SienaNatural-FIBRAPLAC.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#846451",
+      "brand": "FIBRAPLAC",
+      "collection": null
+    },
+    {
+      "id": "guararapes_alabama_guararapes",
+      "name": "GUARARAPES · Alabama",
+      "file": "GUARARAPES/Alabama-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7e5a3e",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_alecrim_guararapes",
+      "name": "GUARARAPES · Alecrim",
+      "file": "GUARARAPES/Alecrim-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#949887",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_antiqua_guararapes",
+      "name": "GUARARAPES · Antiqua",
+      "file": "GUARARAPES/Antiqua-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9e704d",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_antuerpia_guararapes",
+      "name": "GUARARAPES · Antuerpia",
+      "file": "GUARARAPES/Antuerpia-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b19c89",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_areia_guararapes",
+      "name": "GUARARAPES · Areia",
+      "file": "GUARARAPES/Areia-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dbcbb2",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_azulpetroleo_guararapes",
+      "name": "GUARARAPES · Azul Petroleo",
+      "file": "GUARARAPES/AzulPetroleo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2c3339",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_baviera_guararapes",
+      "name": "GUARARAPES · Baviera",
+      "file": "GUARARAPES/Baviera-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#332a24",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_berinjela_guararapes",
+      "name": "GUARARAPES · Berinjela",
+      "file": "GUARARAPES/Berinjela-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4d4445",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_bilbao_guararapes",
+      "name": "GUARARAPES · Bilbao",
+      "file": "GUARARAPES/Bilbao-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c9b49d",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_blancoiceland_guararapes",
+      "name": "GUARARAPES · Blanco Iceland",
+      "file": "GUARARAPES/BlancoIceland-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e8e7e3",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_bronze_guararapes",
+      "name": "GUARARAPES · Bronze",
+      "file": "GUARARAPES/Bronze-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#885534",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_canovas_guararapes",
+      "name": "GUARARAPES · Canovas",
+      "file": "GUARARAPES/Canovas-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bead99",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_capuccino_guararapes",
+      "name": "GUARARAPES · Capuccino",
+      "file": "GUARARAPES/Capuccino-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8d7666",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_caribe_guararapes",
+      "name": "GUARARAPES · Caribe",
+      "file": "GUARARAPES/Caribe-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6a4732",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_carvalho_guararapes",
+      "name": "GUARARAPES · Carvalho",
+      "file": "GUARARAPES/Carvalho-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b19c86",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_cinzaurbanl_guararapes",
+      "name": "GUARARAPES · Cinza Urbanl",
+      "file": "GUARARAPES/CinzaUrbanl-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a7a49f",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_cipres_guararapes",
+      "name": "GUARARAPES · Cipres",
+      "file": "GUARARAPES/Cipres-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d1c1b2",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_cobre_guararapes",
+      "name": "GUARARAPES · Cobre",
+      "file": "GUARARAPES/Cobre-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5c4f3f",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_corten_guararapes",
+      "name": "GUARARAPES · Corten",
+      "file": "GUARARAPES/Corten-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#554033",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_cosmos_guararapes",
+      "name": "GUARARAPES · Cosmos",
+      "file": "GUARARAPES/Cosmos-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#676361",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_curupixa_guararapes",
+      "name": "GUARARAPES · Curupixa",
+      "file": "GUARARAPES/Curupixa-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e5ad77",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_dualblack_guararapes",
+      "name": "GUARARAPES · Dual Black",
+      "file": "GUARARAPES/DualBlack-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1c1c1c",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_elmo_guararapes",
+      "name": "GUARARAPES · Elmo",
+      "file": "GUARARAPES/Elmo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dbcebe",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_fendi_guararapes",
+      "name": "GUARARAPES · Fendi",
+      "file": "GUARARAPES/Fendi-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9e8d79",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_fog_guararapes",
+      "name": "GUARARAPES · Fog",
+      "file": "GUARARAPES/Fog-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e7e7e7",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_fontana_guararapes",
+      "name": "GUARARAPES · Fontana",
+      "file": "GUARARAPES/Fontana-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bfb3a8",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_freijo_guararapes",
+      "name": "GUARARAPES · Freijo",
+      "file": "GUARARAPES/Freijo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a28159",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_fulge_guararapes",
+      "name": "GUARARAPES · Fulge",
+      "file": "GUARARAPES/Fulge-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cac7bf",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_grafite_guararapes",
+      "name": "GUARARAPES · Grafite",
+      "file": "GUARARAPES/Grafite-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#444243",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_imbuia_guararapes",
+      "name": "GUARARAPES · Imbuia",
+      "file": "GUARARAPES/Imbuia-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#553e30",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_ipe_guararapes",
+      "name": "GUARARAPES · Ipe",
+      "file": "GUARARAPES/Ipe-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3c332a",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_lisboa_guararapes",
+      "name": "GUARARAPES · Lisboa",
+      "file": "GUARARAPES/Lisboa-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#78685b",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_marmo_guararapes",
+      "name": "GUARARAPES · Marmo",
+      "file": "GUARARAPES/Marmo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2d2928",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_marsala_guararapes",
+      "name": "GUARARAPES · Marsala",
+      "file": "GUARARAPES/Marsala-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#632e2a",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_maxiblanco_guararapes",
+      "name": "GUARARAPES · Maxi Blanco",
+      "file": "GUARARAPES/MaxiBlanco-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ffffff",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_milano_guararapes",
+      "name": "GUARARAPES · Milano",
+      "file": "GUARARAPES/Milano-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e3ddd9",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_nero_guararapes",
+      "name": "GUARARAPES · Nero",
+      "file": "GUARARAPES/Nero-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#101010",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_nevada_guararapes",
+      "name": "GUARARAPES · Nevada",
+      "file": "GUARARAPES/Nevada-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f5f4f0",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_newcherry_guararapes",
+      "name": "GUARARAPES · New Cherry",
+      "file": "GUARARAPES/NewCherry-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dcd8d2",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_niquel_guararapes",
+      "name": "GUARARAPES · Niquel",
+      "file": "GUARARAPES/Niquel-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6b6663",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_nogalchampagne_guararapes",
+      "name": "GUARARAPES · Nogal Champagne",
+      "file": "GUARARAPES/NogalChampagne-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#765c45",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_nogalsevilha_guararapes",
+      "name": "GUARARAPES · Nogal Sevilha",
+      "file": "GUARARAPES/NogalSevilha-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#604836",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_onix_guararapes",
+      "name": "GUARARAPES · Onix",
+      "file": "GUARARAPES/Onix-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4b4b4b",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_ouro_guararapes",
+      "name": "GUARARAPES · Ouro",
+      "file": "GUARARAPES/Ouro-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#af8b67",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_paris_guararapes",
+      "name": "GUARARAPES · Paris",
+      "file": "GUARARAPES/Paris-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d2c4b8",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_pauferro_guararapes",
+      "name": "GUARARAPES · Pau Ferro",
+      "file": "GUARARAPES/PauFerro-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#65402b",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_petra_guararapes",
+      "name": "GUARARAPES · Petra",
+      "file": "GUARARAPES/Petra-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7d7c7a",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_pixel_guararapes",
+      "name": "GUARARAPES · Pixel",
+      "file": "GUARARAPES/Pixel-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#877b72",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_pretosilk_guararapes",
+      "name": "GUARARAPES · Preto Silk",
+      "file": "GUARARAPES/PretoSilk-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1e1e1e",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_pretoria_guararapes",
+      "name": "GUARARAPES · Pretoria",
+      "file": "GUARARAPES/Pretoria-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#493a2f",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_quartzo_guararapes",
+      "name": "GUARARAPES · Quartzo",
+      "file": "GUARARAPES/Quartzo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#eff0ec",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_rosamillkshake_guararapes",
+      "name": "GUARARAPES · Rosa Millkshake",
+      "file": "GUARARAPES/RosaMillkshake-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e1c4b2",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_santorini_guararapes",
+      "name": "GUARARAPES · Santorini",
+      "file": "GUARARAPES/Santorini-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#928a87",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_savana_guararapes",
+      "name": "GUARARAPES · Savana",
+      "file": "GUARARAPES/Savana-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8e7159",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_siberia_guararapes",
+      "name": "GUARARAPES · Siberia",
+      "file": "GUARARAPES/Siberia-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f0f1ec",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_tauari_guararapes",
+      "name": "GUARARAPES · Tauari",
+      "file": "GUARARAPES/Tauari-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b18e69",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_tecido_guararapes",
+      "name": "GUARARAPES · Tecido",
+      "file": "GUARARAPES/Tecido-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bcb9b1",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_teka_guararapes",
+      "name": "GUARARAPES · Teka",
+      "file": "GUARARAPES/Teka-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e0dbd6",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_tela_guararapes",
+      "name": "GUARARAPES · Tela",
+      "file": "GUARARAPES/Tela-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ccb692",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_terracota_guararapes",
+      "name": "GUARARAPES · Terracota",
+      "file": "GUARARAPES/Terracota-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#734c37",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_tijolo_guararapes",
+      "name": "GUARARAPES · Tijolo",
+      "file": "GUARARAPES/Tijolo-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b37258",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_tricote_guararapes",
+      "name": "GUARARAPES · Tricote",
+      "file": "GUARARAPES/Tricote-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#adaaa3",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "guararapes_vesuvio_guararapes",
+      "name": "GUARARAPES · Vesuvio",
+      "file": "GUARARAPES/Vesuvio-GUARARAPES.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#322d2a",
+      "brand": "GUARARAPES",
+      "collection": null
+    },
+    {
+      "id": "masisa_acacia_masisa",
+      "name": "MASISA · Acacia",
+      "file": "MASISA/Acacia-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ab8360",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_agatha_masisa",
+      "name": "MASISA · Agatha",
+      "file": "MASISA/Agatha-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#538783",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_almendra_masisa",
+      "name": "MASISA · Almendra",
+      "file": "MASISA/Almendra-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f4deac",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_aluminio_masisa",
+      "name": "MASISA · Aluminio",
+      "file": "MASISA/Aluminio-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bfc3cc",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_amarilloocaso_masisa",
+      "name": "MASISA · Amarillo Ocaso",
+      "file": "MASISA/AmarilloOcaso-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ebb551",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_arcemaple_masisa",
+      "name": "MASISA · Arce Maple",
+      "file": "MASISA/ArceMaple-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#aa6d3a",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_arena_masisa",
+      "name": "MASISA · Arena",
+      "file": "MASISA/Arena-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d7c6b3",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_azulacero_masisa",
+      "name": "MASISA · Azul Acero",
+      "file": "MASISA/AzulAcero-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4b5a6f",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_blanco_masisa",
+      "name": "MASISA · Blanco",
+      "file": "MASISA/Blanco-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e1dddc",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_blancofrosty_masisa",
+      "name": "MASISA · Blanco Frosty",
+      "file": "MASISA/BlancoFrosty-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f3f7fa",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_blancoperla_masisa",
+      "name": "MASISA · Blanco Perla",
+      "file": "MASISA/BlancoPerla-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f4f5f0",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cacao_masisa",
+      "name": "MASISA · Cacao",
+      "file": "MASISA/Cacao-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#514030",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cairo_masisa",
+      "name": "MASISA · Cairo",
+      "file": "MASISA/Cairo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e7e5d9",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_canela_masisa",
+      "name": "MASISA · Canela",
+      "file": "MASISA/Canela-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#947a69",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cantera_masisa",
+      "name": "MASISA · Cantera",
+      "file": "MASISA/Cantera-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cfccc7",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_caoba_masisa",
+      "name": "MASISA · Caoba",
+      "file": "MASISA/Caoba-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6b3029",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_carvalo_masisa",
+      "name": "MASISA · Carvalo",
+      "file": "MASISA/Carvalo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c4ab8a",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_castanoblanco_masisa",
+      "name": "MASISA · Castaño Blanco",
+      "file": "MASISA/CastañoBlanco-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dcd3c7",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cava_masisa",
+      "name": "MASISA · Cava",
+      "file": "MASISA/Cava-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8f8576",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cedro_masisa",
+      "name": "MASISA · Cedro",
+      "file": "MASISA/Cedro-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6d220a",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cerezo_masisa",
+      "name": "MASISA · Cerezo",
+      "file": "MASISA/Cerezo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6a4227",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_cerezopremium_masisa",
+      "name": "MASISA · Cerezo Premium",
+      "file": "MASISA/CerezoPremium-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#975534",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_coigue_masisa",
+      "name": "MASISA · Coigue",
+      "file": "MASISA/Coigue-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c09770",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_coiguechocolate_masisa",
+      "name": "MASISA · Coigue Chocolate",
+      "file": "MASISA/CoigueChocolate-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#38251a",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_concretometropolitan_masisa",
+      "name": "MASISA · Concreto Metropolitan",
+      "file": "MASISA/ConcretoMetropolitan-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c8c0b8",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_ebanoindi_masisa",
+      "name": "MASISA · Ebano Indi",
+      "file": "MASISA/EbanoIndi-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1c1713",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_encinopolar_masisa",
+      "name": "MASISA · Encino Polar",
+      "file": "MASISA/EncinoPolar-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e0d8c9",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_enigma_masisa",
+      "name": "MASISA · Enigma",
+      "file": "MASISA/Enigma-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#eee9e5",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_estocolmo_masisa",
+      "name": "MASISA · Estocolmo",
+      "file": "MASISA/Estocolmo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e3dfdc",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_farola_masisa",
+      "name": "MASISA · Farola",
+      "file": "MASISA/Farola-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6c5b52",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_fibra_masisa",
+      "name": "MASISA · Fibra",
+      "file": "MASISA/Fibra-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#696c6f",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_fogon_masisa",
+      "name": "MASISA · Fogon",
+      "file": "MASISA/Fogon-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#241c15",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_fresnobruma_masisa",
+      "name": "MASISA · Fresno Bruma",
+      "file": "MASISA/FresnoBruma-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7f7667",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_fresnohumo_masisa",
+      "name": "MASISA · Fresno Humo",
+      "file": "MASISA/FresnoHumo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#564c48",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_germika_masisa",
+      "name": "MASISA · Germika",
+      "file": "MASISA/Germika-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#62584e",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_gres_masisa",
+      "name": "MASISA · Gres",
+      "file": "MASISA/Gres-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ddc5bb",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_grisclaro_masisa",
+      "name": "MASISA · Gris Claro",
+      "file": "MASISA/GrisClaro-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f5f6f1",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_grisgrafito_masisa",
+      "name": "MASISA · Gris Grafito",
+      "file": "MASISA/GrisGrafito-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#555557",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_grisplatino_masisa",
+      "name": "MASISA · Gris Platino",
+      "file": "MASISA/GrisPlatino-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e7e7e9",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_laricina_masisa",
+      "name": "MASISA · Laricina",
+      "file": "MASISA/Laricina-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f5f5f7",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_lingue_masisa",
+      "name": "MASISA · Lingue",
+      "file": "MASISA/Lingue-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6d4024",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_lino_masisa",
+      "name": "MASISA · Lino",
+      "file": "MASISA/lino-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d3ccbe",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_magma_masisa",
+      "name": "MASISA · Magma",
+      "file": "MASISA/Magma-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2c2c2c",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_manto_masisa",
+      "name": "MASISA · Manto",
+      "file": "MASISA/Manto-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ccbcb1",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_maple_masisa",
+      "name": "MASISA · Maple",
+      "file": "MASISA/Maple-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ddcdb4",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_maplegrava_masisa",
+      "name": "MASISA · Maple Grava",
+      "file": "MASISA/MapleGrava-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#af8c71",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_mikado_masisa",
+      "name": "MASISA · Mikado",
+      "file": "MASISA/Mikado-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3e312e",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_mortero_masisa",
+      "name": "MASISA · Mortero",
+      "file": "MASISA/Mortero-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ac9f97",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_moscova_masisa",
+      "name": "MASISA · Moscova",
+      "file": "MASISA/Moscova-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#eae8de",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_naranjotan_masisa",
+      "name": "MASISA · Naranjo Tan",
+      "file": "MASISA/NaranjoTan-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e08849",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_negro_masisa",
+      "name": "MASISA · Negro",
+      "file": "MASISA/Negro-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#242424",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalafricano_masisa",
+      "name": "MASISA · Nogal Africano",
+      "file": "MASISA/NogalAfricano-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#937556",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalamazonico_masisa",
+      "name": "MASISA · Nogal Amazónico",
+      "file": "MASISA/NogalAmazónico-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#663a21",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalbritanico_masisa",
+      "name": "MASISA · Nogal Britanico",
+      "file": "MASISA/NogalBritanico-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#573728",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalceniza_masisa",
+      "name": "MASISA · Nogal Ceniza",
+      "file": "MASISA/NogalCeniza-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c5bfb5",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalneo_masisa",
+      "name": "MASISA · Nogal Neo",
+      "file": "MASISA/NogalNeo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6f5140",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_nogalurbano_masisa",
+      "name": "MASISA · Nogal Urbano",
+      "file": "MASISA/NogalUrbano-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c1ae9f",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_olmoalpino_masisa",
+      "name": "MASISA · Olmo Alpino",
+      "file": "MASISA/OlmoAlpino-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c5a983",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_ondas3d_masisa",
+      "name": "MASISA · Ondas3d",
+      "file": "MASISA/Ondas3d-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dfdeda",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_oxford_masisa",
+      "name": "MASISA · Oxford",
+      "file": "MASISA/Oxford-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4b4843",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_oyamel_masisa",
+      "name": "MASISA · Oyamel",
+      "file": "MASISA/Oyamel-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f5c383",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_peral_masisa",
+      "name": "MASISA · Peral",
+      "file": "MASISA/Peral-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b47243",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_precompuestoceniza_masisa",
+      "name": "MASISA · Precompuesto Ceniza",
+      "file": "MASISA/PrecompuestoCeniza-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#867971",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_robleantracita_masisa",
+      "name": "MASISA · Roble Antracita",
+      "file": "MASISA/RobleAntracita-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#343438",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_roblemerida_masisa",
+      "name": "MASISA · Roble Merida",
+      "file": "MASISA/RobleMerida-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d9ba95",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_roblemilano_masisa",
+      "name": "MASISA · Roble Milano",
+      "file": "MASISA/RobleMilano-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6a5748",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_robleoscuro_masisa",
+      "name": "MASISA · Roble Oscuro",
+      "file": "MASISA/RobleOscuro-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#432a1b",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_roblesantana_masisa",
+      "name": "MASISA · Roble Santana",
+      "file": "MASISA/RobleSantana-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b29781",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_robletabaco_masisa",
+      "name": "MASISA · Roble Tabaco",
+      "file": "MASISA/RobleTabaco-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#38261f",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_rojocolonial_masisa",
+      "name": "MASISA · Rojo Colonial",
+      "file": "MASISA/RojoColonial-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a32f20",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_sahara_masisa",
+      "name": "MASISA · Sahara",
+      "file": "MASISA/Sahara-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bd944c",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_santorini_masisa",
+      "name": "MASISA · Santorini",
+      "file": "MASISA/Santorini-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e0d3bd",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_savia_masisa",
+      "name": "MASISA · Savia",
+      "file": "MASISA/Savia-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c5b4aa",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_tecaitaliana_masisa",
+      "name": "MASISA · Teca Italiana",
+      "file": "MASISA/TecaItaliana-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#87746b",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_tecalimo_masisa",
+      "name": "MASISA · Teca Limo",
+      "file": "MASISA/TecaLimo-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#86756a",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_tweed_masisa",
+      "name": "MASISA · Tweed",
+      "file": "MASISA/Tweed-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9c8f82",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_verdeoliva_masisa",
+      "name": "MASISA · Verde Oliva",
+      "file": "MASISA/VerdeOliva-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#727a55",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "masisa_vison_masisa",
+      "name": "MASISA · Vison",
+      "file": "MASISA/Vison-MASISA.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9b8c79",
+      "brand": "MASISA",
+      "collection": null
+    },
+    {
+      "id": "pelikano_acero_pelikano",
+      "name": "PELIKANO · Acero",
+      "file": "PELIKANO/Acero-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7e7e7e",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_agave_pelikano",
+      "name": "PELIKANO · Agave",
+      "file": "PELIKANO/Agave-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a2bb9e",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_amaretto_pelikano",
+      "name": "PELIKANO · Amaretto",
+      "file": "PELIKANO/Amaretto-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3f2718",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_artiko_pelikano",
+      "name": "PELIKANO · Artiko",
+      "file": "PELIKANO/artiko-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d3d0cc",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_arupo_pelikano",
+      "name": "PELIKANO · Arupo",
+      "file": "PELIKANO/Arupo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d49079",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_bardolino_pelikano",
+      "name": "PELIKANO · Bardolino",
+      "file": "PELIKANO/Bardolino-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ad9e8f",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_bellota_pelikano",
+      "name": "PELIKANO · Bellota",
+      "file": "PELIKANO/Bellota-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6b5441",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_blanco_pelikano",
+      "name": "PELIKANO · Blanco",
+      "file": "PELIKANO/Blanco-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e1dddc",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_bosque_pelikano",
+      "name": "PELIKANO · Bosque",
+      "file": "PELIKANO/Bosque-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#545953",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_bronce_pelikano",
+      "name": "PELIKANO · Bronce",
+      "file": "PELIKANO/Bronce-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8d5325",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_capri_pelikano",
+      "name": "PELIKANO · Capri",
+      "file": "PELIKANO/Capri-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cdc4b3",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_caramelo_pelikano",
+      "name": "PELIKANO · Caramelo",
+      "file": "PELIKANO/Caramelo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6f4622",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_carbon_pelikano",
+      "name": "PELIKANO · Carbón",
+      "file": "PELIKANO/Carbón-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#403c36",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_castano_pelikano",
+      "name": "PELIKANO · Castano",
+      "file": "PELIKANO/Castano-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a9886b",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_cedro_pelikano",
+      "name": "PELIKANO · Cedro",
+      "file": "PELIKANO/Cedro-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7e4121",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_cemento_pelikano",
+      "name": "PELIKANO · Cemento",
+      "file": "PELIKANO/Cemento-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b2b6ba",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_ceniza_pelikano",
+      "name": "PELIKANO · Ceniza",
+      "file": "PELIKANO/Ceniza-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a29589",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_cerezo_pelikano",
+      "name": "PELIKANO · Cerezo",
+      "file": "PELIKANO/Cerezo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#833d0d",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_coral_pelikano",
+      "name": "PELIKANO · Coral",
+      "file": "PELIKANO/Coral-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ef5555",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_conac_pelikano",
+      "name": "PELIKANO · Coñac",
+      "file": "PELIKANO/Coñac-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#503b34",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_cuero_pelikano",
+      "name": "PELIKANO · Cuero",
+      "file": "PELIKANO/Cuero-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b8a89e",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_duna_pelikano",
+      "name": "PELIKANO · Duna",
+      "file": "PELIKANO/Duna-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a6876f",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_espresso_pelikano",
+      "name": "PELIKANO · Espresso",
+      "file": "PELIKANO/Espresso-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#826249",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_fume_pelikano",
+      "name": "PELIKANO · Fume",
+      "file": "PELIKANO/Fume-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#3e2919",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_gales_pelikano",
+      "name": "PELIKANO · Gales",
+      "file": "PELIKANO/Gales-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#71492c",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_gris_pelikano",
+      "name": "PELIKANO · Gris",
+      "file": "PELIKANO/Gris-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c0c5cb",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_habano_pelikano",
+      "name": "PELIKANO · Habano",
+      "file": "PELIKANO/Habano-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#53423e",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_hayacatedral_pelikano",
+      "name": "PELIKANO · Haya Catedral",
+      "file": "PELIKANO/HayaCatedral-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a47a61",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_highglossbeige_pelikano",
+      "name": "PELIKANO · High Gloss Beige",
+      "file": "PELIKANO/HighGlossBeige-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9c857d",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_highglossnegro_pelikano",
+      "name": "PELIKANO · High Gloss Negro",
+      "file": "PELIKANO/HighGlossNegro-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#393a3c",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_ibiza_pelikano",
+      "name": "PELIKANO · Ibiza",
+      "file": "PELIKANO/Ibiza-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c1beb9",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_lino_pelikano",
+      "name": "PELIKANO · Lino",
+      "file": "PELIKANO/Lino-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e6e4d8",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_macadamia_pelikano",
+      "name": "PELIKANO · Macadamia",
+      "file": "PELIKANO/Macadamia-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a78869",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_mango_pelikano",
+      "name": "PELIKANO · Mango",
+      "file": "PELIKANO/Mango-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fbe472",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_manzano_pelikano",
+      "name": "PELIKANO · Manzano",
+      "file": "PELIKANO/Manzano-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cdb59c",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_marfil_pelikano",
+      "name": "PELIKANO · Marfil",
+      "file": "PELIKANO/Marfil-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e4e2d9",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_marino_pelikano",
+      "name": "PELIKANO · Marino",
+      "file": "PELIKANO/Marino-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#005e80",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_miel_pelikano",
+      "name": "PELIKANO · Miel",
+      "file": "PELIKANO/Miel-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a5856d",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_milan_pelikano",
+      "name": "PELIKANO · Milán",
+      "file": "PELIKANO/Milán-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#67574a",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_moka_pelikano",
+      "name": "PELIKANO · Moka",
+      "file": "PELIKANO/Moka-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#514541",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_nacar_pelikano",
+      "name": "PELIKANO · Nacar",
+      "file": "PELIKANO/Nacar-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bea992",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_nazca_pelikano",
+      "name": "PELIKANO · Nazca",
+      "file": "PELIKANO/Nazca-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bdb098",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_negro_pelikano",
+      "name": "PELIKANO · Negro",
+      "file": "PELIKANO/Negro-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#434343",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_nevado_pelikano",
+      "name": "PELIKANO · Nevado",
+      "file": "PELIKANO/Nevado-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#efeeed",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_niebla_pelikano",
+      "name": "PELIKANO · Niebla",
+      "file": "PELIKANO/Niebla-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e5dfd4",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_oceano_pelikano",
+      "name": "PELIKANO · Oceano",
+      "file": "PELIKANO/Oceano-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#49566b",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_olivo_pelikano",
+      "name": "PELIKANO · Olivo",
+      "file": "PELIKANO/Olivo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8d807a",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_olmo_pelikano",
+      "name": "PELIKANO · Olmo",
+      "file": "PELIKANO/Olmo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#85715f",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_onixalta_pelikano",
+      "name": "PELIKANO · Onix Alta",
+      "file": "PELIKANO/OnixAlta-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5d5d58",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_oxid_pelikano",
+      "name": "PELIKANO · Oxid",
+      "file": "PELIKANO/Oxid-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#624d47",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_panela_pelikano",
+      "name": "PELIKANO · Panela",
+      "file": "PELIKANO/Panela-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cda271",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_paramo_pelikano",
+      "name": "PELIKANO · Paramo",
+      "file": "PELIKANO/Paramo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b1a295",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_piel_pelikano",
+      "name": "PELIKANO · Piel",
+      "file": "PELIKANO/Piel-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b6a89f",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_plomo_pelikano",
+      "name": "PELIKANO · Plomo",
+      "file": "PELIKANO/Plomo-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#514f50",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_robleahumado_pelikano",
+      "name": "PELIKANO · Roble Ahumado",
+      "file": "PELIKANO/RobleAhumado-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2d2016",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_robleblanco_pelikano",
+      "name": "PELIKANO · Roble Blanco",
+      "file": "PELIKANO/RobleBlanco-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f6f6f6",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_roblegris_pelikano",
+      "name": "PELIKANO · Roble Gris",
+      "file": "PELIKANO/RobleGris-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#646669",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_roblenegro_pelikano",
+      "name": "PELIKANO · Roble Negro",
+      "file": "PELIKANO/RobleNegro-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#070707",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_rovere_pelikano",
+      "name": "PELIKANO · Rovere",
+      "file": "PELIKANO/Rovere-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b59d84",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_sangria_pelikano",
+      "name": "PELIKANO · Sangria",
+      "file": "PELIKANO/Sangria-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8d5c3f",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_sapelli_pelikano",
+      "name": "PELIKANO · Sapelli",
+      "file": "PELIKANO/Sapelli-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7a3614",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_siena_pelikano",
+      "name": "PELIKANO · Siena",
+      "file": "PELIKANO/Siena-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#55453c",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_sombra_pelikano",
+      "name": "PELIKANO · Sombra",
+      "file": "PELIKANO/Sombra-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#444343",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_taupe_pelikano",
+      "name": "PELIKANO · Taupe",
+      "file": "PELIKANO/Taupe-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#978a81",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_tivoli_pelikano",
+      "name": "PELIKANO · Tivoli",
+      "file": "PELIKANO/Tivoli-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cbc3bb",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_toquilla_pelikano",
+      "name": "PELIKANO · Toquilla",
+      "file": "PELIKANO/Toquilla-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e1d3be",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_wengue_pelikano",
+      "name": "PELIKANO · Wengue",
+      "file": "PELIKANO/Wengue-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1c1012",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "pelikano_whitechic_pelikano",
+      "name": "PELIKANO · White Chic",
+      "file": "PELIKANO/WhiteChic-PELIKANO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dcdee1",
+      "brand": "PELIKANO",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_albalineal_th",
+      "name": "TABLEROS HISPANOS · Alba Lineal",
+      "file": "TABLEROS HISPANOS/AlbaLineal-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e9e0e3",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_almendra_th",
+      "name": "TABLEROS HISPANOS · Almendra",
+      "file": "TABLEROS HISPANOS/Almendra-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fbf7d2",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_aluminio_th",
+      "name": "TABLEROS HISPANOS · Aluminio",
+      "file": "TABLEROS HISPANOS/Aluminio-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bbc5ca",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_amarillo_th",
+      "name": "TABLEROS HISPANOS · Amarillo",
+      "file": "TABLEROS HISPANOS/Amarillo-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ffdd1c",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_arabesk_th",
+      "name": "TABLEROS HISPANOS · Arabesk",
+      "file": "TABLEROS HISPANOS/Arabesk-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#acaea9",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_arushawengue_th",
+      "name": "TABLEROS HISPANOS · Arusha Wengue",
+      "file": "TABLEROS HISPANOS/ArushaWengue-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#41433f",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_azul_th",
+      "name": "TABLEROS HISPANOS · Azul",
+      "file": "TABLEROS HISPANOS/Azul-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2d5da9",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_baco_th",
+      "name": "TABLEROS HISPANOS · Baco",
+      "file": "TABLEROS HISPANOS/Baco-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ada898",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_beige_th",
+      "name": "TABLEROS HISPANOS · Beige",
+      "file": "TABLEROS HISPANOS/Beige-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dedbba",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_cadbury_th",
+      "name": "TABLEROS HISPANOS · Cadbury",
+      "file": "TABLEROS HISPANOS/Cadbury-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2f322a",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_canyon_th",
+      "name": "TABLEROS HISPANOS · Canyon",
+      "file": "TABLEROS HISPANOS/Canyon-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#787161",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_capuchino_th",
+      "name": "TABLEROS HISPANOS · Capuchino",
+      "file": "TABLEROS HISPANOS/Capuchino-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a1917d",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_castanolineal_th",
+      "name": "TABLEROS HISPANOS · Castaño Lineal",
+      "file": "TABLEROS HISPANOS/CastañoLineal-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c6c5c8",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_cenizo",
+      "name": "TABLEROS HISPANOS · Cenizo",
+      "file": "TABLEROS HISPANOS/Cenizo.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7c7d7b",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_chiavenna_th",
+      "name": "TABLEROS HISPANOS · Chiavenna",
+      "file": "TABLEROS HISPANOS/Chiavenna-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7c5231",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_chocolate_th",
+      "name": "TABLEROS HISPANOS · Chocolate",
+      "file": "TABLEROS HISPANOS/Chocolate-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#351e14",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_croma_th",
+      "name": "TABLEROS HISPANOS · Croma",
+      "file": "TABLEROS HISPANOS/Croma-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b3a086",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_dekfinfucsia_th",
+      "name": "TABLEROS HISPANOS · Dekfin Fucsia",
+      "file": "TABLEROS HISPANOS/DekfinFucsia-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ec88ac",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_delfinarena_th",
+      "name": "TABLEROS HISPANOS · Delfin Arena",
+      "file": "TABLEROS HISPANOS/DelfinArena-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ede7e1",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_delfinturqueza_th",
+      "name": "TABLEROS HISPANOS · Delfin Turqueza",
+      "file": "TABLEROS HISPANOS/DelfinTurqueza-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a6cfce",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_entabladonatural_th",
+      "name": "TABLEROS HISPANOS · Entablado Natural",
+      "file": "TABLEROS HISPANOS/EntabladoNatural-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ada59d",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_entabladorustico_th",
+      "name": "TABLEROS HISPANOS · Entablado Rustico",
+      "file": "TABLEROS HISPANOS/EntabladoRustico-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#988f80",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_fantasialineal_th",
+      "name": "TABLEROS HISPANOS · Fantasia Lineal",
+      "file": "TABLEROS HISPANOS/FantasiaLineal-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1b1b23",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_floresta_th",
+      "name": "TABLEROS HISPANOS · Floresta",
+      "file": "TABLEROS HISPANOS/Floresta-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f2efe9",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_fucsia_th",
+      "name": "TABLEROS HISPANOS · Fucsia",
+      "file": "TABLEROS HISPANOS/Fucsia-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e62b82",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_galaxy_th",
+      "name": "TABLEROS HISPANOS · Galaxy",
+      "file": "TABLEROS HISPANOS/Galaxy-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#222828",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_glacial_th",
+      "name": "TABLEROS HISPANOS · Glacial",
+      "file": "TABLEROS HISPANOS/Glacial-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e6e1dd",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_grisazulado_th",
+      "name": "TABLEROS HISPANOS · Gris Azulado",
+      "file": "TABLEROS HISPANOS/GrisAzulado-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2f495a",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_grisgraffito_th",
+      "name": "TABLEROS HISPANOS · Gris Graffito",
+      "file": "TABLEROS HISPANOS/GrisGraffito-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#333333",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_grissuave_th",
+      "name": "TABLEROS HISPANOS · Gris Suave",
+      "file": "TABLEROS HISPANOS/GrisSuave-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cacacc",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_hexagon_th",
+      "name": "TABLEROS HISPANOS · Hexagon",
+      "file": "TABLEROS HISPANOS/Hexagon-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e2e2e2",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_icaro_th",
+      "name": "TABLEROS HISPANOS · Icaro",
+      "file": "TABLEROS HISPANOS/Icaro-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b0aa9a",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_lariceexpress_th",
+      "name": "TABLEROS HISPANOS · Larice Express",
+      "file": "TABLEROS HISPANOS/LariceExpress-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b9aaa0",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_lilafloral_th",
+      "name": "TABLEROS HISPANOS · Lila Floral",
+      "file": "TABLEROS HISPANOS/LilaFloral-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9187c3",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_marmol_th",
+      "name": "TABLEROS HISPANOS · Marmol",
+      "file": "TABLEROS HISPANOS/Marmol-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e9ece8",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_naranja_th",
+      "name": "TABLEROS HISPANOS · Naranja",
+      "file": "TABLEROS HISPANOS/Naranja-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ff6b01",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_netizen_th",
+      "name": "TABLEROS HISPANOS · Netizen",
+      "file": "TABLEROS HISPANOS/Netizen-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#aaa9a2",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_olmogris_th",
+      "name": "TABLEROS HISPANOS · Olmo Gris",
+      "file": "TABLEROS HISPANOS/OlmoGris-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#524b47",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_pandora_th",
+      "name": "TABLEROS HISPANOS · Pandora",
+      "file": "TABLEROS HISPANOS/Pandora-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#989898",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_perillo_th",
+      "name": "TABLEROS HISPANOS · Perillo",
+      "file": "TABLEROS HISPANOS/Perillo-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d7c3a8",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_pinara_th",
+      "name": "TABLEROS HISPANOS · Pinara",
+      "file": "TABLEROS HISPANOS/Pinara-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b9b9b9",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_puntos_th",
+      "name": "TABLEROS HISPANOS · Puntos",
+      "file": "TABLEROS HISPANOS/Puntos-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4c4849",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_robleburalo_th",
+      "name": "TABLEROS HISPANOS · Roble Buralo",
+      "file": "TABLEROS HISPANOS/RobleBuralo-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cf9960",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_roblecafe_th",
+      "name": "TABLEROS HISPANOS · Roble Café",
+      "file": "TABLEROS HISPANOS/RobleCafé-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2a1f1b",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_roblecanela_th",
+      "name": "TABLEROS HISPANOS · Roble Canela",
+      "file": "TABLEROS HISPANOS/RobleCanela-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#706157",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_rojoclavel_th",
+      "name": "TABLEROS HISPANOS · Rojo Clavel",
+      "file": "TABLEROS HISPANOS/RojoClavel-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bd0f04",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_rosadobebe_th",
+      "name": "TABLEROS HISPANOS · Rosado Bebe",
+      "file": "TABLEROS HISPANOS/RosadoBebe-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d8899e",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_roverekendal_th",
+      "name": "TABLEROS HISPANOS · Rovere Kendal",
+      "file": "TABLEROS HISPANOS/RovereKendal-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#968e89",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_sapelli_th",
+      "name": "TABLEROS HISPANOS · Sapelli",
+      "file": "TABLEROS HISPANOS/Sapelli-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#763c17",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_sonoma_th",
+      "name": "TABLEROS HISPANOS · Sonoma",
+      "file": "TABLEROS HISPANOS/Sonoma-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cec1a5",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_tellurian_th",
+      "name": "TABLEROS HISPANOS · Tellurian",
+      "file": "TABLEROS HISPANOS/Tellurian-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c9c9c9",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_verdelimon_th",
+      "name": "TABLEROS HISPANOS · Verde Limon",
+      "file": "TABLEROS HISPANOS/VerdeLimon-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#accd1e",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_violeta_th",
+      "name": "TABLEROS HISPANOS · Violeta",
+      "file": "TABLEROS HISPANOS/Violeta-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7d3776",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "tableros_hispanos_wengue_th",
+      "name": "TABLEROS HISPANOS · Wengue",
+      "file": "TABLEROS HISPANOS/Wengue-TH.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#261912",
+      "brand": "TABLEROS HISPANOS",
+      "collection": null
+    },
+    {
+      "id": "vesto_clasico_cedronatural_vesto",
+      "name": "VESTO · CLÁSICO · Cedro Natural",
+      "file": "VESTO/CLÁSICO/CedroNatural-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9f5e32",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_cerezonatural_vesto",
+      "name": "VESTO · CLÁSICO · Cerezo Natural",
+      "file": "VESTO/CLÁSICO/CerezoNatural-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#69371d",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_coigue_vesto",
+      "name": "VESTO · CLÁSICO · Coigue",
+      "file": "VESTO/CLÁSICO/Coigue-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c79261",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_haya_vesto",
+      "name": "VESTO · CLÁSICO · Haya",
+      "file": "VESTO/CLÁSICO/Haya-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d19961",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_sapelli_vesto",
+      "name": "VESTO · CLÁSICO · Sapelli",
+      "file": "VESTO/CLÁSICO/Sapelli-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#643b21",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_wengue_vesto",
+      "name": "VESTO · CLÁSICO · Wengue",
+      "file": "VESTO/CLÁSICO/Wengue-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#2c1d1b",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_clasico_wengueoscuro_vesto",
+      "name": "VESTO · CLÁSICO · Wengue Oscuro",
+      "file": "VESTO/CLÁSICO/WengueOscuro-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#211712",
+      "brand": "VESTO",
+      "collection": "CLÁSICO"
+    },
+    {
+      "id": "vesto_innovacion_antalya_vesto",
+      "name": "VESTO · INNOVACIÓN · Antalya",
+      "file": "VESTO/INNOVACIÓN/Antalya-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7a7368",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_innovacion_linochiaro_vesto",
+      "name": "VESTO · INNOVACIÓN · Lino Chiaro",
+      "file": "VESTO/INNOVACIÓN/LinoChiaro-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dfdddc",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_innovacion_sedagiorno_vesto",
+      "name": "VESTO · INNOVACIÓN · Seda Giorno",
+      "file": "VESTO/INNOVACIÓN/SedaGiorno-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b7b0a6",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_innovacion_sedanotte_vesto",
+      "name": "VESTO · INNOVACIÓN · Seda Notte",
+      "file": "VESTO/INNOVACIÓN/SedaNotte-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6d6864",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_innovacion_titanio_vesto",
+      "name": "VESTO · INNOVACIÓN · Titanio",
+      "file": "VESTO/INNOVACIÓN/Titanio-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#595047",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_innovacion_vizcaya_vesto",
+      "name": "VESTO · INNOVACIÓN · Vizcaya",
+      "file": "VESTO/INNOVACIÓN/Vizcaya-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#545351",
+      "brand": "VESTO",
+      "collection": "INNOVACIÓN"
+    },
+    {
+      "id": "vesto_sinkronia_cocoa_vesto",
+      "name": "VESTO · SINKRONIA · Cocoa",
+      "file": "VESTO/SINKRONIA/Cocoa-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4c3120",
+      "brand": "VESTO",
+      "collection": "SINKRONIA"
+    },
+    {
+      "id": "vesto_sinkronia_nougat_vesto",
+      "name": "VESTO · SINKRONIA · Nougat",
+      "file": "VESTO/SINKRONIA/Nougat-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e5cbbd",
+      "brand": "VESTO",
+      "collection": "SINKRONIA"
+    },
+    {
+      "id": "vesto_sinkronia_toffee_vesto",
+      "name": "VESTO · SINKRONIA · Toffee",
+      "file": "VESTO/SINKRONIA/Toffee-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#9f7358",
+      "brand": "VESTO",
+      "collection": "SINKRONIA"
+    },
+    {
+      "id": "vesto_tendencias_amazonas_vesto",
+      "name": "VESTO · TENDENCIAS · Amazonas",
+      "file": "VESTO/TENDENCIAS/Amazonas-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#836e5b",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_aserradonordico_vesto",
+      "name": "VESTO · TENDENCIAS · Aserrado Nórdico",
+      "file": "VESTO/TENDENCIAS/AserradoNórdico-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5a4e40",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_awoura_vesto",
+      "name": "VESTO · TENDENCIAS · Awoura",
+      "file": "VESTO/TENDENCIAS/Awoura-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d0c6b1",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_caramel_vesto",
+      "name": "VESTO · TENDENCIAS · Caramel",
+      "file": "VESTO/TENDENCIAS/Caramel-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#715535",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_cendraescandinavo_vesto",
+      "name": "VESTO · TENDENCIAS · Cendra Escandinavo",
+      "file": "VESTO/TENDENCIAS/CendraEscandinavo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8f8173",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_espresso_vesto",
+      "name": "VESTO · TENDENCIAS · Espresso",
+      "file": "VESTO/TENDENCIAS/Espresso-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#1f1b1a",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_fresnoeuropeo_vesto",
+      "name": "VESTO · TENDENCIAS · Fresno Europeo",
+      "file": "VESTO/TENDENCIAS/FresnoEuropeo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cfb395",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_jerez_vesto",
+      "name": "VESTO · TENDENCIAS · Jerez",
+      "file": "VESTO/TENDENCIAS/Jerez-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c7b69a",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_legno_vesto",
+      "name": "VESTO · TENDENCIAS · Legno",
+      "file": "VESTO/TENDENCIAS/Legno-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#d4d1cc",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_linosacinza_vesto",
+      "name": "VESTO · TENDENCIAS · Linosa Cinza",
+      "file": "VESTO/TENDENCIAS/LinosaCinza-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#574a4a",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_noccemilano_vesto",
+      "name": "VESTO · TENDENCIAS · Nocce Milano",
+      "file": "VESTO/TENDENCIAS/NocceMilano-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#422a1e",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_nogalterracota_vesto",
+      "name": "VESTO · TENDENCIAS · Nogal Terracota",
+      "file": "VESTO/TENDENCIAS/NogalTerracota-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7e5a3c",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_olmopardo_vesto",
+      "name": "VESTO · TENDENCIAS · Olmo Pardo",
+      "file": "VESTO/TENDENCIAS/OlmoPardo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#6d5244",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_origenandino_vesto",
+      "name": "VESTO · TENDENCIAS · Origen Andino",
+      "file": "VESTO/TENDENCIAS/OrigenAndino-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#af825f",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_patina",
+      "name": "VESTO · TENDENCIAS · Patina",
+      "file": "VESTO/TENDENCIAS/patina.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#7d4c35",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_robleamericano_vesto",
+      "name": "VESTO · TENDENCIAS · Roble Americano",
+      "file": "VESTO/TENDENCIAS/RobleAmericano-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b2935d",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_roblecava_vesto",
+      "name": "VESTO · TENDENCIAS · Roble Cava",
+      "file": "VESTO/TENDENCIAS/RobleCava-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#99806b",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_robleespanol_vesto",
+      "name": "VESTO · TENDENCIAS · Roble Espanol",
+      "file": "VESTO/TENDENCIAS/RobleEspanol-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a77c48",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_robleprovenzal_vesto",
+      "name": "VESTO · TENDENCIAS · Roble Provenzal",
+      "file": "VESTO/TENDENCIAS/RobleProvenzal-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b8a491",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_roblerustico_vesto",
+      "name": "VESTO · TENDENCIAS · Roble Rustico",
+      "file": "VESTO/TENDENCIAS/RobleRustico-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#c7a67e",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_saffron_vesto",
+      "name": "VESTO · TENDENCIAS · Saffron",
+      "file": "VESTO/TENDENCIAS/Saffron-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#5d3a25",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_tekaartico_vesto",
+      "name": "VESTO · TENDENCIAS · Teka Ártico",
+      "file": "VESTO/TENDENCIAS/TekaÁrtico-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#dedbce",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_toscana_vesto",
+      "name": "VESTO · TENDENCIAS · Toscana",
+      "file": "VESTO/TENDENCIAS/Toscana-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#cac1b1",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_venezia_vesto",
+      "name": "VESTO · TENDENCIAS · Venezia",
+      "file": "VESTO/TENDENCIAS/Venezia-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#e3e3e4",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_tendencias_wengueshyraz_vesto",
+      "name": "VESTO · TENDENCIAS · Wengue Shyraz",
+      "file": "VESTO/TENDENCIAS/WengueShyraz-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#574a3f",
+      "brand": "VESTO",
+      "collection": "TENDENCIAS"
+    },
+    {
+      "id": "vesto_unicolores_almendra_vesto",
+      "name": "VESTO · UNICOLORES · Almendra",
+      "file": "VESTO/UNICOLORES/Almendra-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#fdf5d9",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_alumino_vesto",
+      "name": "VESTO · UNICOLORES · Alumino",
+      "file": "VESTO/UNICOLORES/Alumino-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a0a4a3",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_azullago_vesto",
+      "name": "VESTO · UNICOLORES · Azul Lago",
+      "file": "VESTO/UNICOLORES/AzulLago-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#486a8f",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_azulmarino_vesto",
+      "name": "VESTO · UNICOLORES · Azul Marino",
+      "file": "VESTO/UNICOLORES/AzulMarino-VESTO.jpeg",
+      "defaultScale": 600,
+      "defaultColor": "#022a32",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_blanco_vesto",
+      "name": "VESTO · UNICOLORES · Blanco",
+      "file": "VESTO/UNICOLORES/Blanco-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f8f9f4",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_blanconieve_vesto",
+      "name": "VESTO · UNICOLORES · Blanco Nieve",
+      "file": "VESTO/UNICOLORES/BlancoNieve-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#f7f7f5",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_carbon_vesto",
+      "name": "VESTO · UNICOLORES · Carbon",
+      "file": "VESTO/UNICOLORES/Carbon-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#49494a",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_grafito_vesto",
+      "name": "VESTO · UNICOLORES · Grafito",
+      "file": "VESTO/UNICOLORES/Grafito-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#4a4b46",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_grishumo_vesto",
+      "name": "VESTO · UNICOLORES · Gris Humo",
+      "file": "VESTO/UNICOLORES/GrisHumo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#b6b6b0",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_humo_vesto",
+      "name": "VESTO · UNICOLORES · Humo",
+      "file": "VESTO/UNICOLORES/Humo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bcb7b1",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_maras_vesto",
+      "name": "VESTO · UNICOLORES · Maras",
+      "file": "VESTO/UNICOLORES/Maras-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#ac9186",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_negro_vesto",
+      "name": "VESTO · UNICOLORES · Negro",
+      "file": "VESTO/UNICOLORES/Negro-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#020202",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_negrovelvet_vesto",
+      "name": "VESTO · UNICOLORES · Negro Velvet",
+      "file": "VESTO/UNICOLORES/NegroVelvet-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#080808",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_rojo_vesto",
+      "name": "VESTO · UNICOLORES · Rojo",
+      "file": "VESTO/UNICOLORES/Rojo-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#a8211e",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_taupe_vesto",
+      "name": "VESTO · UNICOLORES · Taupe",
+      "file": "VESTO/UNICOLORES/Taupe-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#8e8076",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_verde_vesto",
+      "name": "VESTO · UNICOLORES · Verde",
+      "file": "VESTO/UNICOLORES/Verde-VESTO.jpg",
+      "defaultScale": 600,
+      "defaultColor": "#bbd162",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    },
+    {
+      "id": "vesto_unicolores_verdejade_vesto",
+      "name": "VESTO · UNICOLORES · Verde Jade",
+      "file": "VESTO/UNICOLORES/VerdeJade-VESTO.jpeg",
+      "defaultScale": 600,
+      "defaultColor": "#9aad97",
+      "brand": "VESTO",
+      "collection": "UNICOLORES"
+    }
   ]
 }

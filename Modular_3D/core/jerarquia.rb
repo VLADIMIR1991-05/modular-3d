@@ -1064,6 +1064,20 @@ module LPenafiel_GeneradorMueblesExacto
         nil
       end
     end
+    # Biblioteca de texturas incluidas (Modular_3D/textures/, con las marcas
+    # de fabricante agregadas ademas de las 7 genericas originales): se
+    # generan una sola vez en Ruby (manifiesto_texturas_incluidas, que ya
+    # lee manifest.json recursivamente sin importar cuantas subcarpetas de
+    # marca/coleccion tenga) y se empujan al dialogo para que el desplegable
+    # "Textura incluida" las liste agrupadas por marca.
+    texturas_json = JSON.generate(self.manifiesto_texturas_incluidas.values)
+    UI.start_timer(0.35, false) do
+      begin
+        dialogo.execute_script("window.__modular3dIncludedTextures = #{texturas_json}; if (window.Modular3DApplyIncludedTextures) { window.Modular3DApplyIncludedTextures(window.__modular3dIncludedTextures); }") if dialogo
+      rescue
+        nil
+      end
+    end
     if datos_iniciales && !datos_iniciales.empty?
       datos_json = JSON.generate(datos_iniciales)
       script = "window.__modular3dInitial = #{datos_json}; if (window.Modular3DLoadInitial) { window.Modular3DLoadInitial(window.__modular3dInitial); }"

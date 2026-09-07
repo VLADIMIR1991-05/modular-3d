@@ -3,8 +3,10 @@
   var groups=['casco','interior','frentes','cajones','respaldo','ajuste','herrajes'];
   var overrides={},dimensionOverrides={},miterOverrides={},textures={},textureMeta={},selectedKey=null,selectedDetail=null,bound=false,pendingTexture='',pendingPieceTexture='';
   var LIBRARY_KEY='modular3d_material_library_v1';
-  // Biblioteca de texturas incluidas con el plugin (imagenes genericas /
-  // procedurales, no fotografias reales) -- mismo listado que
+  // Biblioteca de texturas incluidas con el plugin: arranca con las 7
+  // genericas de siempre, y Ruby suma acá (via
+  // window.Modular3DApplyIncludedTextures) las texturas reales de marca de
+  // Modular_3D/textures/<MARCA>/... -- mismos ids que
   // Modular_3D/textures/manifest.json, que es lo que Ruby usa para
   // resolver el "INCLUDED:<id>" a un archivo real al construir.
   var INCLUDED_TEXTURES=[
@@ -16,9 +18,47 @@
     {id:'nogal_oscuro',name:'Nogal oscuro',file:'nogal_oscuro.png',defaultScale:300},
     {id:'wengue',name:'Wengué',file:'wengue.png',defaultScale:300}
   ];
+  var includedTextureSelects=[];
   function includedTexture(id){return INCLUDED_TEXTURES.filter(function(t){return t.id===id;})[0]||null;}
   function textureDisplayUrl(source){var raw=String(source||'');if(raw.indexOf('INCLUDED:')!==0)return raw;var tex=includedTexture(raw.slice('INCLUDED:'.length));return tex?('../textures/'+tex.file):'';}
-  function fillIncludedSelect(node){if(!node||node.options.length>1)return;INCLUDED_TEXTURES.forEach(function(tex){var option=document.createElement('option');option.value=tex.id;option.textContent=tex.name;node.appendChild(option);});}
+  // Las texturas de marca (inyectadas por Ruby desde manifest.json, que a su
+  // vez se genera escaneando Modular_3D/textures/ sin importar cuantos
+  // niveles de subcarpeta tenga cada marca) llegan con name="MARCA · Color"
+  // o "MARCA · Coleccion · Color" -- se agrupan por marca en <optgroup> y se
+  // muestra solo la parte final (ya sin repetir la marca, que es el titulo
+  // del grupo) para que el desplegable no quede repetitivo.
+  function fillIncludedSelect(node){
+    if(!node)return;
+    includedTextureSelects.indexOf(node)===-1&&includedTextureSelects.push(node);
+    var previous=node.value;
+    while(node.options.length>1)node.removeChild(node.lastChild);
+    var porMarca={},sinMarca=[];
+    INCLUDED_TEXTURES.forEach(function(tex){
+      if(tex.brand){(porMarca[tex.brand]=porMarca[tex.brand]||[]).push(tex);}
+      else sinMarca.push(tex);
+    });
+    sinMarca.forEach(function(tex){var option=document.createElement('option');option.value=tex.id;option.textContent=tex.name;node.appendChild(option);});
+    Object.keys(porMarca).sort().forEach(function(marca){
+      var group=document.createElement('optgroup');group.label=marca;
+      porMarca[marca].forEach(function(tex){
+        var option=document.createElement('option');option.value=tex.id;
+        var etiqueta=String(tex.name||'').split(' · ').slice(1).join(' · ')||tex.name;
+        option.textContent=etiqueta;group.appendChild(option);
+      });
+      node.appendChild(group);
+    });
+    if(previous&&includedTexture(previous))node.value=previous;
+  }
+  // Ruby empuja la biblioteca de marcas con un pequeño delay tras abrir el
+  // dialogo (window.__modular3dIncludedTextures); se suma a las 7 texturas
+  // genericas de siempre sin duplicar ids, y se refresca cualquier
+  // desplegable que ya se haya llenado antes de que llegara el dato.
+  window.Modular3DApplyIncludedTextures=function(lista){
+    if(!Array.isArray(lista))return;
+    var conocidos={};INCLUDED_TEXTURES.forEach(function(t){conocidos[t.id]=true;});
+    lista.forEach(function(tex){if(tex&&tex.id&&!conocidos[tex.id]){INCLUDED_TEXTURES.push(tex);conocidos[tex.id]=true;}});
+    includedTextureSelects.forEach(fillIncludedSelect);
+  };
   function id(name){return document.getElementById(name);}
   function value(name,fallback){var node=id(name);return node?node.value:fallback;}
   function checked(name){var node=id(name);return !!(node&&node.checked);}
