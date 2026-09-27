@@ -36,6 +36,10 @@ module LPenafiel_GeneradorMueblesExacto
       enviar_estado_licencia.call(Modular3D::License.login(email, password, force_transfer == true))
     end
 
+    dialogo.add_action_callback("licenciaAceptarTerminos") do |_action_context, email, password, accept, force_transfer|
+      enviar_estado_licencia.call(Modular3D::License.accept_terms(email, password, accept == true, force_transfer == true))
+    end
+
     dialogo.add_action_callback("licenciaHeartbeat") do |_action_context|
       enviar_estado_licencia.call(Modular3D::License.heartbeat)
     end

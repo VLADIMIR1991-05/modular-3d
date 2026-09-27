@@ -79,6 +79,32 @@ module Modular3D
       response
     end
 
+    # Se llama cuando login() devolvió TERMS_REQUIRED y el usuario aceptó los
+    # términos en el diálogo. Reenvía las mismas credenciales al servidor,
+    # que registra la aceptación (una sola vez, para siempre) y devuelve la
+    # sesión igual que login() si accept es true.
+    def accept_terms(email, password, accept, force_transfer = false)
+      response = request(
+        "/auth/accept-terms",
+        {
+          email: email.to_s.strip.downcase,
+          password: password.to_s,
+          accept: accept == true,
+          machine_id: machine_id,
+          force_transfer: force_transfer == true,
+          plugin_version: Modular3D::VERSION,
+          sketchup_version: Sketchup.version.to_s,
+          product_code: "modular3d_plugin"
+        }
+      )
+      if response[:ok] && response[:token]
+        Sketchup.write_default(Modular3D::PREFERENCES_KEY, TOKEN_KEY, response[:token])
+        Sketchup.write_default(Modular3D::PREFERENCES_KEY, EMAIL_KEY, email.to_s.strip.downcase)
+        mark_verified(response)
+      end
+      response
+    end
+
     def validate
       return mark_verified(ok: true, mode: "development") unless enabled?
       return { ok: false, code: "LOGIN_REQUIRED" } if saved_token.empty?

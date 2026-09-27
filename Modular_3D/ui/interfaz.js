@@ -48,8 +48,33 @@
       relleno.style.background = colorPorPorcentajeLicencia(pct);
       texto.textContent = diasRestantes + (diasRestantes === 1 ? ' día' : ' días');
     }
+    // Copia local de los terminos, solo para "Leer terminos y condiciones"
+    // ANTES de intentar iniciar sesion (no requiere red ni credenciales). El
+    // texto que de verdad se registra como aceptado es el que devuelve el
+    // servidor en TERMS_REQUIRED (result.terms.text) -- mantener esta copia
+    // sincronizada a mano si el texto del servidor cambia.
+    var TERMS_TEXT_LOCAL = 'Términos y condiciones de uso — Modular_3D\n\n' +
+      '1. Licencia de uso. Modular_3D es un software con licencia de uso personal e intransferible, activada por correo y contraseña, válida para el número de equipos autorizado en tu plan. No debes compartir tus credenciales de acceso ni instalar el plugin en más equipos de los autorizados sin contratar un plan mayor.\n\n' +
+      '2. Datos que se guardan. Para activar y dar soporte a tu licencia guardamos tu nombre, apellido, correo, celular y dirección. Estos datos se usan únicamente para gestionar tu cuenta, darte soporte técnico y contactarte por temas relacionados con tu licencia (por ejemplo, si está por vencer). No se comparten ni se venden a terceros.\n\n' +
+      '3. Vigencia y renovación. Tu licencia tiene una fecha de vencimiento visible en el plugin. Al vencer, el plugin deja de generar módulos nuevos hasta que renueves. Podemos contactarte antes o después del vencimiento para ofrecerte la renovación.\n\n' +
+      '4. Responsabilidad. Modular_3D se entrega "como esta". El resultado final de cualquier mueble depende de que revises las medidas y el despiece antes de llevarlo a produccion; el software es una herramienta de diseno y calculo, no sustituye la revision de un profesional para obras criticas.\n\n' +
+      '5. Soporte. El soporte tecnico se brinda por los canales indicados dentro del propio plugin (WhatsApp/correo), en el horario que el equipo de soporte comunique.\n\n' +
+      'Al aceptar estos terminos confirmas que los leiste (o tuviste la oportunidad de leerlos) y que estas de acuerdo con ellos. Esta aceptacion se guarda una sola vez; no se te volvera a pedir en el mismo equipo ni en otros equipos autorizados de tu licencia.';
+
+    function abrirTerminos(texto, modo) {
+      document.getElementById('terms_body').textContent = texto;
+      document.getElementById('terms_actions_gate').hidden = modo !== 'gate';
+      document.getElementById('terms_actions_read').hidden = modo === 'gate';
+      if (modo === 'gate') document.getElementById('terms_checkbox').checked = false;
+      document.getElementById('terms_overlay').hidden = false;
+    }
+    function cerrarTerminos() {
+      document.getElementById('terms_overlay').hidden = true;
+    }
+
     window.Modular3DLicense = {
       busy: false,
+      pendingTerms: false,
       receive: function(result) {
         result = result || {};
         this.busy = false;
@@ -59,12 +84,21 @@
         button.textContent = 'Entrar a Modular_3D';
 
         if (result.ok) {
+          this.pendingTerms = false;
+          cerrarTerminos();
           document.body.classList.remove('license-locked');
           document.getElementById('license_overlay').style.display = 'none';
           document.getElementById('license_session').classList.add('show');
           document.getElementById('license_identity').textContent = result.email || document.getElementById('license_email').value || 'Licencia activa';
           message.classList.remove('show');
           actualizarBarraLicencia(result);
+          return;
+        }
+
+        if (result.code === 'TERMS_REQUIRED') {
+          this.pendingTerms = true;
+          abrirTerminos((result.terms && result.terms.text) || TERMS_TEXT_LOCAL, 'gate');
+          message.classList.remove('show');
           return;
         }
 
@@ -75,7 +109,8 @@
           LICENSE_BLOCKED: 'La licencia fue bloqueada por el administrador.',
           DEVICE_CONFLICT: 'Esta licencia ya esta vinculada a otra computadora.',
           SERVER_UNAVAILABLE: 'No se pudo conectar al servidor de licencias. Verifica tu conexion a Internet.',
-          TOKEN_EXPIRED: 'La sesion vencio. Inicia sesion nuevamente.'
+          TOKEN_EXPIRED: 'La sesion vencio. Inicia sesion nuevamente.',
+          TERMS_NOT_ACCEPTED: 'Debes aceptar los terminos y condiciones para continuar.'
         };
         document.body.classList.add('license-locked');
         document.getElementById('license_overlay').style.display = 'flex';
@@ -100,6 +135,22 @@
         } else {
           this.receive({ ok: false, message: 'Esta validacion debe abrirse dentro de SketchUp.' });
         }
+      },
+      acceptTerms: function(accept) {
+        if (this.busy) return;
+        var email = document.getElementById('license_email').value.trim();
+        var password = document.getElementById('license_password').value;
+        if (!accept) { this.pendingTerms = false; cerrarTerminos(); return; }
+        this.busy = true;
+        if (window.sketchup && sketchup.licenciaAceptarTerminos) {
+          sketchup.licenciaAceptarTerminos(email, password, true, document.getElementById('license_transfer').checked);
+        } else {
+          this.busy = false;
+          this.receive({ ok: false, message: 'Esta validacion debe abrirse dentro de SketchUp.' });
+        }
+      },
+      readTerms: function() {
+        abrirTerminos(TERMS_TEXT_LOCAL, 'read');
       },
       check: function() {
         if (window.sketchup && sketchup.licenciaEstado) sketchup.licenciaEstado();
@@ -932,6 +983,13 @@
     el('license_login').addEventListener('click', function() { window.Modular3DLicense.login(); });
     el('license_password').addEventListener('keydown', function(event) { if (event.key === 'Enter') window.Modular3DLicense.login(); });
     el('license_logout').addEventListener('click', function() { if (window.sketchup && sketchup.licenciaLogout) sketchup.licenciaLogout(); });
+    el('license_read_terms').addEventListener('click', function() { window.Modular3DLicense.readTerms(); });
+    el('terms_close').addEventListener('click', function() { document.getElementById('terms_overlay').hidden = true; });
+    el('terms_cancel').addEventListener('click', function() { window.Modular3DLicense.acceptTerms(false); });
+    el('terms_accept').addEventListener('click', function() {
+      if (!el('terms_checkbox').checked) { el('terms_checkbox').focus(); return; }
+      window.Modular3DLicense.acceptTerms(true);
+    });
     if (window.Modular3DPreview) window.Modular3DPreview.init();
     actualizarVista();
     sincronizarReglasRespaldo();

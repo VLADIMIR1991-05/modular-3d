@@ -133,6 +133,15 @@
     .license-days-track { width: 56px; height: 6px; border-radius: 999px; background: rgba(255,255,255,.28); overflow: hidden; }
     .license-days-fill { height: 100%; width: 0%; border-radius: 999px; background: #2563eb; transition: width .3s ease, background .3s ease; }
     body.license-locked main, body.license-locked header { pointer-events: none; user-select: none; }
+    .link-button { margin-top: 4px; padding: 6px; color: var(--brand-dark); border: none; background: none; text-decoration: underline; font-size: 11px; font-weight: 600; }
+    .link-button:hover { background: none; color: var(--brand); }
+    .terms-overlay { z-index: 1100; }
+    #terms_overlay[hidden] { display: none; }
+    .terms-card { width: min(560px, 100%); }
+    .terms-body { max-height: 46vh; margin: 0 24px; padding: 14px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.55; color: #364652; background: #f7f8f9; border: 1px solid #e3e7ea; border-radius: 8px; }
+    .terms-actions { padding: 18px 24px 24px; }
+    .terms-actions .license-options { margin-top: 4px; }
+    .terms-actions button.secondary { margin-top: 0; }
     small { color: var(--muted); }
     @media (max-width: 720px) {
       main { grid-template-columns: 1fr; }

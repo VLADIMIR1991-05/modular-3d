@@ -27,6 +27,26 @@
           <input type="checkbox" id="license_transfer"> Trasladar la licencia a esta computadora
         </label>
         <button type="button" id="license_login">Entrar a Modular_3D</button>
+        <button type="button" id="license_read_terms" class="link-button">Leer términos y condiciones</button>
+      </div>
+    </div>
+  </div>
+  <div id="terms_overlay" class="license-overlay terms-overlay" hidden>
+    <div class="license-card terms-card">
+      <div class="license-brand">
+        <strong>Modular_3D</strong>
+        <span>Términos y condiciones de uso</span>
+      </div>
+      <div class="terms-body" id="terms_body"></div>
+      <div class="terms-actions" id="terms_actions_gate" hidden>
+        <label class="license-options">
+          <input type="checkbox" id="terms_checkbox"> Leí y acepto los términos y condiciones
+        </label>
+        <button type="button" id="terms_accept">Acepto y continuar</button>
+        <button type="button" id="terms_cancel" class="secondary">Cancelar</button>
+      </div>
+      <div class="terms-actions" id="terms_actions_read" hidden>
+        <button type="button" id="terms_close">Cerrar</button>
       </div>
     </div>
   </div>
