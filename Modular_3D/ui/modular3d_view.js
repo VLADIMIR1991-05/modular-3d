@@ -353,9 +353,58 @@
     var bottomDepth = Math.max(1, depth - setbackFrontBottom - setbackBackBottom);
     if (hasBottom) addPiece('Panel inferior', bottomW, bottomT, bottomDepth, bottomX, 0, setbackFrontBottom, COLORS.horizontal, 'horizontal', false, {pieceId:'shell-bottom',materialKey:'BASE',role:'shell-bottom',sourceField:'grosor_inferior'});
 
+    // v6: "2 travesaños" como alternativa a techo completo en el casco
+    // general (solo la tapa superior tiene esta opción -- la base siempre
+    // va de panel completo, a pedido explícito). Replica jerarquia.rb.
     var topW = mountTop === 'EXTERIOR' ? width : usableW, topX = mountTop === 'EXTERIOR' ? 0 : leftT;
     var topDepth = Math.max(1, depth - setbackFrontTop - setbackBackTop);
-    if (hasTop) addPiece('Panel superior', topW, topT, topDepth, topX, height - topT, setbackFrontTop, COLORS.horizontal, 'top', false, {pieceId:'shell-top',materialKey:'TECHO',role:'shell-top',sourceField:'grosor_superior'});
+    var techoModoGeneral = String(data.tipo_superior || 'FULL').toUpperCase();
+    if (hasTop) {
+      if (techoModoGeneral === 'TRAVESANOS') {
+        var anchoTravTecho = Math.max(20, number(data, 'travesano_ancho_superior', 70));
+        addPiece('Travesaño superior delantero', topW, topT, anchoTravTecho, topX, height - topT, 0, COLORS.horizontal, 'top', false, {pieceId:'shell-top-trav-del',materialKey:'TECHO_TRAV_DEL',role:'shell-top',sourceField:'tipo_superior'});
+        addPiece('Travesaño superior trasero', topW, topT, anchoTravTecho, topX, height - topT, depth - anchoTravTecho, COLORS.horizontal, 'top', false, {pieceId:'shell-top-trav-tras',materialKey:'TECHO_TRAV_TRAS',role:'shell-top',sourceField:'tipo_superior'});
+      } else {
+        addPiece('Panel superior', topW, topT, topDepth, topX, height - topT, setbackFrontTop, COLORS.horizontal, 'top', false, {pieceId:'shell-top',materialKey:'TECHO',role:'shell-top',sourceField:'grosor_superior'});
+      }
+    }
+
+    // v6.0.1 -- bug real reportado: la puerta solapada quedaba "embutida" en
+    // este visor JS porque nunca se enteraba de calcular_protrusion_puerta
+    // (jerarquia.rb), que adelanta la puerta hasta igualar al panel vecino
+    // que mas sobresalga por su sobremedida frontal (o respeta el override
+    // manual del usuario). Sin este espejo la puerta siempre nacia en
+    // -grosor_puerta sin importar la ultima sobremedida cargada, aunque la
+    // construccion real en SketchUp ya protruyera correctamente. Replica
+    // EXACTA de esa función, misma tolerancia de 0.5mm para detectar que
+    // panel realmente toca la cavidad de esa puerta.
+    var puertaProtrusionModo = String(data.puerta_protrusion_modo || 'AUTOMATICO').toUpperCase();
+    var puertaProtrusionOverrideRaw = String(data.puerta_protrusion_override_mm == null ? '' : data.puerta_protrusion_override_mm).trim();
+    var puertaProtrusionOverride = (puertaProtrusionModo === 'MANUAL' && puertaProtrusionOverrideRaw !== '') ? Math.max(0, Number(puertaProtrusionOverrideRaw) || 0) : null;
+    var sobFrontIzqGeneral = number(data, 'sobremedida_frontal_izq', 0);
+    var sobFrontDerGeneral = number(data, 'sobremedida_frontal_der', 0);
+    var sobFrontInferiorGeneral = number(data, 'sobremedida_frontal_inferior', 0);
+    var sobFrontSuperiorGeneral = number(data, 'sobremedida_frontal_superior', 0);
+    function calcularProtrusionPuerta(cavXMin, cavXMax, cavZMin, cavZMax, enclosureNode, sobNodo, grosorPuertaLocal) {
+      if (puertaProtrusionOverride !== null) return puertaProtrusionOverride;
+      var eps = 0.5;
+      var candidatos = [grosorPuertaLocal];
+      if (hasLeft && Math.abs(cavXMin - leftT) <= eps) candidatos.push(sobFrontIzqGeneral);
+      if (hasRight && Math.abs(cavXMax - (width - rightT)) <= eps) candidatos.push(sobFrontDerGeneral);
+      // La base del casco general nunca es travesaños en este visor (esa
+      // opción es exclusiva de la tapa superior, a pedido explícito), así
+      // que aquí no hace falta replicar ese chequeo para la base.
+      if (hasBottom && Math.abs(cavZMin - bottomT) <= eps) candidatos.push(sobFrontInferiorGeneral);
+      if (hasTop && techoModoGeneral !== 'TRAVESANOS' && Math.abs(cavZMax - (height - topT)) <= eps) candidatos.push(sobFrontSuperiorGeneral);
+      if (enclosureNode && typeof enclosureNode === 'object') {
+        var sob = (sobNodo && typeof sobNodo === 'object') ? sobNodo : {};
+        if (enclosureNode.left) candidatos.push(Number(sob.frontalIzq) || 0);
+        if (enclosureNode.right) candidatos.push(Number(sob.frontalDer) || 0);
+        if (enclosureNode.bottom) candidatos.push(Number(sob.frontalInferior) || 0);
+        if (enclosureNode.top && String(enclosureNode.topMode || 'FULL').toUpperCase() !== 'TRAVESANOS') candidatos.push(Number(sob.frontalSuperior) || 0);
+      }
+      return Math.max.apply(null, candidatos);
+    }
 
     if (!hasHierarchy && physicalX) for (var c = 0; c < colSizes.length - 1; c += 1) {
       addPiece('División vertical ' + (c + 1), general, innerH, interiorDepth, colStarts[c] + colSizes[c], bottomT, interiorSetback, COLORS.interior, 'interior');
@@ -436,17 +485,49 @@
         var sob = node.sobremedida || {};
         var retFrontal = function(clave){ return -(Number(sob['frontal'+clave]) || 0); };
         var retTrasera = function(clave){ return -(Number(sob['trasera'+clave]) || 0); };
-        if (enclosure.left) { var rfI=retFrontal('Izq'), rtI=retTrasera('Izq'); addPiece('Lateral local · '+nodeLabel,general,b.h,b.d-rfI-rtI,b.x,b.z,b.y+rfI,COLORS.interior,'interior',false,localMeta('local-left','h_left')); }
-        if (enclosure.right) { var rfD=retFrontal('Der'), rtD=retTrasera('Der'); addPiece('Lateral local · '+nodeLabel,general,b.h,b.d-rfD-rtD,b.x+b.w-general,b.z,b.y+rfD,COLORS.interior,'interior',false,localMeta('local-right','h_right')); }
-        if (enclosure.bottom) { var rfB=retFrontal('Inferior'), rtB=retTrasera('Inferior'); addPiece('Base local · '+nodeLabel,b.w,general,b.d-rfB-rtB,b.x,b.z,b.y+rfB,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom')); }
+        // v6.0.1 -- este visor dibujaba SIEMPRE el cierre local (lateral,
+        // base, techo de nodo) a ancho/alto completo, ignorando por completo
+        // leftMount/rightMount/bottomMount/topMount -- por eso en el dibujo
+        // se veian como si el montaje siguiera siendo el de antes (p. ej.
+        // "de punta a punta") aunque el desplegable ya dijera Interior o
+        // Sobrepuesto. Replica EXACTA de jerarquia.rb (mismo nombre de
+        // variable, misma regla de conflicto de esquina lateral-vs-horizontal).
+        var mountIzqNodo = String(enclosure.leftMount || 'EXTERIOR').toUpperCase();
+        var mountDerNodo = String(enclosure.rightMount || 'EXTERIOR').toUpperCase();
+        var mountInfNodo = String(enclosure.bottomMount || 'INTERIOR').toUpperCase();
+        var mountSupNodo = String(enclosure.topMount || 'INTERIOR').toUpperCase();
+        if (mountIzqNodo !== 'INTERIOR' || mountDerNodo !== 'INTERIOR') {
+          if (mountInfNodo === 'EXTERIOR') mountInfNodo = 'INTERIOR';
+          if (mountSupNodo === 'EXTERIOR') mountSupNodo = 'INTERIOR';
+        }
+        if (enclosure.left) {
+          var rfI=retFrontal('Izq'), rtI=retTrasera('Izq');
+          var altoIzqNodo = mountIzqNodo === 'INTERIOR' ? (b.h - (enclosure.bottom?general:0) - (enclosure.top?general:0)) : b.h;
+          var zIzqNodo = (mountIzqNodo === 'INTERIOR' && enclosure.bottom) ? b.z + general : b.z;
+          addPiece('Lateral local · '+nodeLabel,general,altoIzqNodo,b.d-rfI-rtI,b.x,zIzqNodo,b.y+rfI,COLORS.interior,'interior',false,localMeta('local-left','h_left'));
+        }
+        if (enclosure.right) {
+          var rfD=retFrontal('Der'), rtD=retTrasera('Der');
+          var altoDerNodo = mountDerNodo === 'INTERIOR' ? (b.h - (enclosure.bottom?general:0) - (enclosure.top?general:0)) : b.h;
+          var zDerNodo = (mountDerNodo === 'INTERIOR' && enclosure.bottom) ? b.z + general : b.z;
+          addPiece('Lateral local · '+nodeLabel,general,altoDerNodo,b.d-rfD-rtD,b.x+b.w-general,zDerNodo,b.y+rfD,COLORS.interior,'interior',false,localMeta('local-right','h_right'));
+        }
+        if (enclosure.bottom) {
+          var rfB=retFrontal('Inferior'), rtB=retTrasera('Inferior');
+          var anchoBaseNodo = mountInfNodo === 'INTERIOR' ? (b.w - (enclosure.left?general:0) - (enclosure.right?general:0)) : b.w;
+          var xBaseNodo = (mountInfNodo === 'INTERIOR' && enclosure.left) ? b.x + general : b.x;
+          addPiece('Base local · '+nodeLabel,anchoBaseNodo,general,b.d-rfB-rtB,xBaseNodo,b.z,b.y+rfB,COLORS.interior,'interior',false,localMeta('local-bottom','h_bottom'));
+        }
         if (enclosure.top) {
+          var anchoTopNodo = mountSupNodo === 'INTERIOR' ? (b.w - (enclosure.left?general:0) - (enclosure.right?general:0)) : b.w;
+          var xTopNodo = (mountSupNodo === 'INTERIOR' && enclosure.left) ? b.x + general : b.x;
           if (String(enclosure.topMode || 'FULL').toUpperCase() === 'TRAVESANOS') {
             var anchoTrav = Math.max(20, Number(enclosure.topTravesano) || 70);
-            addPiece('Travesaño delantero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_del'));
-            addPiece('Travesaño trasero · '+nodeLabel, b.w, general, anchoTrav, b.x, b.z+b.h-general, b.y+b.d-anchoTrav, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_tras'));
+            addPiece('Travesaño delantero · '+nodeLabel, anchoTopNodo, general, anchoTrav, xTopNodo, b.z+b.h-general, b.y, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_del'));
+            addPiece('Travesaño trasero · '+nodeLabel, anchoTopNodo, general, anchoTrav, xTopNodo, b.z+b.h-general, b.y+b.d-anchoTrav, COLORS.interior, 'interior', false, localMeta('local-top','h_top','_tras'));
           } else {
             var rfT=retFrontal('Superior'), rtT=retTrasera('Superior');
-            addPiece('Techo local · '+nodeLabel,b.w,general,b.d-rfT-rtT,b.x,b.z+b.h-general,b.y+rfT,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
+            addPiece('Techo local · '+nodeLabel,anchoTopNodo,general,b.d-rfT-rtT,xTopNodo,b.z+b.h-general,b.y+rfT,COLORS.interior,'interior',false,localMeta('local-top','h_top'));
           }
         }
         if (enclosure.back) addPiece('Respaldo local · '+nodeLabel,b.w,b.h,number(data,'grosor_resp',6),b.x,b.z,b.y+b.d-number(data,'grosor_resp',6),COLORS.back,'back',false,localMeta('local-back','h_back'));
@@ -520,7 +601,10 @@
             var doorMeta=localMeta('door','h_front','_'+(hf+1));
             doorMeta.materialKey='H_PUERTA_'+(internalFront?'INT':'EXT')+'_'+nid+'_'+(hf+1);
             var externalEmbutida=!internalFront&&String(data.montaje_puerta||'SOLAPADA').toUpperCase()==='EMBUTIDA';
-            addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:(externalEmbutida?0:-frontT),COLORS.front,'front',false,doorMeta);
+            // Externa solapada: adelantada hasta igualar al panel vecino que
+            // mas sobresalga (o el override manual) -- NUNCA un -frontT fijo.
+            var protrusionPuerta=(internalFront||externalEmbutida)?frontT:calcularProtrusionPuerta(b.x,b.x+b.w,b.z,b.z+b.h,enclosure,sob,frontT);
+            addPiece((internalFront?'Puerta interna · ':'Puerta externa · ')+nodeLabel+' '+(hf+1),frontW,frontH,frontT,fb.x+(internalFront?gap:0)+hf*(frontW+gapCenter),fb.z+(internalFront?gap:0),internalFront?fb.y+2:(externalEmbutida?0:-protrusionPuerta),COLORS.front,'front',false,doorMeta);
           }
         }
       });
@@ -531,7 +615,11 @@
         var gl=Math.max(0,number(data,'global_front_gap_left',3)),gr=Math.max(0,number(data,'global_front_gap_right',3));
         var gt=Math.max(0,number(data,'global_front_gap_top',3)),gb=Math.max(0,number(data,'global_front_gap_bottom',3)),gc=Math.max(0,number(data,'global_front_gap_center',3));
         var globalT=number(data,'puerta_grosor',general),globalW=Math.max(1,(width-gl-gr-gc*(globalCount-1))/globalCount),globalH=Math.max(1,height-gt-gb);
-        for(var gf=0;gf<globalCount;gf+=1)addPiece('Puerta exterior global '+(gf+1),globalW,globalH,globalT,gl+gf*(globalW+gc),gb,-globalT,COLORS.front,'front',false,{pieceId:'global_front_'+(gf+1),materialKey:'G_PUERTA_EXT_'+(gf+1),role:'door',ownerSpaceId:'root',parentSpaceId:'root',sourceField:'global_front_count'});
+        // Frente global: por definición toca los 4 lados del casco, así que
+        // se pasan los bordes exactos de coincidencia (igual que jerarquia.rb
+        // -- no distingue EMBUTIDA aquí, tal cual el motor real).
+        var protrusionGlobal=calcularProtrusionPuerta(leftT,width-rightT,bottomT,height-topT,null,null,globalT);
+        for(var gf=0;gf<globalCount;gf+=1)addPiece('Puerta exterior global '+(gf+1),globalW,globalH,globalT,gl+gf*(globalW+gc),gb,-protrusionGlobal,COLORS.front,'front',false,{pieceId:'global_front_'+(gf+1),materialKey:'G_PUERTA_EXT_'+(gf+1),role:'door',ownerSpaceId:'root',parentSpaceId:'root',sourceField:'global_front_count'});
       }
     }
 
@@ -767,7 +855,12 @@
     camera.position.copy(position); camera.up.copy(up); camera.lookAt(target);
     controls.object = camera; controls.target.copy(target); controls.update();
     var button = byId('view_projection');
-    if (button) { button.textContent = useOrtho ? 'Ortogonal' : 'Perspectiva'; button.classList.toggle('active', useOrtho); }
+    // El botón etiqueta la ACCIÓN a la que lleva un clic (no el estado
+    // actual): en 3D (perspectiva) ofrece pasar a "Vista 2D"; en 2D
+    // (ortogonal) ofrece volver a "Vista 3D". Ver bind('view_projection', ...)
+    // en initialize() para la vista de frente + modo espacio que arma la
+    // "vista 2D" real.
+    if (button) { button.textContent = useOrtho ? 'Vista 3D' : 'Vista 2D'; button.classList.toggle('active', useOrtho); }
     requestRender();
   }
 
@@ -1033,7 +1126,33 @@
     bind('view_home', frameModel);
     bind('view_mode_space',function(){setSelectionMode('space');});bind('view_mode_piece',function(){setSelectionMode('piece');});
     bind('view_piece_focus',focusSelected);bind('view_piece_isolate',isolateSelected);bind('view_piece_visibility',toggleSelectedVisibility);bind('view_piece_edit',editSelected);
-    bind('view_projection', function(){ switchProjection(!orthographic); });
+    /* Unificación 2D/3D: un solo visor cubre ambos casos en vez de mantener
+       un diagrama plano HTML aparte (retirado de hierarchical_config.js).
+       "Vista 2D" = vista de frente ortogonal (ancho x alto, a escala real,
+       igual layout que el antiguo plano) + selección por espacios + la
+       transparencia forzada temporalmente para poder ver la configuración
+       interior a través de puertas y frentes; "Vista 3D" restaura la
+       transparencia previa y vuelve a la isométrica en perspectiva. */
+    var transparentBeforePlanView = null;
+    bind('view_projection', function(){
+      if (orthographic) {
+        if (transparentBeforePlanView !== null) {
+          transparent = transparentBeforePlanView; transparentBeforePlanView = null;
+          if (byId('view_transparency')) byId('view_transparency').classList.toggle('active', transparent);
+          applyVisualState();
+        }
+        setView('iso');
+      } else {
+        transparentBeforePlanView = transparent;
+        if (!transparent) {
+          transparent = true;
+          if (byId('view_transparency')) byId('view_transparency').classList.toggle('active', true);
+          applyVisualState();
+        }
+        setSelectionMode('space');
+        setView('front');
+      }
+    });
     bind('view_transparency', function(){ transparent = !transparent; byId('view_transparency').classList.toggle('active', transparent); applyVisualState(); });
     bind('view_edges', function(){ edgesVisible = !edgesVisible; byId('view_edges').classList.toggle('active', edgesVisible); applyVisualState(); });
     bind('view_shadows', function(){ shadows = !shadows; renderer.shadowMap.enabled = shadows; byId('view_shadows').classList.toggle('active', shadows); applyVisualState(); });

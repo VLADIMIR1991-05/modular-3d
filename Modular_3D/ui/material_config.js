@@ -66,8 +66,82 @@
   function groupFor(piece){return piece&&piece.group||'interior';}
   function groupColor(group){return value('material_'+group+'_color','#d5a66e');}
   function library(){try{return JSON.parse(localStorage.getItem(LIBRARY_KEY)||'[]')||[];}catch(_e){return [];}}
-  function saveLibrary(items){localStorage.setItem(LIBRARY_KEY,JSON.stringify(items));renderLibrary();}
-  function renderLibrary(){var node=id('material_library_select');if(!node)return;var previous=node.value;node.innerHTML='<option value="">Seleccionar...</option>';library().forEach(function(item,index){var option=document.createElement('option');option.value=String(index);option.textContent=item.name;node.appendChild(option);});node.value=previous;}
+  function saveLibrary(items){localStorage.setItem(LIBRARY_KEY,JSON.stringify(items));renderLibrary();refrescarPaletas();}
+  // Miniatura de color en el desplegable de biblioteca: el usuario pidió
+  // poder diferenciar visualmente los materiales guardados, así que cada
+  // <option> se pinta con su color real (más un color de texto con
+  // suficiente contraste, calculado por luminancia) en vez de mostrar solo
+  // el nombre. Se degrada sin errores en motores que no soportan pintar
+  // <option> (el texto sigue siendo legible igual).
+  function colorTextoContraste(hex){
+    var h=String(hex||'').replace('#','');
+    if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');
+    if(!/^[0-9a-fA-F]{6}$/.test(h))return '#000000';
+    var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+    return ((0.299*r+0.587*g+0.114*b)/255)>0.6?'#000000':'#ffffff';
+  }
+  function renderLibrary(){var node=id('material_library_select');if(!node)return;var previous=node.value;node.innerHTML='<option value="">Seleccionar...</option>';library().forEach(function(item,index){var option=document.createElement('option');option.value=String(index);option.textContent=item.name;if(item.color){option.style.backgroundColor=item.color;option.style.color=colorTextoContraste(item.color);}node.appendChild(option);});node.value=previous;}
+  // Paleta de "colores ya usados": el usuario pidió poder elegir entre los
+  // colores que ya subió/definió en vez de tener que volver a escribir o
+  // elegir el hex cada vez. Se juntan los colores realmente en uso (único
+  // global, cada grupo, cada override de pieza, cada material guardado en
+  // la biblioteca) más un puñado de neutros de referencia (BASE_PALETTE)
+  // para que la paleta nunca aparezca vacía en un módulo nuevo.
+  var BASE_PALETTE=['#ffffff','#000000','#8c8c8c','#d5a66e','#5a3d2b','#2f2f2f','#c9c2b6'];
+  function coloresUsados(){
+    var vistos={},lista=[];
+    function agregar(hex){
+      if(!hex)return;hex=String(hex).trim();
+      if(!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex))return;
+      var key=hex.toLowerCase();if(vistos[key])return;vistos[key]=true;lista.push(hex);
+    }
+    agregar(value('material_global_color',''));
+    groups.forEach(function(group){agregar(value('material_'+group+'_color',''));});
+    Object.keys(overrides).forEach(function(key){agregar(overrides[key]&&overrides[key].color);});
+    library().forEach(function(item){agregar(item&&item.color);});
+    BASE_PALETTE.forEach(agregar);
+    return lista;
+  }
+  // Inyecta (una sola vez por input) una fila de muestras de color clicables
+  // debajo de la fila que contiene el <input type=color>; cada click pone
+  // ese color en el input y dispara input+change para que el resto de
+  // listeners (preview, datosFormulario, etc.) reaccionen exactamente igual
+  // que si el usuario hubiera elegido el color a mano. Se cuelga la paleta
+  // DESPUÉS de la fila completa (".material-swatch-row"/".row"), no justo
+  // después del input: esas filas son un grid de 2 columnas (color+nombre)
+  // y meter la paleta como tercer hijo ahí dentro rompe el auto-placement
+  // del grid (el campo de nombre termina angosto).
+  function montarPaleta(inputId){
+    var input=id(inputId);if(!input)return;
+    var anchor=input.closest('.material-swatch-row')||input.closest('.row')||input.parentElement;
+    var paletteId=inputId+'_paleta',palette=id(paletteId);
+    if(!palette){palette=document.createElement('div');palette.id=paletteId;palette.className='color-palette';anchor.insertAdjacentElement('afterend',palette);}
+    // La paleta vive como hermana de la fila (no dentro, ver comentario de
+    // arriba), así que el motor de cascada -- que solo oculta la fila por su
+    // propio id (p.ej. #material_casco_swatch_row) -- nunca la toca a ella.
+    // Se copia a mano el display inline de la fila (o de la fila padre si
+    // esta es la anidada ".row") para que la paleta quede oculta exactamente
+    // cuando su fila lo está (p.ej. grupo sin "Material propio" activado).
+    palette.style.display=(anchor.style.display==='none')?'none':'';
+    var actual=String(input.value||'').toLowerCase();
+    palette.innerHTML='';
+    coloresUsados().forEach(function(hex){
+      var swatch=document.createElement('button');
+      swatch.type='button';swatch.className='color-palette-swatch'+(hex.toLowerCase()===actual?' active':'');
+      swatch.style.backgroundColor=hex;swatch.title=hex;swatch.setAttribute('aria-label','Usar color '+hex);
+      swatch.addEventListener('click',function(){
+        input.value=hex;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      palette.appendChild(swatch);
+    });
+  }
+  function refrescarPaletas(){
+    montarPaleta('material_global_color');
+    groups.forEach(function(group){montarPaleta('material_'+group+'_color');});
+    montarPaleta('material_piece_color');
+  }
   function previewTexture(source){var node=id('material_texture_preview');if(!node)return;var shown=textureDisplayUrl(source);node.textContent=source?'Vista del material':'Sin textura';node.style.backgroundImage=shown?'url("'+shown.replace(/"/g,'%22')+'")':'';}
   function previewAt(nodeId,source,emptyText){var node=id(nodeId);if(!node)return;var shown=textureDisplayUrl(source);node.textContent=source?'Vista de la textura':emptyText;node.style.backgroundImage=shown?'url("'+shown.replace(/"/g,'%22')+'")':'';}
   function imageFileToData(file,done,fail){if(!file)return;var reader=new FileReader();reader.onerror=function(){if(fail)fail('No se pudo leer la imagen.');};reader.onload=function(){var image=new Image();image.onerror=function(){if(fail)fail('Formato no compatible. Usa JPG, PNG, WebP, BMP o GIF.');};image.onload=function(){var scale=Math.min(1,1024/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);done(canvas.toDataURL('image/jpeg',.9));};image.src=reader.result;};reader.readAsDataURL(file);}
@@ -75,24 +149,27 @@
   // Activacion en cascada: los campos de textura/color de "material unico",
   // el swatch de cada grupo y el detalle de una pieza individual solo
   // aportan algo si esa opcion esta activada -- se ocultan el resto del
-  // tiempo para no amontonar la pestana con controles que no aplican.
-  function toggleCascadaMateriales(){
-    var unico=checked('material_unico')||checked('material_unico_materiales');
-    document.querySelectorAll('.material-unico-detalle').forEach(function(node){node.hidden=!unico;});
-    groups.forEach(function(group){
-      var swatch=id('material_'+group+'_custom');
-      var row=swatch&&swatch.closest('.material-group')?swatch.closest('.material-group').querySelector('.material-swatch-row'):null;
-      if(row)row.hidden=!checked('material_'+group+'_custom');
-    });
-    var pieceCustom=value('material_piece_custom','NO')==='SI';
-    var detalle=id('material_piece_detalle');
-    if(detalle)detalle.hidden=!pieceCustom;
-  }
+  // tiempo para no amontonar la pestana con controles que no aplican. Las
+  // condiciones viven como datos en el motor compartido
+  // (reglas_visibilidad.js): el swatch de cada grupo se registra en un
+  // bucle porque son 7 grupos con el mismo patrón (checkbox
+  // material_<grupo>_custom -> su propio .material-swatch-row).
+  if (window.Modular3DReglas) window.Modular3DReglas.registrar([
+    { selector: '.material-unico-detalle', cuando: { field: 'material_unico', test: 'checked' } },
+    { selector: '#material_piece_detalle', cuando: { field: 'material_piece_custom', test: 'equals', value: 'SI' } }
+  ].concat(groups.map(function (group) {
+    // Cada .material-swatch-row tiene su propio id "material_<grupo>_swatch_row"
+    // en interfaz.html (no se usa un selector relativo tipo :has(), para no
+    // depender de soporte reciente de CSS dentro del navegador embebido de
+    // SketchUp).
+    return { selector: '#material_' + group + '_swatch_row', cuando: { field: 'material_' + group + '_custom', test: 'checked' } };
+  })));
+  function toggleCascadaMateriales(){ if(window.Modular3DReglas) window.Modular3DReglas.aplicar(); }
   function selectDetail(detail){
     if(!detail)return;selectedDetail=detail;selectedKey=detail.materialKey||detail.pieceId;
     var current=overrides[selectedKey]||{},group=current.group||detail.materialGroup||'interior';
     id('material_piece_info').innerHTML='<b>'+String(detail.name||'Pieza')+'</b><br>'+String(detail.ownerSpaceId?'Pertenece al espacio '+detail.ownerSpaceId:'Pieza general del módulo');
-    id('material_piece_group').value=group;id('material_piece_custom').value=current.color||current.texture?'SI':'NO';id('material_piece_color').value=current.color||detail.materialColor||groupColor(group);id('material_piece_name').value=current.name||detail.materialName||'';id('material_piece_edge').value=current.edge||'INHERIT';id('material_piece_edge_color').value=current.edgeColor&&current.edgeColor!=='INHERIT'?'CUSTOM':'INHERIT';id('material_piece_edge_custom_color').value=current.edgeColor&&current.edgeColor!=='INHERIT'?current.edgeColor:(current.color||detail.materialColor||groupColor(group));pendingPieceTexture=current.texture||'';id('material_piece_texture_url').value=pendingPieceTexture&&!pendingPieceTexture.startsWith('data:')&&!pendingPieceTexture.startsWith('INCLUDED:')?pendingPieceTexture:'';if(id('material_piece_texture_included'))id('material_piece_texture_included').value=pendingPieceTexture.indexOf('INCLUDED:')===0?pendingPieceTexture.slice('INCLUDED:'.length):'';id('material_piece_rotation').value=current.rotation==null?'INHERIT':String(current.rotation);previewAt('material_piece_texture_preview',pendingPieceTexture,'Heredar textura');toggleCascadaMateriales();
+    id('material_piece_group').value=group;id('material_piece_custom').value=current.color||current.texture?'SI':'NO';id('material_piece_color').value=current.color||detail.materialColor||groupColor(group);id('material_piece_name').value=current.name||detail.materialName||'';id('material_piece_edge').value=current.edge||'INHERIT';id('material_piece_edge_color').value=current.edgeColor&&current.edgeColor!=='INHERIT'?'CUSTOM':'INHERIT';id('material_piece_edge_custom_color').value=current.edgeColor&&current.edgeColor!=='INHERIT'?current.edgeColor:(current.color||detail.materialColor||groupColor(group));pendingPieceTexture=current.texture||'';id('material_piece_texture_url').value=pendingPieceTexture&&!pendingPieceTexture.startsWith('data:')&&!pendingPieceTexture.startsWith('INCLUDED:')?pendingPieceTexture:'';if(id('material_piece_texture_included'))id('material_piece_texture_included').value=pendingPieceTexture.indexOf('INCLUDED:')===0?pendingPieceTexture.slice('INCLUDED:'.length):'';id('material_piece_rotation').value=current.rotation==null?'INHERIT':String(current.rotation);previewAt('material_piece_texture_preview',pendingPieceTexture,'Heredar textura');toggleCascadaMateriales();montarPaleta('material_piece_color');
     var sizing=dimensionOverrides[selectedKey]||{};
     if(id('material_piece_oversize_ancho'))id('material_piece_oversize_ancho').value=sizing.delta_ancho||0;
     if(id('material_piece_oversize_prof'))id('material_piece_oversize_prof').value=sizing.delta_prof||0;
@@ -109,6 +186,7 @@
   }
   function refresh(){
     if(window.actualizarVista)window.actualizarVista();
+    refrescarPaletas();
     setTimeout(function(){renderList();if(selectedKey&&window.Modular3DView)window.Modular3DView.selectPieceByKey(selectedKey);renderSummary();},30);
   }
   function renderSummary(){
@@ -134,11 +212,14 @@
     groups.forEach(function(group){['color','nombre'].forEach(function(field){var node=id('material_'+group+'_'+field);if(node)node.addEventListener('input',function(){if(checked('material_unico'))id('material_'+group+'_custom').checked=true;refresh();});});var custom=id('material_'+group+'_custom');if(custom)custom.addEventListener('change',function(){toggleCascadaMateriales();refresh();});});
     id('material_piece_search').addEventListener('input',renderList);id('material_piece_apply').addEventListener('click',applySelected);id('material_piece_clear').addEventListener('click',clearSelected);
     id('material_piece_custom').addEventListener('change',toggleCascadaMateriales);
-    function syncGlobal(fromMaterials){var enabled=fromMaterials?checked('material_unico_materiales'):checked('material_unico'),color=value(fromMaterials?'material_global_color_materiales':'material_global_color','#ffffff'),name=value(fromMaterials?'material_global_nombre_materiales':'material_global_nombre','Blanco');id('material_unico').checked=enabled;id('material_unico_materiales').checked=enabled;id('material_global_color').value=color;id('material_global_color_materiales').value=color;id('material_global_nombre').value=name;id('material_global_nombre_materiales').value=name;toggleCascadaMateriales();refresh();}
-    ['material_unico','material_global_color','material_global_nombre'].forEach(function(key){id(key).addEventListener(key==='material_unico'?'change':'input',function(){syncGlobal(false);});});
-    ['material_unico_materiales','material_global_color_materiales','material_global_nombre_materiales'].forEach(function(key){id(key).addEventListener(key==='material_unico_materiales'?'change':'input',function(){syncGlobal(true);});});
+    // v6.1.0 -- "Material único" vivía duplicado (un juego completo de
+    // campos en "1 Medidas" y una copia simplificada en "4 Materiales",
+    // sincronizados a mano por un lambda aparte). Se organizó todo lo de
+    // materiales en un solo lugar ("4 Materiales"), así que ahora hay una
+    // sola copia real y no hace falta sincronizar nada.
+    ['material_unico','material_global_color','material_global_nombre'].forEach(function(key){id(key).addEventListener(key==='material_unico'?'change':'input',function(){toggleCascadaMateriales();refresh();});});
     id('material_clear_overrides').addEventListener('click',function(){if(confirm('¿Eliminar todas las excepciones individuales de material?')){overrides={};refresh();}});
-    function syncGlobalPreview(){var source=textures.global||'';previewAt('material_global_preview',source,'Color sólido');previewAt('material_global_preview_materiales',source,'Color sólido');}
+    function syncGlobalPreview(){previewAt('material_global_preview',textures.global||'','Color sólido');}
     if(id('material_texture_included'))fillIncludedSelect(id('material_texture_included'));
     id('material_texture_group').addEventListener('change',function(){pendingTexture=textures[this.value]||'';var meta=textureMeta[this.value]||{};id('material_texture_url').value=(pendingTexture.indexOf('data:')===0||pendingTexture.indexOf('INCLUDED:')===0)?'':pendingTexture;if(id('material_texture_included'))id('material_texture_included').value=pendingTexture.indexOf('INCLUDED:')===0?pendingTexture.slice('INCLUDED:'.length):'';id('material_texture_scale').value=meta.scale||600;id('material_texture_rotation').value=String(meta.rotation||0);previewTexture(pendingTexture);});
     id('material_texture_url').addEventListener('input',function(){pendingTexture=this.value.trim();if(id('material_texture_included'))id('material_texture_included').value='';previewTexture(pendingTexture);});
@@ -147,23 +228,22 @@
     id('material_texture_apply').addEventListener('click',function(){var group=value('material_texture_group','casco');if(pendingTexture)textures[group]=pendingTexture;textureMeta[group]={scale:Number(value('material_texture_scale',600))||600,rotation:Number(value('material_texture_rotation',0))||0};if(group==='global')syncGlobalPreview();refresh();});
     id('material_texture_clear').addEventListener('click',function(){var group=value('material_texture_group','casco');delete textures[group];pendingTexture='';id('material_texture_url').value='';previewTexture('');if(group==='global')syncGlobalPreview();refresh();});
     id('material_library_save').addEventListener('click',function(){var group=value('material_texture_group','global'),name=group==='global'?value('material_global_nombre','Material'):value('material_'+group+'_nombre','Material'),color=group==='global'?value('material_global_color','#ffffff'):groupColor(group),items=library();name=name.trim()||'Material';items.push({name:name,color:color,texture:textures[group]||pendingTexture||'',scale:Number(value('material_texture_scale',600))||600,rotation:Number(value('material_texture_rotation',0))||0});saveLibrary(items);});
-    id('material_library_use').addEventListener('click',function(){var index=parseInt(value('material_library_select',''),10),item=library()[index];if(!item)return;var group=value('material_texture_group','global');if(group==='global'){id('material_global_nombre').value=item.name;id('material_global_nombre_materiales').value=item.name;id('material_global_color').value=item.color;id('material_global_color_materiales').value=item.color;}else{id('material_'+group+'_nombre').value=item.name;id('material_'+group+'_color').value=item.color;}textures[group]=item.texture||'';textureMeta[group]={scale:item.scale||600,rotation:item.rotation||0};pendingTexture=textures[group];id('material_texture_scale').value=textureMeta[group].scale;id('material_texture_rotation').value=String(textureMeta[group].rotation);previewTexture(pendingTexture);syncGlobalPreview();refresh();});
+    id('material_library_use').addEventListener('click',function(){var index=parseInt(value('material_library_select',''),10),item=library()[index];if(!item)return;var group=value('material_texture_group','global');if(group==='global'){id('material_global_nombre').value=item.name;id('material_global_color').value=item.color;}else{id('material_'+group+'_nombre').value=item.name;id('material_'+group+'_color').value=item.color;}textures[group]=item.texture||'';textureMeta[group]={scale:item.scale||600,rotation:item.rotation||0};pendingTexture=textures[group];id('material_texture_scale').value=textureMeta[group].scale;id('material_texture_rotation').value=String(textureMeta[group].rotation);previewTexture(pendingTexture);syncGlobalPreview();refresh();});
     id('material_global_file').addEventListener('change',function(){imageFileToData(this.files&&this.files[0],function(data){textures.global=data;id('material_global_source').value='FILE';syncGlobalPreview();refresh();},function(message){alert(message);});});
     id('material_global_url').addEventListener('change',function(){var source=this.value.trim();if(source){textures.global=source;id('material_global_source').value='URL';syncGlobalPreview();refresh();}});
     id('material_global_source').addEventListener('change',function(){if(this.value==='COLOR'){delete textures.global;syncGlobalPreview();refresh();}else if(this.value==='FILE'){id('material_global_file').click();}else if(this.value==='URL'){id('material_global_url').focus();}else if(this.value==='LIBRARY'){id('material_texture_group').value='global';id('material_library').scrollIntoView({behavior:'smooth',block:'center'});}else if(this.value==='INCLUDED'){id('material_texture_group').value='global';if(id('material_texture_included'))id('material_texture_included').scrollIntoView({behavior:'smooth',block:'center'});}});
     id('material_global_scale').addEventListener('input',function(){textureMeta.global=textureMeta.global||{};textureMeta.global.scale=Number(this.value)||600;refresh();});id('material_global_rotation').addEventListener('change',function(){textureMeta.global=textureMeta.global||{};textureMeta.global.rotation=Number(this.value)||0;refresh();});
-    id('material_global_choose_file').addEventListener('click',function(){id('material_global_file').click();});id('material_global_use_url').addEventListener('click',function(){var source=id('material_global_url').value.trim();if(!source){source=prompt('Pega el enlace directo JPG, PNG o WebP:','')||'';id('material_global_url').value=source;}if(source){textures.global=source;id('material_global_source').value='URL';syncGlobalPreview();refresh();}});id('material_global_clear_texture').addEventListener('click',function(){delete textures.global;id('material_global_source').value='COLOR';syncGlobalPreview();refresh();});
     id('material_piece_texture_url').addEventListener('change',function(){pendingPieceTexture=this.value.trim();if(id('material_piece_texture_included'))id('material_piece_texture_included').value='';previewAt('material_piece_texture_preview',pendingPieceTexture,'Heredar textura');});id('material_piece_texture_file').addEventListener('change',function(){imageFileToData(this.files&&this.files[0],function(data){pendingPieceTexture=data;if(id('material_piece_texture_included'))id('material_piece_texture_included').value='';previewAt('material_piece_texture_preview',data,'Heredar textura');},function(message){alert(message);});});
     if(id('material_piece_texture_included')){fillIncludedSelect(id('material_piece_texture_included'));id('material_piece_texture_included').addEventListener('change',function(){if(!this.value)return;var tex=includedTexture(this.value);if(!tex)return;pendingPieceTexture='INCLUDED:'+tex.id;id('material_piece_texture_url').value='';previewAt('material_piece_texture_preview',pendingPieceTexture,'Heredar textura');});}
     id('material_library_delete').addEventListener('click',function(){var index=parseInt(value('material_library_select',''),10),items=library();if(!items[index])return;items.splice(index,1);saveLibrary(items);});
     window.addEventListener('modular3d:pieceSelected',function(event){selectDetail(event.detail||{});});
     window.addEventListener('modular3d:pageShown',function(event){if(event.detail&&event.detail.id==='diseno')setTimeout(function(){renderList();renderSummary();},30);});
-    var oldLoad=window.Modular3DLoadInitial;window.Modular3DLoadInitial=function(data){oldLoad(data);groups.forEach(function(group){['color','nombre'].forEach(function(field){var node=id('material_'+group+'_'+field),key='material_'+group+'_'+field;if(node&&data[key])node.value=data[key];});});id('material_unico').checked=data.material_unico==='SI';id('material_global_color').value=data.material_global_color||'#ffffff';id('material_global_nombre').value=data.material_global_nombre||'Blanco';id('material_unico_materiales').checked=id('material_unico').checked;id('material_global_color_materiales').value=id('material_global_color').value;id('material_global_nombre_materiales').value=id('material_global_nombre').value;try{overrides=typeof data.material_overrides_json==='string'?JSON.parse(data.material_overrides_json):data.material_overrides_json||{};}catch(_e){overrides={};}try{dimensionOverrides=typeof data.dimension_overrides_json==='string'?JSON.parse(data.dimension_overrides_json):data.dimension_overrides_json||{};}catch(_d){dimensionOverrides={};}try{miterOverrides=typeof data.miter_overrides_json==='string'?JSON.parse(data.miter_overrides_json):data.miter_overrides_json||{};}catch(_mo){miterOverrides={};}try{textures=typeof data.material_textures_json==='string'?JSON.parse(data.material_textures_json):data.material_textures_json||{};}catch(_t){textures={};}try{textureMeta=typeof data.material_texture_meta_json==='string'?JSON.parse(data.material_texture_meta_json):data.material_texture_meta_json||{};}catch(_m){textureMeta={};}pendingTexture=textures[value('material_texture_group','casco')]||'';id('material_global_source').value=!textures.global?'COLOR':(String(textures.global).indexOf('https://')===0?'URL':(String(textures.global).indexOf('INCLUDED:')===0?'INCLUDED':'FILE'));id('material_global_url').value=id('material_global_source').value==='URL'?textures.global:'';if(id('material_texture_included'))id('material_texture_included').value=pendingTexture.indexOf('INCLUDED:')===0?pendingTexture.slice('INCLUDED:'.length):'';id('material_global_scale').value=(textureMeta.global&&textureMeta.global.scale)||600;id('material_global_rotation').value=String((textureMeta.global&&textureMeta.global.rotation)||0);syncGlobalPreview();previewTexture(pendingTexture);refresh();};
+    var oldLoad=window.Modular3DLoadInitial;window.Modular3DLoadInitial=function(data){oldLoad(data);groups.forEach(function(group){['color','nombre'].forEach(function(field){var node=id('material_'+group+'_'+field),key='material_'+group+'_'+field;if(node&&data[key])node.value=data[key];});});id('material_unico').checked=data.material_unico==='SI';id('material_global_color').value=data.material_global_color||'#ffffff';id('material_global_nombre').value=data.material_global_nombre||'Blanco';try{overrides=typeof data.material_overrides_json==='string'?JSON.parse(data.material_overrides_json):data.material_overrides_json||{};}catch(_e){overrides={};}try{dimensionOverrides=typeof data.dimension_overrides_json==='string'?JSON.parse(data.dimension_overrides_json):data.dimension_overrides_json||{};}catch(_d){dimensionOverrides={};}try{miterOverrides=typeof data.miter_overrides_json==='string'?JSON.parse(data.miter_overrides_json):data.miter_overrides_json||{};}catch(_mo){miterOverrides={};}try{textures=typeof data.material_textures_json==='string'?JSON.parse(data.material_textures_json):data.material_textures_json||{};}catch(_t){textures={};}try{textureMeta=typeof data.material_texture_meta_json==='string'?JSON.parse(data.material_texture_meta_json):data.material_texture_meta_json||{};}catch(_m){textureMeta={};}pendingTexture=textures[value('material_texture_group','casco')]||'';id('material_global_source').value=!textures.global?'COLOR':(String(textures.global).indexOf('https://')===0?'URL':(String(textures.global).indexOf('INCLUDED:')===0?'INCLUDED':'FILE'));id('material_global_url').value=id('material_global_source').value==='URL'?textures.global:'';if(id('material_texture_included'))id('material_texture_included').value=pendingTexture.indexOf('INCLUDED:')===0?pendingTexture.slice('INCLUDED:'.length):'';id('material_global_scale').value=(textureMeta.global&&textureMeta.global.scale)||600;id('material_global_rotation').value=String((textureMeta.global&&textureMeta.global.rotation)||0);syncGlobalPreview();previewTexture(pendingTexture);refresh();};
     var materialLoadWithGroups=window.Modular3DLoadInitial;
     window.Modular3DLoadInitial=function(data){materialLoadWithGroups(data);groups.forEach(function(group){var custom=id('material_'+group+'_custom');if(custom)custom.checked=data['material_'+group+'_custom']==='SI';});refresh();};
     if(window.__modular3dInitial)window.Modular3DLoadInitial(window.__modular3dInitial);
     toggleCascadaMateriales();
-    setTimeout(function(){renderList();renderSummary();renderLibrary();},80);
+    setTimeout(function(){renderList();renderSummary();renderLibrary();refrescarPaletas();},80);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(bind,0);});else setTimeout(bind,0);
 }());

@@ -178,9 +178,19 @@
         var category = panel[0] === 'superior' ? 'top' : (panel[0] === 'inferior' ? 'horizontal' : 'lateral');
         var esLateral = panel[0] === 'izq' || panel[0] === 'der';
         var opcionesInglete = esLateral ? '<option value="INGLETE_SUPERIOR">Inglete 45° (con techo)</option><option value="INGLETE_INFERIOR">Inglete 45° (con base)</option>' : '';
+        // v6.0.1 -- corregido: "2 travesaños" como alternativa al panel
+        // completo del casco general es EXCLUSIVO de la tapa superior (a
+        // pedido explícito del usuario). La versión anterior lo ofrecía
+        // también en BASE INFERIOR por simetría con la tapa superior, pero
+        // la base siempre debe construirse como panel completo.
+        var bloqueTravesano = panel[0] === 'superior' ?
+          '<div class="row"><label>Tipo de cierre</label><select id="tipo_' + panel[0] + '"><option value="FULL">Panel completo</option><option value="TRAVESANOS">2 travesaños</option></select></div>' +
+          '<div class="row campo-travesano-' + panel[0] + '"><label>Ancho travesaño (mm)</label><input type="number" id="travesano_ancho_' + panel[0] + '" value="70" min="20" step="1"></div>'
+          : '';
         return '<div class="panel-card" data-editor-card="' + panel[0] + '" data-editor-category="' + category + '"><h3>' + panel[1] + '</h3>' +
           '<div class="row"><label>Construccion</label><select id="montaje_' + panel[0] + '"><option value="INTERIOR"' + ((panel[0] === 'superior' || panel[0] === 'inferior') ? ' selected' : '') + '>Montaje interior</option><option value="EXTERIOR"' + (esLateral ? ' selected' : '') + '>Sobrepuesto exterior</option>' + opcionesInglete + '</select></div>' +
           '<div class="row"><label>Grosor (mm)</label><input type="number" class="grosor-panel" id="grosor_' + panel[0] + '" value="' + thickness + '" min="3"></div>' +
+          bloqueTravesano +
           '<div class="row"><label>Sobremedida delantera (mm)</label><input type="number" id="sobremedida_frontal_' + panel[0] + '" value="0" step=".5"></div>' +
           '<div class="row"><label>Sobremedida trasera (mm)</label><input type="number" id="sobremedida_trasera_' + panel[0] + '" value="0" step=".5"></div>' +
           '<small>Positivo = agranda este panel hacia ese lado (sobresale). Negativo = lo achica (se retranquea hacia adentro). Fondo resultante = fondo total + sobremedida delantera + sobremedida trasera.</small>' +
@@ -290,15 +300,16 @@
     }
     // Activación en cascada: si el respaldo/ajuste está apagado, sus campos
     // de detalle no aportan nada y solo amontonan la pantalla -- se ocultan
-    // hasta que la opción que los habilita esté encendida.
-    function toggleCascadaCasco() {
-      var hayRespaldo = el('lleva_respaldo') && el('lleva_respaldo').value !== 'NO';
-      document.querySelectorAll('.casco-respaldo-detalle').forEach(function(row) { row.style.display = hayRespaldo ? '' : 'none'; });
-      var hayAjustePost = el('cantidad_ajustes') && el('cantidad_ajustes').value !== '0';
-      document.querySelectorAll('.casco-ajuste-post').forEach(function(row) { row.style.display = hayAjustePost ? '' : 'none'; });
-      var hayAjusteFront = el('ajuste_frontal_activo') && el('ajuste_frontal_activo').value === 'SI';
-      document.querySelectorAll('.casco-ajuste-front').forEach(function(row) { row.style.display = hayAjusteFront ? '' : 'none'; });
-    }
+    // hasta que la opción que los habilita esté encendida. Las condiciones
+    // viven como datos en el motor compartido (reglas_visibilidad.js), no
+    // como código imperativo propio de esta pestaña.
+    if (window.Modular3DReglas) window.Modular3DReglas.registrar([
+      { selector: '.casco-respaldo-detalle', cuando: { field: 'lleva_respaldo', test: 'notEquals', value: 'NO' } },
+      { selector: '.casco-ajuste-post', cuando: { field: 'cantidad_ajustes', test: 'notEquals', value: '0' } },
+      { selector: '.casco-ajuste-front', cuando: { field: 'ajuste_frontal_activo', test: 'equals', value: 'SI' } },
+      { selector: '.campo-travesano-superior', cuando: { field: 'tipo_superior', test: 'equals', value: 'TRAVESANOS' } }
+    ]);
+    function toggleCascadaCasco() { if (window.Modular3DReglas) window.Modular3DReglas.aplicar(); }
     function setCajonesNichos(valores, tipos) {
       actualizarNichos();
       document.querySelectorAll('.cajones-nicho').forEach(function(campo, i) { campo.value = valores[i] || 0; });
@@ -372,6 +383,15 @@
         }
       });
       el('btn_actualizar_modulo').classList.toggle('show', editMode);
+      // El módulo cargado ya trae su propio parametro_diseno_id (o
+      // "ESTANDAR" si es viejo, vía migrar_manifiesto): re-aplica sus
+      // huelgos para que, si se agregan espacios NUEVOS durante esta
+      // edición, hereden el mismo Parámetro de Diseño que el módulo ya
+      // tenía guardado, en vez de quedar con el default de una sesión
+      // anterior. La función se define más abajo en este mismo archivo,
+      // pero ya existe para cuando Modular3DLoadInitial se llama (el
+      // motor de carga se ejecuta después de definir todo).
+      if (typeof aplicarParametroDiseno === 'function') aplicarParametroDiseno();
       actualizarNichos();
       if (datos.cajones_por_nicho) setCajonesNichos(String(datos.cajones_por_nicho).split(',').map(function(v) { return parseInt(v, 10) || 0; }), datos.tipos_cajon_por_nicho ? String(datos.tipos_cajon_por_nicho).split(',') : null);
       spaceState = {};
@@ -519,9 +539,46 @@
         host.className = 'retranqueo-result' + (estado === 'ok' ? '' : ' ' + estado);
       });
     }
+    // v6 §Fase A: aviso en vivo (antes de construir) de que una puerta
+    // solapada va a salir mas adelante que su grosor normal porque algun
+    // panel vecino (casco general o el espacio seleccionado) tiene
+    // sobremedida frontal mayor. Espeja el mismo criterio "gana el mayor"
+    // que aplica core/jerarquia.rb#calcular_protrusion_puerta al construir;
+    // no detecta aqui si el panel realmente toca esta puerta en particular
+    // (esa comprobacion geometrica exacta solo la hace Ruby) -- es un aviso
+    // deliberadamente conservador, pensado para que nada se le escape al
+    // usuario antes de construir, no una repeticion exacta del calculo real.
+    function actualizarAvisoProtrusionPuerta(d) {
+      var host = el('puerta_protrusion_aviso');
+      if (!host) return;
+      var grosorPuerta = Math.max(3, Number(d.puerta_grosor) || 15);
+      var candidatos = [grosorPuerta];
+      if (d.lleva_lateral_izq !== 'NO') candidatos.push(Number(d.sobremedida_frontal_izq) || 0);
+      if (d.lleva_lateral_der !== 'NO') candidatos.push(Number(d.sobremedida_frontal_der) || 0);
+      if (d.lleva_base !== 'NO') candidatos.push(Number(d.sobremedida_frontal_inferior) || 0);
+      if (d.lleva_techo !== 'NO') candidatos.push(Number(d.sobremedida_frontal_superior) || 0);
+      if (d.h_left === 'SI') candidatos.push(Number(d.h_sob_frontal_izq) || 0);
+      if (d.h_right === 'SI') candidatos.push(Number(d.h_sob_frontal_der) || 0);
+      if (d.h_bottom === 'SI') candidatos.push(Number(d.h_sob_frontal_inferior) || 0);
+      if (d.h_top === 'SI' && d.h_top_mode !== 'TRAVESANOS') candidatos.push(Number(d.h_sob_frontal_superior) || 0);
+      var override = isFinite(d.puerta_protrusion_override_mm) ? Math.max(0, d.puerta_protrusion_override_mm) : null;
+      var efectivo = override != null ? override : Math.max.apply(Math, candidatos);
+      var modo = d.puerta_protrusion_modo || 'AUTOMATICO';
+      if (override != null) {
+        host.textContent = 'Salida forzada: todas las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm.';
+        host.className = 'hint-text';
+      } else if (modo === 'AVISAR' && efectivo > grosorPuerta + 0.5) {
+        host.textContent = 'Aviso: hay un panel con sobremedida mayor que el grosor de puerta (' + Math.round(grosorPuerta) + ' mm). Las puertas solapadas que lo toquen saldrán ' + Math.round(efectivo) + ' mm para quedar al ras. Podés forzar otro valor arriba si no es lo que querés.';
+        host.className = 'hint-text warn';
+      } else {
+        host.textContent = '';
+        host.className = 'hint-text';
+      }
+    }
     function actualizarVista() {
       var d = datosFormulario();
       actualizarResultadoRetranqueos(d);
+      actualizarAvisoProtrusionPuerta(d);
       var ancho = Math.max(0, d.ancho_total - d.grosor_izq - d.grosor_der);
       var alto = Math.max(0, d.alto_total - d.grosor_superior - d.grosor_inferior);
       var cajones = d.cajones_por_nicho.split(',').reduce(function(s, n) { return s + parseInt(n || 0, 10); }, 0);
@@ -580,6 +637,18 @@
         status.textContent = 'Revision final';
         return;
       }
+      // "5 Catálogo" es una pestaña propia, fuera de la secuencia de 4 pasos
+      // (se llega a ella con su propio botón de la barra de arriba, no con
+      // Anterior/Siguiente) -- se desactivan ambos botones para no sugerir
+      // un orden que no existe, en vez de dejar "Paso 1 de 4" desactualizado.
+      if (id === 'catalogo') {
+        prev.disabled = true;
+        next.disabled = true;
+        next.textContent = 'Siguiente';
+        status.textContent = 'Catálogo Global de Tipos de Módulo';
+        return;
+      }
+      next.disabled = false;
       var index = stepPages.indexOf(id || 'inicial');
       if (index < 0) index = currentStepIndex();
       prev.disabled = index <= 0;
@@ -652,6 +721,140 @@
     }
     el('modulo_plantilla').addEventListener('change', aplicarPlantillaSeleccionada);
 
+    // --- Parámetros de Diseño (§3): mismo patrón que Plantilla, pero solo
+    // toca huelgos/fugas/solapes de frente (no medidas del casco) y avisa al
+    // configurador jerárquico (hierarchical_config.js) para que los use como
+    // punto de partida de los espacios NUEVOS que se creen de aquí en más --
+    // nunca reescribe espacios que ya existen.
+    var parametrosDisenoDisponibles = [];
+    function mensajeParametroDiseno(texto, esError) {
+      var el2 = el('parametro_diseno_mensaje');
+      if (!el2) return;
+      el2.textContent = texto || '';
+      el2.className = 'hint-text' + (esError ? ' error' : '');
+    }
+    window.Modular3DApplyParametrosDisenoList = function(lista) {
+      parametrosDisenoDisponibles = Array.isArray(lista) ? lista : [];
+      var select = el('parametro_diseno_id');
+      if (!select) return;
+      var actual = select.value || 'ESTANDAR';
+      select.innerHTML = '';
+      parametrosDisenoDisponibles.forEach(function(item) {
+        var option = document.createElement('option');
+        option.value = item.parametro_id;
+        option.textContent = item.nombre || item.parametro_id;
+        select.appendChild(option);
+      });
+      if (parametrosDisenoDisponibles.some(function(item) { return item.parametro_id === actual; })) select.value = actual;
+    };
+    if (window.__modular3dParametrosDiseno) window.Modular3DApplyParametrosDisenoList(window.__modular3dParametrosDiseno);
+    function aplicarParametroDiseno() {
+      var select = el('parametro_diseno_id');
+      if (!select) return;
+      var parametro = parametrosDisenoDisponibles.filter(function(item) { return item.parametro_id === select.value; })[0];
+      if (!parametro) return;
+      if (el('juego_general')) {
+        el('juego_general').value = parametro.juego_general;
+        el('juego_general').dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (window.Modular3DSetHuelgosDefault) {
+        window.Modular3DSetHuelgosDefault({
+          frontJoint: parametro.front_joint, gap: parametro.gap, gapCenter: parametro.gap_center, drawerGap: parametro.drawer_gap,
+          overlayLeft: parametro.overlay_left, overlayRight: parametro.overlay_right, overlayTop: parametro.overlay_top, overlayBottom: parametro.overlay_bottom
+        });
+      }
+      actualizarVista();
+    }
+    if (el('parametro_diseno_id')) el('parametro_diseno_id').addEventListener('change', aplicarParametroDiseno);
+    if (el('btn_guardar_parametro_diseno')) el('btn_guardar_parametro_diseno').addEventListener('click', function() {
+      var nombre = window.prompt('Nombre del nuevo Parámetro de Diseño:', '');
+      if (nombre === null || !nombre.trim()) return;
+      if (!window.sketchup || !sketchup.parametroDisenoGuardar) { mensajeParametroDiseno('Esta acción debe abrirse dentro de SketchUp.', true); return; }
+      var huelgos = (window.Modular3DGetHuelgosActuales && window.Modular3DGetHuelgosActuales()) || {};
+      sketchup.parametroDisenoGuardar({
+        nombre: nombre.trim(),
+        juego_general: numero('juego_general', 2),
+        front_joint: huelgos.frontJoint, gap: huelgos.gap, gap_center: huelgos.gapCenter, drawer_gap: huelgos.drawerGap,
+        overlay_left: huelgos.overlayLeft, overlay_right: huelgos.overlayRight, overlay_top: huelgos.overlayTop, overlay_bottom: huelgos.overlayBottom
+      });
+    });
+    window.Modular3DParametroDisenoResult = function(resultado) {
+      mensajeParametroDiseno(resultado && resultado.message, !(resultado && resultado.ok));
+      if (resultado && resultado.ok && resultado.lista) {
+        window.Modular3DApplyParametrosDisenoList(resultado.lista);
+        if (resultado.parametro && el('parametro_diseno_id')) { el('parametro_diseno_id').value = resultado.parametro.parametro_id; aplicarParametroDiseno(); }
+      }
+    };
+
+    // --- Reglas de Construcción (Fase C, v6): mismo patrón que Parámetros
+    // de Diseño, pero sobre el casco general (montaje_izq/der/superior/
+    // inferior + tipo_superior + travesano_ancho_superior -- "2 travesaños"
+    // es exclusivo de la tapa superior, la base siempre es panel completo)
+    // en vez de huelgos. A diferencia de Parámetro de Diseño,
+    // "Aplicar" sí reescribe campos ya existentes del casco (no solo
+    // espacios nuevos), porque una Regla de Construcción describe
+    // explícitamente esa combinación completa.
+    var reglasConstruccionDisponibles = [];
+    function mensajeReglaConstruccion(texto, esError) {
+      var el2 = el('regla_construccion_mensaje');
+      if (!el2) return;
+      el2.textContent = texto || '';
+      el2.className = 'hint-text' + (esError ? ' error' : '');
+    }
+    window.Modular3DApplyReglasConstruccionList = function(lista) {
+      reglasConstruccionDisponibles = Array.isArray(lista) ? lista : [];
+      var select = el('regla_construccion_id');
+      if (!select) return;
+      var actual = select.value || 'ESTANDAR';
+      select.innerHTML = '';
+      reglasConstruccionDisponibles.forEach(function(item) {
+        var option = document.createElement('option');
+        option.value = item.regla_id;
+        option.textContent = item.nombre || item.regla_id;
+        select.appendChild(option);
+      });
+      if (reglasConstruccionDisponibles.some(function(item) { return item.regla_id === actual; })) select.value = actual;
+    };
+    if (window.__modular3dReglasConstruccion) window.Modular3DApplyReglasConstruccionList(window.__modular3dReglasConstruccion);
+    function aplicarReglaConstruccion() {
+      var select = el('regla_construccion_id');
+      if (!select) return;
+      var regla = reglasConstruccionDisponibles.filter(function(item) { return item.regla_id === select.value; })[0];
+      if (!regla) return;
+      ['montaje_izq', 'montaje_der', 'montaje_superior', 'montaje_inferior', 'tipo_superior', 'travesano_ancho_superior'].forEach(function(campo) {
+        if (el(campo) && regla[campo] !== undefined && regla[campo] !== null) {
+          el(campo).value = regla[campo];
+          el(campo).dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      actualizarVista();
+    }
+    if (el('btn_aplicar_regla_construccion')) el('btn_aplicar_regla_construccion').addEventListener('click', function() {
+      aplicarReglaConstruccion();
+      mensajeReglaConstruccion('Regla de Construcción aplicada al casco general.', false);
+    });
+    if (el('btn_guardar_regla_construccion')) el('btn_guardar_regla_construccion').addEventListener('click', function() {
+      var nombre = window.prompt('Nombre de la nueva Regla de Construcción:', '');
+      if (nombre === null || !nombre.trim()) return;
+      if (!window.sketchup || !sketchup.reglaConstruccionGuardar) { mensajeReglaConstruccion('Esta acción debe abrirse dentro de SketchUp.', true); return; }
+      sketchup.reglaConstruccionGuardar({
+        nombre: nombre.trim(),
+        montaje_izq: el('montaje_izq') ? el('montaje_izq').value : undefined,
+        montaje_der: el('montaje_der') ? el('montaje_der').value : undefined,
+        montaje_superior: el('montaje_superior') ? el('montaje_superior').value : undefined,
+        montaje_inferior: el('montaje_inferior') ? el('montaje_inferior').value : undefined,
+        tipo_superior: el('tipo_superior') ? el('tipo_superior').value : undefined,
+        travesano_ancho_superior: numero('travesano_ancho_superior', 70)
+      });
+    });
+    window.Modular3DReglaConstruccionResult = function(resultado) {
+      mensajeReglaConstruccion(resultado && resultado.message, !(resultado && resultado.ok));
+      if (resultado && resultado.ok && resultado.lista) {
+        window.Modular3DApplyReglasConstruccionList(resultado.lista);
+        if (resultado.regla && el('regla_construccion_id')) el('regla_construccion_id').value = resultado.regla.regla_id;
+      }
+    };
+
     crearPaneles();
     actualizarNichos();
     sincronizarReglasRespaldo();
@@ -676,7 +879,7 @@
       markManualThickness(event.target.id || '');
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
-      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo') sincronizarReglasRespaldo();
+      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo' || event.target.id === 'tipo_superior') sincronizarReglasRespaldo();
       // Laterales (izq/der) y horizontales (superior/inferior) nunca pueden
       // llegar los dos "de punta a punta" a la misma esquina: cada uno es
       // una sola pieza de punta a punta, asi que si uno abraza la esquina por

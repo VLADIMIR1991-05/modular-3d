@@ -40,7 +40,7 @@
       </div>
       <button type="button" id="license_logout">Cerrar sesion</button>
     </div>
-    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v4.9.0</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.2.0</div>
   </header>
 
   <main>
@@ -50,6 +50,7 @@
         <button class="tab" data-page="paneles" data-help="Edita tapa, base, laterales, respaldo y ajustes posteriores. Selecciona una pieza en 3D para abrirla.">2 Casco</button>
         <button class="tab" data-page="interior" data-help="Divide espacios en X, Y o Z; añade piezas, repisas, cajones y puertas internas o externas.">3 Configuración</button>
         <button class="tab" data-page="diseno" data-help="Asigna materiales por grupo y sobrescribe cualquier pieza individual antes de construir.">4 Materiales</button>
+        <button class="tab" data-page="catalogo" data-help="Inserta Tipos de Módulo estándar compartidos por todos los usuarios con licencia, o guarda el módulo actual para el resto del equipo.">5 Catálogo</button>
       </nav>
 
       <div id="inicial" class="page active">
@@ -68,9 +69,12 @@
           <small>Intercambia anchura y altura exteriores. Útil para pasar de un módulo horizontal (bajo, cajonera) a uno vertical (torre, columna) o viceversa antes de configurar el interior. Si ya dividiste espacios en Configuración, revísalos después de girar.</small>
           <div class="row"><label for="espesor">Espesor general (mm)</label><input type="number" id="espesor" value="15" min="3"></div>
           <div class="row"><label for="juego_general">Juego general de frentes (mm)</label><input type="number" id="juego_general" value="2" min="0" step=".5"></div>
+          <div class="row"><label for="parametro_diseno_id">Parámetro de diseño</label><select id="parametro_diseno_id"><option value="ESTANDAR">Estándar (valores actuales del plugin)</option></select></div>
+          <div class="tool-row"><button type="button" class="secondary" id="btn_guardar_parametro_diseno">Guardar huelgos actuales como Parámetro de diseño...</button></div>
+          <div id="parametro_diseno_mensaje" class="hint-text"></div>
+          <small>Un Parámetro de Diseño agrupa juego general, fugas y solapes de frente reutilizables entre módulos (ver Diseño paramétrico de imos). Solo afecta a los ESPACIOS NUEVOS que crees después en "3 Configuración"; los que ya existen conservan sus propios valores.</small>
           <div class="row"><label for="madeval">Descuento de fabricacion</label><select id="madeval"><option value="NO">Sin descuento</option><option value="SI">1 mm</option></select></div>
-          <div class="material-unico-box"><label><input type="checkbox" id="material_unico"> Usar un solo material para todo el módulo</label><div class="material-unico-detalle"><div class="material-swatch-row"><input type="color" id="material_global_color" value="#ffffff"><input id="material_global_nombre" value="Blanco" placeholder="Nombre del material general"></div><div class="row"><label for="material_global_source">Acabado general</label><select id="material_global_source"><option value="COLOR">Color sólido</option><option value="FILE">Imagen del equipo</option><option value="URL">Imagen desde enlace</option><option value="INCLUDED">Textura incluida</option><option value="LIBRARY">Material guardado</option></select></div><div class="row"><label for="material_global_url">Enlace JPG/PNG/WebP</label><input id="material_global_url" type="url" placeholder="https://sitio.com/material.jpg"></div><div class="row"><label for="material_global_file">Cargar imagen</label><input id="material_global_file" type="file" accept="image/*,.bmp,.gif"></div><div class="material-texture-preview" id="material_global_preview">Color sólido</div><div class="row"><label for="material_global_scale">Escala de textura (mm)</label><input type="number" id="material_global_scale" value="600" min="10"></div><div class="row"><label for="material_global_rotation">Dirección de veta</label><select id="material_global_rotation"><option value="0">0° · horizontal</option><option value="90">90° · vertical</option><option value="180">180°</option><option value="270">270°</option></select></div><small>Admite color, archivo, enlace o material guardado. Las excepciones por grupo o por pieza conservan prioridad.</small></div></div>
-          <div class="material-unico-box"><strong>Cantos del módulo</strong><div class="row"><label for="edge_mode">Regla predeterminada</label><select id="edge_mode"><option value="MIXED">Puertas canto duro · resto PVC</option><option value="ALL_PVC">Todo PVC</option><option value="ALL_HARD">Todo canto duro</option></select></div><small>El color del canto se hereda del color de cada pieza; cambialo puntualmente por pieza en Materiales.</small></div>
+          <small>El material único, los materiales por grupo, las texturas y los cantos del módulo se configuran todos juntos en "4 Materiales".</small>
           <label class="check-line"><input type="checkbox" id="sincronizar_ajuste" checked> Sincronizar grosor del ajuste posterior con el espesor del casco</label>
           <div class="sync-row"><span>El espesor general sincroniza casco, puerta y medidas interiores hasta que edites un campo manualmente.</span><button type="button" class="secondary" id="restore_sync">Restaurar sincronizacion</button></div>
         </div>
@@ -110,11 +114,26 @@
           <div class="row casco-ajuste-front"><label for="ajuste_frontal_orientacion">Orientación frontal</label><select id="ajuste_frontal_orientacion"><option value="HORIZONTAL">Rail horizontal (ancho completo)</option><option value="VERTICAL">Escuadras en las esquinas</option></select></div>
           <small class="casco-ajuste-front">El ajuste frontal usa el mismo grosor y altura que el posterior; da escuadra al frente independientemente del posterior.</small>
         </div>
+        <div class="card" data-editor-card="puerta-protrusion">
+          <h3>Puertas frente a sobremedida</h3>
+          <small>Si un lateral, base o techo sobresale hacia adelante por su propia sobremedida (arriba, o en "Componentes del espacio" de cada espacio en "3 Configuración"), la puerta solapada avanza para quedar al ras del panel que más sobresale, en vez de quedar "embutida" detrás. Solo afecta a puertas solapadas (no a embutidas ni internas).</small>
+          <div class="row"><label for="puerta_protrusion_modo">Modo</label><select id="puerta_protrusion_modo"><option value="AUTOMATICO">Automático (silencioso)</option><option value="AVISAR">Automático y avisar si hay diferencia notable</option></select></div>
+          <div class="row"><label for="puerta_protrusion_override_mm">Forzar salida de puerta (mm)</label><input type="number" id="puerta_protrusion_override_mm" placeholder="Automático" step="1"></div>
+          <small>Dejalo vacío para que se calcule solo (gana la sobremedida mayor entre las piezas que esa puerta toca). Escribí un valor para fijarlo a mano en todas las puertas solapadas del módulo.</small>
+          <div id="puerta_protrusion_aviso" class="hint-text"></div>
+        </div>
+        <div class="card" data-editor-card="regla-construccion">
+          <h3>Regla de Construcción</h3>
+          <small>Guarda la combinación completa de montaje de laterales/base/techo y tipo de base/techo (panel completo o travesaños) de este casco general, con nombre, para reaplicarla con un clic en otro módulo (inspirado en las Reglas de Construcción de imos, B_06). No toca los espacios internos de "3 Configuración" (eso lo cubre "Principio de Espacio").</small>
+          <div class="row"><label for="regla_construccion_id">Elegir Regla</label><select id="regla_construccion_id"><option value="ESTANDAR">Estándar (valores actuales del plugin)</option></select></div>
+          <div class="tool-row"><button type="button" class="secondary" id="btn_aplicar_regla_construccion">Aplicar al casco general</button><button type="button" class="secondary" id="btn_guardar_regla_construccion">Guardar esta combinación como Regla...</button></div>
+          <div id="regla_construccion_mensaje" class="hint-text"></div>
+        </div>
       </div>
 
       <div id="interior" class="page">
         <div class="card hierarchy-card">
-          <div class="hierarchy-title"><div><h2>Configuración</h2><small>Selecciona un espacio en el plano. Cada división se crea únicamente dentro de ese espacio.</small></div><div class="hierarchy-title-actions"><button type="button" class="secondary compact" id="hierarchy_undo" onclick="window.Modular3DHierarchyUndo&&window.Modular3DHierarchyUndo()">Deshacer</button><button type="button" class="secondary compact" id="hierarchy_redo" onclick="window.Modular3DHierarchyRedo&&window.Modular3DHierarchyRedo()">Rehacer</button><button type="button" class="secondary compact" id="hierarchy_reset">Restablecer</button></div></div>
+          <div class="hierarchy-title"><div><h2>Configuración</h2><small>Selecciona un espacio en el árbol o directamente en la vista 3D/2D del panel derecho (botón "Vista 2D" para una vista técnica de frente). Cada división se crea únicamente dentro de ese espacio.</small></div><div class="hierarchy-title-actions"><button type="button" class="secondary compact" id="hierarchy_undo" onclick="window.Modular3DHierarchyUndo&&window.Modular3DHierarchyUndo()">Deshacer</button><button type="button" class="secondary compact" id="hierarchy_redo" onclick="window.Modular3DHierarchyRedo&&window.Modular3DHierarchyRedo()">Rehacer</button><button type="button" class="secondary compact" id="hierarchy_reset">Restablecer</button></div></div>
           <div class="message warn" id="hierarchy_legacy_migrate_notice" style="display:none">
             Este módulo fue creado con una versión anterior del plugin, antes de que existiera este configurador jerárquico. El código que lo construye tal cual sigue funcionando sin cambios; opcionalmente podés convertir su estructura a la jerarquía nueva para poder editarla acá.
             <div class="tool-row"><button type="button" id="hierarchy_legacy_migrate_btn">Convertir a configurador jerárquico</button></div>
@@ -126,12 +145,18 @@
             <section class="hierarchy-plan-wrap">
               <div class="hierarchy-breadcrumb" id="hierarchy_breadcrumb"></div>
               <div class="hierarchy-tree" id="hierarchy_tree"></div>
-              <div class="hierarchy-plan" id="hierarchy_plan"></div>
+              <small class="hierarchy-plan-hint">La vista visual de espacios vive ahora en el panel <b>MODULAR-3D VIEW</b>, unificada con el 3D: usá el botón "Vista 2D" ahí para una vista técnica ortogonal de frente, a escala real, con clic para seleccionar cualquier espacio.</small>
               <div class="hierarchy-status" id="hierarchy_status"></div>
             </section>
             <section class="hierarchy-inspector">
               <h3>Espacio seleccionado</h3>
               <div class="space-summary" id="hierarchy_summary"></div>
+              <details class="h-subpanel"><summary>Principio de Espacio</summary>
+                <small>Guarda contenido, frente, huelgos y cierres de este espacio para reaplicarlos en cualquier otro espacio de cualquier módulo (inspirado en el Principio de Construcción de imos). No incluye subdivisiones propias.</small>
+                <div class="row"><label for="principio_id">Elegir Principio</label><select id="principio_id"><option value="">Elegir...</option></select></div>
+                <div class="tool-row"><button type="button" class="secondary" id="btn_aplicar_principio">Aplicar al espacio seleccionado</button><button type="button" class="secondary" id="btn_guardar_principio">Guardar este espacio como Principio...</button></div>
+                <div id="principio_mensaje" class="hint-text"></div>
+              </details>
               <details open><summary>Dividir espacio</summary>
                 <div class="row"><label for="hierarchy_axis">Dirección</label><select id="hierarchy_axis"><option value="X">X · divisor vertical</option><option value="Z">Z · repisa horizontal</option><option value="Y">Y · profundidad</option></select></div>
                 <div class="row"><label for="hierarchy_expr">Estaciones</label><input id="hierarchy_expr" value="1:1" placeholder="1:1 · 300mm:AUTO"></div>
@@ -143,6 +168,11 @@
                 <div class="checks-grid"><label><input type="checkbox" id="h_left"> Lateral izq.</label><label><input type="checkbox" id="h_right"> Lateral der.</label><label><input type="checkbox" id="h_bottom"> Base</label><label><input type="checkbox" id="h_top"> Cierre superior</label><label><input type="checkbox" id="h_back"> Respaldo</label></div>
                 <div class="row h-top-mode"><label for="h_top_mode">Tipo de cierre superior</label><select id="h_top_mode"><option value="FULL">Techo completo</option><option value="TRAVESANOS">2 travesaños</option></select></div>
                 <div class="row h-top-mode" id="h_top_travesano_row"><label for="h_top_travesano">Ancho travesaño (mm)</label><input type="number" id="h_top_travesano" value="70" min="20" step="1"></div>
+                <small>Montaje de cada panel de este espacio: igual que en "2 Casco", Interior = queda entre los paneles vecinos (por defecto en base/techo); Sobrepuesto exterior = se extiende de punta a punta, montando por encima (por defecto en laterales). Un lateral sobrepuesto o con inglete fuerza la base/techo de este mismo espacio a Interior (no pueden competir por la misma esquina).</small>
+                <div class="row h-mount-izq"><label for="h_mount_left">Montaje lateral izq.</label><select id="h_mount_left"><option value="INTERIOR">Interior</option><option value="EXTERIOR" selected>Sobrepuesto exterior</option><option value="INGLETE_SUPERIOR">Inglete 45° (con techo)</option><option value="INGLETE_INFERIOR">Inglete 45° (con base)</option></select></div>
+                <div class="row h-mount-der"><label for="h_mount_right">Montaje lateral der.</label><select id="h_mount_right"><option value="INTERIOR">Interior</option><option value="EXTERIOR" selected>Sobrepuesto exterior</option><option value="INGLETE_SUPERIOR">Inglete 45° (con techo)</option><option value="INGLETE_INFERIOR">Inglete 45° (con base)</option></select></div>
+                <div class="row h-mount-inferior"><label for="h_mount_bottom">Montaje base</label><select id="h_mount_bottom"><option value="INTERIOR" selected>Interior</option><option value="EXTERIOR">Sobrepuesto exterior</option></select></div>
+                <div class="row h-mount-superior"><label for="h_mount_top">Montaje cierre superior</label><select id="h_mount_top"><option value="INTERIOR" selected>Interior</option><option value="EXTERIOR">Sobrepuesto exterior</option></select></div>
                 <details class="h-sob-panel h-subpanel"><summary>Sobremedida de este espacio</summary>
                   <small>Igual que la sobremedida del casco general: un valor positivo hace que ese panel sobresalga hacia adelante o atrás; negativo lo retranquea. Solo aplica a los paneles activados arriba (no a travesaños ni respaldo).</small>
                   <div class="row h-sob-izq"><label for="h_sob_frontal_izq">Lateral izq. · sobremedida frontal (mm)</label><input type="number" id="h_sob_frontal_izq" value="0" step="1"></div>
@@ -199,20 +229,46 @@
       <div id="diseno" class="page">
         <div class="card">
           <h2>Materiales y colores</h2>
-          <small>Configura primero los grupos. Después selecciona cualquier pieza en el modelo o en la lista para darle un acabado individual.</small>
-          <div class="material-unico-box"><label><input type="checkbox" id="material_unico_materiales"> Material único para todo el módulo</label><div class="material-unico-detalle"><div class="material-swatch-row"><input type="color" id="material_global_color_materiales" value="#ffffff"><input id="material_global_nombre_materiales" value="Blanco" placeholder="Nombre del material general"></div><div class="material-texture-preview" id="material_global_preview_materiales">Color sólido</div><div class="tool-row"><button type="button" id="material_global_choose_file">Cargar JPG/PNG/imagen</button><button type="button" class="secondary" id="material_global_use_url">Usar enlace</button><button type="button" class="secondary" id="material_global_clear_texture">Solo color</button></div></div><div class="tool-row"><button type="button" class="secondary" id="material_clear_overrides">Eliminar excepciones individuales</button></div></div>
-          <div class="materials-grid">
-            <section class="material-group"><h3>Casco</h3><label class="check-line"><input type="checkbox" id="material_casco_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_casco_color" value="#d5a66e"><input id="material_casco_nombre" value="Casco decorativo" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Interior</h3><label class="check-line"><input type="checkbox" id="material_interior_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_interior_color" value="#e4c393"><input id="material_interior_nombre" value="Interior claro" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Frentes y puertas</h3><label class="check-line"><input type="checkbox" id="material_frentes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_frentes_color" value="#f06424"><input id="material_frentes_nombre" value="Frente decorativo" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Cajones interiores</h3><label class="check-line"><input type="checkbox" id="material_cajones_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_cajones_color" value="#b87543"><input id="material_cajones_nombre" value="Cajón interior" placeholder="Nombre del material"></div></section>
-            <section class="material-group"><h3>Respaldo</h3><label class="check-line"><input type="checkbox" id="material_respaldo_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_respaldo_color" value="#d5a66e"><input id="material_respaldo_nombre" value="Respaldo" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio". Su grosor sigue siendo independiente (p. ej. casco 15/18mm, respaldo 6mm embutido).</small></section>
-            <section class="material-group"><h3>Ajuste posterior/frontal</h3><label class="check-line"><input type="checkbox" id="material_ajuste_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_ajuste_color" value="#d5a66e"><input id="material_ajuste_nombre" value="Ajuste" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio".</small></section>
-            <section class="material-group"><h3>Herrajes (jaladores, gola)</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
+          <small>Todo lo relacionado a materiales, colores, texturas y cantos vive en esta pestaña. Configura primero el material único y los grupos; después selecciona cualquier pieza en el modelo o en la lista para darle un acabado individual.</small>
+        </div>
+        <div class="card">
+          <h3>Material único para todo el módulo</h3>
+          <div class="material-unico-box">
+            <label><input type="checkbox" id="material_unico"> Usar un solo material para todo el módulo</label>
+            <div class="material-unico-detalle">
+              <div class="material-swatch-row"><input type="color" id="material_global_color" value="#ffffff"><input id="material_global_nombre" value="Blanco" placeholder="Nombre del material general"></div>
+              <div class="row"><label for="material_global_source">Acabado general</label><select id="material_global_source"><option value="COLOR">Color sólido</option><option value="FILE">Imagen del equipo</option><option value="URL">Imagen desde enlace</option><option value="INCLUDED">Textura incluida</option><option value="LIBRARY">Material guardado</option></select></div>
+              <div class="row"><label for="material_global_url">Enlace JPG/PNG/WebP</label><input id="material_global_url" type="url" placeholder="https://sitio.com/material.jpg"></div>
+              <div class="row"><label for="material_global_file">Cargar imagen</label><input id="material_global_file" type="file" accept="image/*,.bmp,.gif"></div>
+              <div class="material-texture-preview" id="material_global_preview">Color sólido</div>
+              <div class="row"><label for="material_global_scale">Escala de textura (mm)</label><input type="number" id="material_global_scale" value="600" min="10"></div>
+              <div class="row"><label for="material_global_rotation">Dirección de veta</label><select id="material_global_rotation"><option value="0">0° · horizontal</option><option value="90">90° · vertical</option><option value="180">180°</option><option value="270">270°</option></select></div>
+              <small>Admite color, archivo, enlace o material guardado. Las excepciones por grupo o por pieza conservan prioridad.</small>
+            </div>
           </div>
+        </div>
+        <div class="card">
+          <h3>Cantos del módulo</h3>
+          <div class="row"><label for="edge_mode">Regla predeterminada</label><select id="edge_mode"><option value="MIXED">Puertas canto duro · resto PVC</option><option value="ALL_PVC">Todo PVC</option><option value="ALL_HARD">Todo canto duro</option></select></div>
+          <small>El color del canto se hereda del color de cada pieza; cambialo puntualmente por pieza más abajo, en "Editar una pieza individual".</small>
+        </div>
+        <div class="card">
+          <h3>Materiales por grupo</h3>
+          <small>Marca "Material propio del grupo" para que ese conjunto de piezas deje de heredar el material único de arriba. Hace clic en un color de la paleta (colores ya usados en este módulo) para reutilizarlo, o elegí uno nuevo con el selector de color.</small>
+          <div class="materials-grid">
+            <section class="material-group"><h3>Casco</h3><label class="check-line"><input type="checkbox" id="material_casco_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_casco_swatch_row"><input type="color" id="material_casco_color" value="#d5a66e"><input id="material_casco_nombre" value="Casco decorativo" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Interior</h3><label class="check-line"><input type="checkbox" id="material_interior_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_interior_swatch_row"><input type="color" id="material_interior_color" value="#e4c393"><input id="material_interior_nombre" value="Interior claro" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Frentes y puertas</h3><label class="check-line"><input type="checkbox" id="material_frentes_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_frentes_swatch_row"><input type="color" id="material_frentes_color" value="#f06424"><input id="material_frentes_nombre" value="Frente decorativo" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Cajones interiores</h3><label class="check-line"><input type="checkbox" id="material_cajones_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_cajones_swatch_row"><input type="color" id="material_cajones_color" value="#b87543"><input id="material_cajones_nombre" value="Cajón interior" placeholder="Nombre del material"></div></section>
+            <section class="material-group"><h3>Respaldo</h3><label class="check-line"><input type="checkbox" id="material_respaldo_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_respaldo_swatch_row"><input type="color" id="material_respaldo_color" value="#d5a66e"><input id="material_respaldo_nombre" value="Respaldo" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio". Su grosor sigue siendo independiente (p. ej. casco 15/18mm, respaldo 6mm embutido).</small></section>
+            <section class="material-group"><h3>Ajuste posterior/frontal</h3><label class="check-line"><input type="checkbox" id="material_ajuste_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_ajuste_swatch_row"><input type="color" id="material_ajuste_color" value="#d5a66e"><input id="material_ajuste_nombre" value="Ajuste" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio".</small></section>
+            <section class="material-group"><h3>Herrajes (jaladores, gola)</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_herrajes_swatch_row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
+          </div>
+        </div>
+        <div class="card">
           <div class="material-texture-editor" id="material_library">
-            <h3>Biblioteca de materiales</h3>
-            <small>Asigna una textura al grupo activo desde tu equipo o mediante una URL directa JPG, PNG o WebP. Los materiales guardados quedan disponibles para otros módulos.</small>
+            <h3>Biblioteca de materiales y texturas</h3>
+            <small>Asigna una textura al grupo activo desde tu equipo o mediante una URL directa JPG, PNG o WebP. Los materiales guardados quedan disponibles para otros módulos, con una miniatura de su color para diferenciarlos.</small>
             <div class="row"><label for="material_texture_group">Grupo</label><select id="material_texture_group"><option value="global">Material general</option><option value="casco">Casco</option><option value="interior">Interior</option><option value="frentes">Frentes y puertas</option><option value="cajones">Cajones</option><option value="respaldo">Respaldo</option><option value="ajuste">Ajuste posterior/frontal</option><option value="herrajes">Herrajes</option></select></div>
             <div class="row"><label for="material_texture_included">Textura incluida</label><select id="material_texture_included"><option value="">Elegir de la biblioteca incluida...</option></select></div>
             <small>Acabados genéricos incluidos con el plugin (no son fotografías reales de un proveedor), útiles como punto de partida sin depender de Internet.</small>
@@ -228,6 +284,7 @@
         </div>
         <div class="card">
           <h3>Editar una pieza individual</h3>
+          <div class="tool-row"><button type="button" class="secondary" id="material_clear_overrides">Eliminar todas las excepciones individuales</button></div>
           <div class="material-piece-editor">
             <div><input id="material_piece_search" type="search" placeholder="Buscar lateral, repisa, puerta..."><div id="material_piece_list" class="material-piece-list"></div></div>
             <div>
@@ -274,6 +331,27 @@
           <div id="lista_piezas"></div>
         </div>
       </div>
+
+      <div id="catalogo" class="page">
+        <div class="card">
+          <h2>Catálogo Global de Tipos de Módulo</h2>
+          <p class="hint-text">Módulos con medidas estándar, clasificados por categoría y compartidos entre todos los usuarios con licencia activa de Modular_3D. Insertar precarga este formulario -- ancho, alto y profundidad quedan editables antes de construir.</p>
+          <div id="catalogo_message" class="message warn"></div>
+          <div class="row"><label for="catalogo_categoria">Categoría</label><select id="catalogo_categoria"><option value="">Todas</option></select></div>
+          <div class="row"><label for="catalogo_buscar">Buscar</label><input type="search" id="catalogo_buscar" placeholder="Nombre o descripción"></div>
+          <button type="button" id="catalogo_actualizar">Actualizar catálogo</button>
+          <div id="catalogo_lista" class="catalogo-grid"></div>
+        </div>
+        <div class="card">
+          <h3>Guardar el módulo actual en el Catálogo</h3>
+          <p class="hint-text">Guarda la configuración actual (medidas, casco, espacios y materiales) como un Tipo de Módulo reutilizable por vos y por el resto del equipo con licencia.</p>
+          <div id="catalogo_guardar_message" class="message warn"></div>
+          <div class="row"><label for="catalogo_guardar_categoria">Categoría</label><input type="text" list="catalogo_categorias_datalist" id="catalogo_guardar_categoria" placeholder="Closet, Cocina, Cajonera..."><datalist id="catalogo_categorias_datalist"></datalist></div>
+          <div class="row"><label for="catalogo_guardar_nombre">Nombre</label><input type="text" id="catalogo_guardar_nombre" placeholder="Ej. Puerta abatible 600x720"></div>
+          <div class="row"><label for="catalogo_guardar_descripcion">Descripción</label><input type="text" id="catalogo_guardar_descripcion" placeholder="Opcional"></div>
+          <button type="button" id="catalogo_guardar_boton">Guardar módulo actual en el catálogo</button>
+        </div>
+      </div>
       <div class="step-footer">
         <button type="button" class="secondary" id="step_prev">Anterior</button>
         <div class="step-status" id="step_status">Paso 1 de 4</div>
@@ -301,7 +379,7 @@
             <button type="button" class="nav-arrow-down" data-orbit="down" title="Girar hacia abajo">▼</button>
           </div>
           <button type="button" id="view_home" class="cube-home" title="Vista isométrica">⌂</button>
-          <button type="button" id="view_projection" hidden>Perspectiva</button>
+          <button type="button" id="view_projection" title="Alterna entre la vista 3D en perspectiva y una vista 2D técnica: ortogonal, de frente, a escala real, ideal para configurar espacios">Vista 2D</button>
         </div>
       </div>
       <div class="m3dv-toolbar">
@@ -328,8 +406,10 @@
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/OrbitControls.js"></script>
   <script src="modular3d_view.js"></script>
+  <script src="reglas_visibilidad.js"></script>
   <script src="interfaz.js"></script>
 <script src="hierarchical_config.js"></script>
 <script src="material_config.js"></script>
+<script src="catalogo.js"></script>
 </body>
 </html>
