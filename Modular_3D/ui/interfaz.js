@@ -307,7 +307,12 @@
       { selector: '.casco-respaldo-detalle', cuando: { field: 'lleva_respaldo', test: 'notOneOf', value: ['NO', 'SOLO_AJUSTES'] } },
       { selector: '.casco-ajuste-post', cuando: { field: 'cantidad_ajustes', test: 'notEquals', value: '0' } },
       { selector: '.casco-ajuste-front', cuando: { field: 'ajuste_frontal_activo', test: 'equals', value: 'SI' } },
-      { selector: '.campo-travesano-superior', cuando: { field: 'tipo_superior', test: 'equals', value: 'TRAVESANOS' } }
+      { selector: '.campo-travesano-superior', cuando: { field: 'tipo_superior', test: 'equals', value: 'TRAVESANOS' } },
+      { selector: '.cascada-zocalo', cuando: { field: 'tipo_modulo', test: 'notEquals', value: 'PERSONALIZADO' } },
+      { selector: '.cascada-zocalo-lado', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['BAJO', 'AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-cornisa', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-cornisa-detalle', cuando: { all: [ { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] }, { field: 'cornisa_activa', test: 'equals', value: 'SI' } ] } },
+      { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } }
     ]);
     function toggleCascadaCasco() { if (window.Modular3DReglas) window.Modular3DReglas.aplicar(); }
     function setCajonesNichos(valores, tipos) {
@@ -879,7 +884,7 @@
       markManualThickness(event.target.id || '');
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
-      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo' || event.target.id === 'tipo_superior') sincronizarReglasRespaldo();
+      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo' || event.target.id === 'tipo_superior' || event.target.id === 'tipo_modulo' || event.target.id === 'cornisa_activa') sincronizarReglasRespaldo();
       // Laterales (izq/der) y horizontales (superior/inferior) nunca pueden
       // llegar los dos "de punta a punta" a la misma esquina: cada uno es
       // una sola pieza de punta a punta, asi que si uno abraza la esquina por

@@ -129,6 +129,18 @@
           <div class="tool-row"><button type="button" class="secondary" id="btn_aplicar_regla_construccion">Aplicar al casco general</button><button type="button" class="secondary" id="btn_guardar_regla_construccion">Guardar esta combinación como Regla...</button></div>
           <div id="regla_construccion_mensaje" class="hint-text"></div>
         </div>
+        <div class="card cascada-zocalo" data-editor-card="zocalo-cornisa-remates">
+          <h3>Zócalo, cornisa y remates</h3>
+          <small>Piezas automáticas según el "Tipo de módulo" elegido en "1 Medidas". El zócalo (126×15mm, retranqueado 70mm) se agrega solo en Bajo/Auxiliar/Closet, sin poder desactivarlo. Todavía sin continuidad entre módulos vecinos: cada módulo genera sus propias piezas como si estuviera solo — eso llega en una ronda aparte ("Sincronizar continuidad").</small>
+          <div class="row cascada-zocalo-lado"><label for="remate_zocalo_lado">Remate de zócalo</label><select id="remate_zocalo_lado"><option value="NINGUNO">Ninguno</option><option value="IZQ">Izquierdo</option><option value="DER">Derecho</option><option value="AMBOS">Ambos</option></select></div>
+          <div class="row cascada-cornisa"><label for="cornisa_activa">Cornisa</label><select id="cornisa_activa"><option value="NO">Sin cornisa</option><option value="SI">Con cornisa</option></select></div>
+          <div class="row cascada-cornisa-detalle"><label for="cornisa_altura">Altura de cornisa (mm)</label><input type="number" id="cornisa_altura" value="100" min="20"></div>
+          <small class="cascada-cornisa-detalle">Retranqueada 20mm desde el plano de la puerta, igual concepto que el zócalo pero arriba.</small>
+          <div class="row cascada-cornisa-detalle"><label for="remate_cornisa_lado">Remate de cornisa</label><select id="remate_cornisa_lado"><option value="NINGUNO">Ninguno</option><option value="IZQ">Izquierdo</option><option value="DER">Derecho</option><option value="AMBOS">Ambos</option></select></div>
+          <div class="row cascada-remates"><label for="remate_inicial">Remate inicial (izq.)</label><select id="remate_inicial"><option value="NO">No</option><option value="SI">Sí</option></select></div>
+          <div class="row cascada-remates"><label for="remate_final">Remate final (der.)</label><select id="remate_final"><option value="NO">No</option><option value="SI">Sí</option></select></div>
+          <small class="cascada-remates">Panel de 100mm en el mismo plano que una puerta, desde el zócalo hasta 2420mm de alto fijo (se corta a medida en obra).</small>
+        </div>
       </div>
 
       <div id="interior" class="page">

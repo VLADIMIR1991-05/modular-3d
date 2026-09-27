@@ -406,6 +406,49 @@
       return Math.max.apply(null, candidatos);
     }
 
+    /* Zócalo/premesón/cornisa/remates automáticos por tipo de módulo --
+       espejo exacto de jerarquia.rb (mismos nombres de variable, mismas
+       condiciones). Sin continuidad entre módulos vecinos: cada módulo
+       dibuja sus propias piezas como si estuviera solo. */
+    var zocaloAlto = 126, zocaloGrosor = 15, zocaloRetranqueo = 70;
+    var cornisaGrosor = 15, cornisaRetranqueo = 20;
+    var remateAncho = 100, remateAltoTotal = 2420;
+    var tipoModulo = String(data.tipo_modulo || 'PERSONALIZADO').toUpperCase();
+    var llevaZocalo = ['BAJO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
+    var llevaPremeson = tipoModulo === 'BAJO';
+    var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
+    var cornisaActiva = cornisaDisponible && String(data.cornisa_activa || 'NO') === 'SI';
+    var llevaRemates = ['AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
+
+    if (llevaZocalo) {
+      addPiece('Zócalo', usableW, zocaloAlto, zocaloGrosor, leftT, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'zocalo', materialKey:'ZOCALO', role:'zocalo', sourceField:'tipo_modulo'});
+      var remateZocaloLado = String(data.remate_zocalo_lado || 'NINGUNO').toUpperCase();
+      var fondoRemateZocalo = depth - zocaloRetranqueo;
+      if (fondoRemateZocalo > 0) {
+        if (remateZocaloLado === 'IZQ' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo izq.', zocaloGrosor, zocaloAlto, fondoRemateZocalo, leftT, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_izq', materialKey:'REMATE_ZOCALO_IZQ', role:'zocalo', sourceField:'remate_zocalo_lado'});
+        if (remateZocaloLado === 'DER' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo der.', zocaloGrosor, zocaloAlto, fondoRemateZocalo, width - rightT - zocaloGrosor, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_der', materialKey:'REMATE_ZOCALO_DER', role:'zocalo', sourceField:'remate_zocalo_lado'});
+      }
+    }
+    if (llevaPremeson) {
+      addPiece('Premesón', usableW, general, depth, leftT, height, 0, COLORS.horizontal, 'premeson', false, {pieceId:'premeson', materialKey:'PREMESON', role:'premeson', sourceField:'tipo_modulo'});
+    }
+    if (cornisaActiva) {
+      var cornisaAltura = Math.max(20, number(data, 'cornisa_altura', 100));
+      var zCornisa = height - cornisaAltura;
+      addPiece('Cornisa', usableW, cornisaAltura, cornisaGrosor, leftT, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'cornisa', materialKey:'CORNISA', role:'cornisa', sourceField:'cornisa_activa'});
+      var remateCornisaLado = String(data.remate_cornisa_lado || 'NINGUNO').toUpperCase();
+      var fondoRemateCornisa = depth - cornisaRetranqueo;
+      if (fondoRemateCornisa > 0) {
+        if (remateCornisaLado === 'IZQ' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa izq.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, leftT, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_izq', materialKey:'REMATE_CORNISA_IZQ', role:'cornisa', sourceField:'remate_cornisa_lado'});
+        if (remateCornisaLado === 'DER' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa der.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, width - rightT - cornisaGrosor, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_der', materialKey:'REMATE_CORNISA_DER', role:'cornisa', sourceField:'remate_cornisa_lado'});
+      }
+    }
+    if (llevaRemates) {
+      var grosorFrenteRemate = Math.max(3, number(data, 'puerta_grosor', general));
+      if (String(data.remate_inicial || 'NO') === 'SI') addPiece('Remate inicial', remateAncho, remateAltoTotal, grosorFrenteRemate, -remateAncho, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_inicial', materialKey:'REMATE_INICIAL', role:'remate', sourceField:'remate_inicial'});
+      if (String(data.remate_final || 'NO') === 'SI') addPiece('Remate final', remateAncho, remateAltoTotal, grosorFrenteRemate, width, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_final', materialKey:'REMATE_FINAL', role:'remate', sourceField:'remate_final'});
+    }
+
     if (!hasHierarchy && physicalX) for (var c = 0; c < colSizes.length - 1; c += 1) {
       addPiece('División vertical ' + (c + 1), general, innerH, interiorDepth, colStarts[c] + colSizes[c], bottomT, interiorSetback, COLORS.interior, 'interior');
     }

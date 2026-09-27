@@ -434,6 +434,85 @@ module LPenafiel_GeneradorMueblesExacto
         candidatos.max
       end
 
+      # --- Zócalo, premesón, cornisa y remates automáticos por tipo de módulo ---
+      # Zócalo: tablero delgado (siempre 126x15mm) retranqueado 70mm desde
+      # el frente, en Bajo/Auxiliar/Closet (cualquier módulo que llega al
+      # piso). Premesón: tapa la parte de arriba, solo en Bajo, en material
+      # crudo (sin rol de color propio -- ver "Repintar varios módulos").
+      # Cornisa: equivalente arriba para Alto/Auxiliar/Closet, OPCIONAL
+      # (a diferencia del zócalo) y con altura elegida por el usuario,
+      # retranqueada 20mm desde el plano de la puerta. Remates: paneles de
+      # 100mm en Auxiliar/Closet, desde el piso hasta 2420mm fijo (se cortan
+      # a medida en obra). Remate de zócalo/cornisa: cierran el bolsillo
+      # lateral que deja cada retranqueo.
+      # Deliberadamente SIN continuidad entre módulos vecinos en esta
+      # ronda -- cada módulo genera sus propias piezas como si estuviera
+      # solo; unir tramos entre módulos pegados es responsabilidad de un
+      # comando aparte ("Sincronizar continuidad") que arma piezas propias
+      # por tramo sin tocar este método.
+      zocalo_alto = 126.mm
+      zocalo_grosor = 15.mm
+      zocalo_retranqueo = 70.mm
+      cornisa_grosor = 15.mm
+      cornisa_retranqueo = 20.mm
+      remate_ancho = 100.mm
+      remate_alto_total = 2420.mm
+
+      tipo_modulo = (datos['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase
+      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo)
+      lleva_premeson = tipo_modulo == 'BAJO'
+      cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
+      cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
+      lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)
+
+      if lleva_zocalo
+        self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_util_mueble, zocalo_grosor, zocalo_alto, grosor_lat_izq, zocalo_retranqueo, 0.mm, 1, 1)
+
+        remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
+        fondo_remate_zocalo = prof_total - zocalo_retranqueo
+        if fondo_remate_zocalo > 0.mm
+          if %w[IZQ AMBOS].include?(remate_zocalo_lado)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_IZQ", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, grosor_lat_izq, zocalo_retranqueo, 0.mm, 0, 0)
+          end
+          if %w[DER AMBOS].include?(remate_zocalo_lado)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_DER", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, ancho_total - grosor_lat_der - zocalo_grosor, zocalo_retranqueo, 0.mm, 0, 0)
+          end
+        end
+      end
+
+      if lleva_premeson
+        self.crear_pieza(entities, modulo_nombre, "PREMESON", ancho_util_mueble, prof_total, espesor, grosor_lat_izq, 0.mm, alto_total, 1, 1)
+      end
+
+      if cornisa_activa
+        cornisa_altura = [(datos['cornisa_altura'] || 100).to_f, 20.0].max.mm
+        z_cornisa = alto_total - cornisa_altura
+        self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_util_mueble, cornisa_grosor, cornisa_altura, grosor_lat_izq, cornisa_retranqueo, z_cornisa, 1, 1)
+
+        remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
+        fondo_remate_cornisa = prof_total - cornisa_retranqueo
+        if fondo_remate_cornisa > 0.mm
+          if %w[IZQ AMBOS].include?(remate_cornisa_lado)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_IZQ", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, grosor_lat_izq, cornisa_retranqueo, z_cornisa, 0, 0)
+          end
+          if %w[DER AMBOS].include?(remate_cornisa_lado)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_DER", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, ancho_total - grosor_lat_der - cornisa_grosor, cornisa_retranqueo, z_cornisa, 0, 0)
+          end
+        end
+      end
+
+      if lleva_remates
+        grosor_frente_remate = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
+        remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
+        remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'
+        if remate_inicial
+          self.crear_pieza(entities, modulo_nombre, "REMATE_INICIAL", remate_ancho, grosor_frente_remate, remate_alto_total, 0.mm - remate_ancho, 0.mm - grosor_frente_remate, 0.mm, 0, 0)
+        end
+        if remate_final
+          self.crear_pieza(entities, modulo_nombre, "REMATE_FINAL", remate_ancho, grosor_frente_remate, remate_alto_total, ancho_total, 0.mm - grosor_frente_remate, 0.mm, 0, 0)
+        end
+      end
+
       respaldo_estructural = grosor_resp >= 15.mm
       cantidad_ajustes = 0
       # "SOLO_AJUSTES": sin panel de respaldo pero con ajustes igual -- se

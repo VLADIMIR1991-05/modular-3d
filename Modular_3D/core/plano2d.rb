@@ -64,7 +64,11 @@ module LPenafiel_GeneradorMueblesExacto
     'PUERTA' => 'm3d-plano-puerta-pieza',
     'FRENTE_CAJON' => 'm3d-plano-cajones',
     'REPISA' => 'm3d-plano-repisas',
-    'DIVISOR' => 'm3d-plano-divisor'
+    'DIVISOR' => 'm3d-plano-divisor',
+    'ZOCALO' => 'm3d-plano-zocalo',
+    'PREMESON' => 'm3d-plano-premeson',
+    'CORNISA' => 'm3d-plano-cornisa',
+    'REMATE' => 'm3d-plano-remate'
   }.freeze
 
   def self.clase_svg_pieza(pieza)
@@ -443,6 +447,10 @@ module LPenafiel_GeneradorMueblesExacto
 .m3d-plano-cajones { fill: #fff7ed; stroke: #9a3412; stroke-width: 0.28; }
 .m3d-plano-repisas { fill: #ecfdf5; stroke: #047857; stroke-width: 0.25; }
 .m3d-plano-divisor { fill: #f5f5f4; stroke: #57534e; stroke-width: 0.25; }
+.m3d-plano-zocalo { fill: #dde7d9; stroke: #3f6b3a; stroke-width: 0.28; }
+.m3d-plano-premeson { fill: #ffffff; stroke: #94a3b8; stroke-width: 0.28; stroke-dasharray: 1.6 1.2; }
+.m3d-plano-cornisa { fill: #ede4f5; stroke: #6d3f9a; stroke-width: 0.28; }
+.m3d-plano-remate { fill: #fde8dd; stroke: #c2410c; stroke-width: 0.28; }
 .m3d-plano-corte-pieza { fill: #cbd5e1; stroke: #111827; stroke-width: 0.35; }
 .m3d-plano-frente-linea { stroke: #ef4444; stroke-width: 0.18; stroke-dasharray: 1 1; }
 .m3d-plano-subtitulo { font-size: 3.6px; fill: #1f2937; font-weight: 600; }

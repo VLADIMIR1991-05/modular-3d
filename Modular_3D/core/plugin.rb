@@ -76,7 +76,7 @@ module LPenafiel_GeneradorMueblesExacto
   @contenedor_edicion = nil
   @transformacion_edicion = nil
 
-  MANIFEST_VERSION = 8
+  MANIFEST_VERSION = 9
 
   def self.migrar_manifiesto(manifiesto)
     return manifiesto unless manifiesto.is_a?(Hash)
@@ -116,6 +116,18 @@ module LPenafiel_GeneradorMueblesExacto
     # módulo viejo migrado con este default no cambia ni un milímetro.
     data['puerta_protrusion_modo'] ||= 'AUTOMATICO'
     data['puerta_protrusion_override_mm'] ||= ''
+    # Schema 9: zócalo/premesón/cornisa/remates automáticos por tipo de
+    # módulo (ver core/jerarquia.rb). "PERSONALIZADO" es el default seguro
+    # para migrar módulos viejos -- no dispara ninguna pieza nueva, así que
+    # un módulo migrado no cambia ni un milímetro. cornisa_activa/remates
+    # también parten en NO/NINGUNO por la misma razón.
+    data['tipo_modulo'] ||= 'PERSONALIZADO'
+    data['cornisa_activa'] ||= 'NO'
+    data['cornisa_altura'] ||= 100
+    data['remate_inicial'] ||= 'NO'
+    data['remate_final'] ||= 'NO'
+    data['remate_zocalo_lado'] ||= 'NINGUNO'
+    data['remate_cornisa_lado'] ||= 'NINGUNO'
     manifiesto['data'] = data
     manifiesto['migrated_from_schema'] = manifiesto['schema'].to_i if manifiesto['schema'].to_i < MANIFEST_VERSION
     manifiesto['schema'] = MANIFEST_VERSION

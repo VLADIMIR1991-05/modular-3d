@@ -206,6 +206,55 @@ module LPenafiel_GeneradorMueblesExacto
         candidatos.max
       end
 
+      # --- Zócalo, premesón, cornisa y remates automáticos por tipo de
+      # módulo --- espejo exacto de jerarquia.rb (mismos nombres, mismas
+      # condiciones), para que Despiece/Presupuesto/Plano 2D las incluyan
+      # sin recalcular la lógica aparte. Sin continuidad entre módulos
+      # vecinos en esta ronda.
+      zocalo_alto = 126.0
+      zocalo_grosor = 15.0
+      zocalo_retranqueo = 70.0
+      cornisa_grosor = 15.0
+      cornisa_retranqueo = 20.0
+      remate_ancho = 100.0
+      remate_alto_total = 2420.0
+
+      tipo_modulo = (datos['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase
+      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo)
+      lleva_premeson = tipo_modulo == 'BAJO'
+      cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
+      cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
+      lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)
+
+      if lleva_zocalo
+        agregar.call('ZOCALO', 'ZOCALO', grosor_lat_izq, zocalo_retranqueo, 0.0, ancho_util_mueble, zocalo_grosor, zocalo_alto)
+        remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
+        fondo_remate_zocalo = prof_total - zocalo_retranqueo
+        if fondo_remate_zocalo > 0
+          agregar.call('REMATE_ZOCALO_IZQ', 'ZOCALO', grosor_lat_izq, zocalo_retranqueo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[IZQ AMBOS].include?(remate_zocalo_lado)
+          agregar.call('REMATE_ZOCALO_DER', 'ZOCALO', ancho_total - grosor_lat_der - zocalo_grosor, zocalo_retranqueo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[DER AMBOS].include?(remate_zocalo_lado)
+        end
+      end
+      if lleva_premeson
+        agregar.call('PREMESON', 'PREMESON', grosor_lat_izq, 0.0, alto_total, ancho_util_mueble, prof_total, espesor)
+      end
+      if cornisa_activa
+        cornisa_altura = [f(datos['cornisa_altura'], 100), 20.0].max
+        z_cornisa = alto_total - cornisa_altura
+        agregar.call('CORNISA', 'CORNISA', grosor_lat_izq, cornisa_retranqueo, z_cornisa, ancho_util_mueble, cornisa_grosor, cornisa_altura)
+        remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
+        fondo_remate_cornisa = prof_total - cornisa_retranqueo
+        if fondo_remate_cornisa > 0
+          agregar.call('REMATE_CORNISA_IZQ', 'CORNISA', grosor_lat_izq, cornisa_retranqueo, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[IZQ AMBOS].include?(remate_cornisa_lado)
+          agregar.call('REMATE_CORNISA_DER', 'CORNISA', ancho_total - grosor_lat_der - cornisa_grosor, cornisa_retranqueo, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[DER AMBOS].include?(remate_cornisa_lado)
+        end
+      end
+      if lleva_remates
+        grosor_frente_remate = [f(datos['puerta_grosor'], espesor), 3.0].max
+        agregar.call('REMATE_INICIAL', 'REMATE', 0.0 - remate_ancho, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_inicial'] || 'NO').to_s == 'SI'
+        agregar.call('REMATE_FINAL', 'REMATE', ancho_total, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_final'] || 'NO').to_s == 'SI'
+      end
+
       if hierarchy_geometry.is_a?(Hash) && hierarchy_geometry['nodes'].is_a?(Array)
         # Separadores físicos (divisores/repisas de la jerarquía).
         separadores_por_padre = Hash.new(0)
