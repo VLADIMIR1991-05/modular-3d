@@ -304,7 +304,7 @@
     // viven como datos en el motor compartido (reglas_visibilidad.js), no
     // como código imperativo propio de esta pestaña.
     if (window.Modular3DReglas) window.Modular3DReglas.registrar([
-      { selector: '.casco-respaldo-detalle', cuando: { field: 'lleva_respaldo', test: 'notEquals', value: 'NO' } },
+      { selector: '.casco-respaldo-detalle', cuando: { field: 'lleva_respaldo', test: 'notOneOf', value: ['NO', 'SOLO_AJUSTES'] } },
       { selector: '.casco-ajuste-post', cuando: { field: 'cantidad_ajustes', test: 'notEquals', value: '0' } },
       { selector: '.casco-ajuste-front', cuando: { field: 'ajuste_frontal_activo', test: 'equals', value: 'SI' } },
       { selector: '.campo-travesano-superior', cuando: { field: 'tipo_superior', test: 'equals', value: 'TRAVESANOS' } }

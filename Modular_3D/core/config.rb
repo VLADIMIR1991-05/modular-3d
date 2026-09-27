@@ -13,7 +13,11 @@ module Modular3D
   PLATFORM_API_URL = "https://api.modular-3d.com"
   UPDATE_MANIFEST_URL = "https://api.modular-3d.com/latest.json"
   LICENSE_HEARTBEAT_SECONDS = 900
-  LICENSE_SESSION_MAX_SECONDS = 3600
+  # 72 horas: techo local de cuánto dura la sesión verificada antes de
+  # volver a llamar a /license/validate. Esto por sí solo NO evita el
+  # relogin forzado si el token emitido por el servidor expira antes (ver
+  # SESSION_SECONDS en el Worker de licencias) -- ver nota en license.rb.
+  LICENSE_SESSION_MAX_SECONDS = 259_200
 
   DEFAULTS = {
     "ancho_total" => 600.0,

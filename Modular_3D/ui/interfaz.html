@@ -97,7 +97,7 @@
         <div class="panel-grid" id="panel_grid"></div>
         <div class="card" data-editor-card="back">
           <h3>Sistema posterior</h3>
-          <div class="row"><label for="lleva_respaldo">Construccion</label><select id="lleva_respaldo"><option value="SI">Ranurado / embutido</option><option value="INTERNO">Interno sin ranura</option><option value="SOBREPUESTO">Sobrepuesto trasero</option><option value="NO">Sin respaldo</option></select></div>
+          <div class="row"><label for="lleva_respaldo">Construccion</label><select id="lleva_respaldo"><option value="SI">Ranurado / embutido</option><option value="INTERNO">Interno sin ranura</option><option value="SOBREPUESTO">Sobrepuesto trasero</option><option value="SOLO_AJUSTES">Solo ajustes (sin respaldo)</option><option value="NO">Sin respaldo ni ajustes</option></select></div>
           <div class="row casco-respaldo-detalle"><label for="grosor_resp">Grosor (mm)</label><select id="grosor_resp"><option value="3">3 mm</option><option value="6" selected>6 mm</option><option value="15">15 mm</option><option value="18">18 mm</option></select></div>
           <div class="row casco-respaldo-detalle"><label for="profundidad_ranura">Profundidad de ranura (mm)</label><input type="number" id="profundidad_ranura" value="5" min="0"></div>
         </div>
@@ -106,7 +106,7 @@
           <div class="row"><label for="cantidad_ajustes">Cantidad posterior</label><select id="cantidad_ajustes"><option value="AUTO">Automatica</option><option value="0">Sin ajustes</option><option value="1">1 ajuste</option><option value="2">2 ajustes</option><option value="3">3 ajustes</option><option value="4">4 ajustes</option></select></div>
           <div class="row casco-ajuste-post"><label for="ajuste_posterior_orientacion">Orientación posterior</label><select id="ajuste_posterior_orientacion"><option value="HORIZONTAL">Rail horizontal (ancho completo)</option><option value="VERTICAL">Escuadras en las esquinas</option></select></div>
           <div class="row casco-ajuste-post"><label for="grosor_ajuste">Grosor ajuste (mm)</label><input type="number" id="grosor_ajuste" value="15" min="3" max="40" step=".5"></div>
-          <div class="row casco-ajuste-post"><label for="alto_ajuste">Altura ajuste (mm)</label><input type="number" id="alto_ajuste" value="60" min="20"></div>
+          <div class="row casco-ajuste-post"><label for="alto_ajuste">Altura ajuste (mm)</label><input type="number" id="alto_ajuste" value="70" min="20"></div>
           <div class="row casco-ajuste-post"><label for="separacion_ajuste_respaldo">Separación ajuste-respaldo (mm)</label><input type="number" id="separacion_ajuste_respaldo" value="2" min="0" max="50" step=".5"></div>
           <div class="row casco-ajuste-post"><label for="distancia_plano_posterior">Distancia desde atrás (mm)</label><input type="number" id="distancia_plano_posterior" value="0" min="0" max="100" step=".5"></div>
           <small id="ajustes_hint" class="casco-ajuste-post">Orden desde atrás: distancia posterior → ajuste → separación → respaldo → espacio útil.</small>

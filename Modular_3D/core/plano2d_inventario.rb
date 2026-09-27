@@ -131,7 +131,7 @@ module LPenafiel_GeneradorMueblesExacto
 
       # --- Ajustes (posterior y frontal) ---
       cantidad_ajustes_raw = (datos['cantidad_ajustes'] || 'AUTO').to_s.upcase
-      alto_ajuste = f(datos['alto_ajuste'], 60)
+      alto_ajuste = f(datos['alto_ajuste'], 70)
       grosor_ajuste = f(datos['grosor_ajuste'], espesor)
       separacion_ajuste_respaldo = f(datos['separacion_ajuste_respaldo'], 2)
       distancia_plano_posterior = f(datos['distancia_plano_posterior'], 0)
@@ -139,7 +139,7 @@ module LPenafiel_GeneradorMueblesExacto
       respaldo_estructural = grosor_resp >= 15.0
       lleva_respaldo = (datos['lleva_respaldo'] || 'SI').to_s
       cantidad_ajustes = 0
-      if lleva_respaldo != 'NO' && !respaldo_estructural
+      if lleva_respaldo == 'SOLO_AJUSTES' || (lleva_respaldo != 'NO' && !respaldo_estructural)
         cantidad_ajustes = cantidad_ajustes_raw == 'AUTO' ? (alto_total > 760.0 ? 2 : 1) : cantidad_ajustes_raw.to_i
         cantidad_ajustes = [[cantidad_ajustes, 0].max, 4].min
       end

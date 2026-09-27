@@ -416,12 +416,12 @@
     /* Sistema posterior: mismas 3 variantes y la misma secuencia atrás->adelante
        que plugin.rb (distancia posterior -> ajuste -> separación -> respaldo). */
     var backMode = String(data.lleva_respaldo == null ? 'SI' : data.lleva_respaldo).toUpperCase();
-    var adjustmentT = number(data, 'grosor_ajuste', general), adjustmentH = number(data, 'alto_ajuste', 60);
+    var adjustmentT = number(data, 'grosor_ajuste', general), adjustmentH = number(data, 'alto_ajuste', 70);
     var rearOffset = number(data, 'distancia_plano_posterior', 0), rearGap = number(data, 'separacion_ajuste_respaldo', 2);
     var backT = number(data, 'grosor_resp', 6), structuralBack = backT >= 15;
     var adjustmentCountRaw = String(data.cantidad_ajustes == null ? 'AUTO' : data.cantidad_ajustes).toUpperCase();
     var adjustmentCount = 0;
-    if (backMode !== 'NO' && !structuralBack) {
+    if (backMode === 'SOLO_AJUSTES' || (backMode !== 'NO' && !structuralBack)) {
       adjustmentCount = adjustmentCountRaw === 'AUTO' ? (height > 760 ? 2 : 1) : Math.max(0, parseInt(adjustmentCountRaw, 10) || 0);
       adjustmentCount = Math.max(0, Math.min(4, adjustmentCount));
     }

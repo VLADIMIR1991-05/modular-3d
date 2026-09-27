@@ -203,7 +203,7 @@ module LPenafiel_GeneradorMueblesExacto
       lleva_maletera  = datos['lleva_maletera']
       grosor_resp     = (datos['grosor_resp'] || 6).to_f.mm
       cantidad_ajustes_raw = (datos['cantidad_ajustes'] || "AUTO").to_s.upcase
-      alto_ajuste = (datos['alto_ajuste'] || 60).to_f.mm
+      alto_ajuste = (datos['alto_ajuste'] || 70).to_f.mm
       grosor_ajuste = (datos['grosor_ajuste'] || datos['espesor'] || 15).to_f.mm
       separacion_ajuste_respaldo = (datos['separacion_ajuste_respaldo'] || 2).to_f.mm
       distancia_plano_posterior = (datos['distancia_plano_posterior'] || 0).to_f.mm
@@ -436,7 +436,10 @@ module LPenafiel_GeneradorMueblesExacto
 
       respaldo_estructural = grosor_resp >= 15.mm
       cantidad_ajustes = 0
-      if lleva_respaldo != "NO" && !respaldo_estructural
+      # "SOLO_AJUSTES": sin panel de respaldo pero con ajustes igual -- se
+      # ignora respaldo_estructural en ese modo porque no hay panel cuyo
+      # grosor evaluar.
+      if lleva_respaldo == "SOLO_AJUSTES" || (lleva_respaldo != "NO" && !respaldo_estructural)
         cantidad_ajustes = cantidad_ajustes_raw == "AUTO" ? (alto_total > 760.mm ? 2 : 1) : cantidad_ajustes_raw.to_i
         cantidad_ajustes = [[cantidad_ajustes, 0].max, 4].min
       end
