@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  var groups=['casco','interior','frentes','cajones','respaldo','ajuste','herrajes'];
+  var groups=['casco','interior','frentes','cajones','respaldo','ajuste','herrajes','zocalo','cornisa','remates'];
   var overrides={},dimensionOverrides={},miterOverrides={},textures={},textureMeta={},selectedKey=null,selectedDetail=null,bound=false,pendingTexture='',pendingPieceTexture='';
   var LIBRARY_KEY='modular3d_material_library_v1';
   // Biblioteca de texturas incluidas con el plugin: arranca con las 7

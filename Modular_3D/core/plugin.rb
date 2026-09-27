@@ -38,6 +38,7 @@ Sketchup.require 'Modular_3D/core/geometria'
 Sketchup.require 'Modular_3D/core/actualizaciones'
 Sketchup.require 'Modular_3D/core/componentes_dinamicos'
 Sketchup.require 'Modular_3D/core/jerarquia'
+Sketchup.require 'Modular_3D/core/continuidad'
 Sketchup.require 'Modular_3D/core/despiece'
 Sketchup.require 'Modular_3D/core/presupuesto'
 # §7-9 de la propuesta v5: mecanizados exportables (columna nueva en

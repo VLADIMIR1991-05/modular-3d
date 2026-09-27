@@ -229,6 +229,13 @@ module LPenafiel_GeneradorMueblesExacto
     return 'ajuste' if clave.include?('AJUSTE')
     return 'herrajes' if clave.include?('GOLA') || clave.include?('JALADOR') || clave.include?('TIRADOR')
     return 'cajones' if clave.start_with?('CJ_') || clave.include?('_CJ_')
+    # Zócalo/cornisa: cubre también su propio remate lateral (REMATE_ZOCALO_*/
+    # REMATE_CORNISA_*, que contienen la misma palabra) -- van del mismo
+    # color que el zócalo/cornisa, no del de "Remates" (eso es solo para
+    # REMATE_INICIAL/REMATE_FINAL, el panel lateral de auxiliares/closets).
+    return 'zocalo' if clave.include?('ZOCALO')
+    return 'cornisa' if clave.include?('CORNISA')
+    return 'remates' if clave == 'REMATE_INICIAL' || clave == 'REMATE_FINAL'
     return 'interior' if clave.include?('DIV') || clave.include?('REP') || clave.start_with?('H_CIERRE') || clave.start_with?('H_BASE') || clave.start_with?('H_TECHO')
     'casco'
   end
@@ -588,7 +595,10 @@ module LPenafiel_GeneradorMueblesExacto
     punto = punto + @offset_creacion if @offset_creacion
     transformacion = Geom::Transformation.new(punto)
     instancia.transformation = transformacion
-    self.aplicar_material_configurado(instancia, nombre)
+    # El premesón siempre queda en material crudo (encima va la cubierta/
+    # mesón real) -- no tiene rol de color, a diferencia de zócalo/cornisa/
+    # remates, que sí se pintan como cualquier otra pieza.
+    self.aplicar_material_configurado(instancia, nombre) unless nombre.to_s == 'PREMESON'
     @piezas_modulo_actual << instancia if @piezas_modulo_actual
     return instancia
   end
