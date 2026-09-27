@@ -45,6 +45,59 @@ module LPenafiel_GeneradorMueblesExacto
       enviar_estado_licencia.call(ok: false, code: "LOGIN_REQUIRED", message: "Sesión cerrada.")
     end
 
+    # --- Parámetros de Diseño (§3) ---
+    dialogo.add_action_callback("parametroDisenoGuardar") do |_action_context, datos|
+      resultado = Modular3D::ParametrosDiseno.guardar(datos)
+      dialogo.execute_script("if (window.Modular3DParametroDisenoResult) { window.Modular3DParametroDisenoResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("parametroDisenoEliminar") do |_action_context, parametro_id|
+      resultado = Modular3D::ParametrosDiseno.eliminar(parametro_id)
+      dialogo.execute_script("if (window.Modular3DParametroDisenoResult) { window.Modular3DParametroDisenoResult(#{JSON.generate(resultado)}); }")
+    end
+
+    # --- Reglas de Construcción (v6 §Fase C, inspirado en B_06) ---
+    dialogo.add_action_callback("reglaConstruccionGuardar") do |_action_context, datos|
+      resultado = Modular3D::ReglasConstruccion.guardar(datos)
+      dialogo.execute_script("if (window.Modular3DReglaConstruccionResult) { window.Modular3DReglaConstruccionResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("reglaConstruccionEliminar") do |_action_context, regla_id|
+      resultado = Modular3D::ReglasConstruccion.eliminar(regla_id)
+      dialogo.execute_script("if (window.Modular3DReglaConstruccionResult) { window.Modular3DReglaConstruccionResult(#{JSON.generate(resultado)}); }")
+    end
+
+    # --- Principios de Espacio (§2) ---
+    dialogo.add_action_callback("principioGuardar") do |_action_context, nodo, nombre, principio_id_existente|
+      resultado = Modular3D::Principios.guardar(nodo, nombre, principio_id_existente)
+      dialogo.execute_script("if (window.Modular3DPrincipioResult) { window.Modular3DPrincipioResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("principioEliminar") do |_action_context, principio_id|
+      resultado = Modular3D::Principios.eliminar(principio_id)
+      dialogo.execute_script("if (window.Modular3DPrincipioResult) { window.Modular3DPrincipioResult(#{JSON.generate(resultado)}); }")
+    end
+
+    # --- Catálogo Global de Tipos de Módulo (ecosistema Modular-3D) ---
+    # Llamadas de red reales (Modular3D::Catalogo, ver core/catalogo.rb)
+    # disparadas bajo demanda desde la pestaña "5 Catálogo" -- nunca al abrir
+    # el diálogo, para no sumarle latencia de red a la apertura del
+    # configurador (a diferencia de Perfiles/Principios/Reglas, que son
+    # lectura de archivos locales instantánea).
+    dialogo.add_action_callback("catalogoCategorias") do |_action_context|
+      resultado = Modular3D::Catalogo.categorias
+      dialogo.execute_script("if (window.Modular3DCatalogoCategoriasResult) { window.Modular3DCatalogoCategoriasResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoListar") do |_action_context, categoria, buscar|
+      resultado = Modular3D::Catalogo.listar(categoria: categoria, buscar: buscar)
+      dialogo.execute_script("if (window.Modular3DCatalogoListaResult) { window.Modular3DCatalogoListaResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoDetalle") do |_action_context, catalogo_id|
+      resultado = Modular3D::Catalogo.detalle(catalogo_id)
+      dialogo.execute_script("if (window.Modular3DCatalogoDetalleResult) { window.Modular3DCatalogoDetalleResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoGuardar") do |_action_context, categoria, nombre, descripcion, datos|
+      resultado = Modular3D::Catalogo.guardar(categoria, nombre, descripcion, datos)
+      dialogo.execute_script("if (window.Modular3DCatalogoGuardarResult) { window.Modular3DCatalogoGuardarResult(#{JSON.generate(resultado)}); }")
+    end
+
     dialogo.add_action_callback("ejecutarConstruccionMueble") do |_action_context, datos|
       estado_licencia = Modular3D::License.ensure_authorized
       unless estado_licencia[:ok]
@@ -125,6 +178,17 @@ module LPenafiel_GeneradorMueblesExacto
       retranqueo_trasero_izq = 0.mm - sobremedida_trasera_izq
       retranqueo_frontal_der = 0.mm - sobremedida_frontal_der
       retranqueo_trasero_der = 0.mm - sobremedida_trasera_der
+      # v6 §Fase A: la puerta externa solapada nacía siempre en
+      # Y = -grosor_puerta, sin enterarse de que un lateral/base/techo vecino
+      # podía sobresalir mas hacia adelante por su propia sobremedida frontal
+      # -- si esa sobremedida era mayor que el grosor de puerta, la puerta
+      # quedaba "embutida" detras del panel que ahora sobresalia mas. Ver
+      # calcular_protrusion_puerta mas abajo (linea ~326) y su uso en el bucle
+      # de puertas. "puerta_protrusion_override_mm" es la "decision editable"
+      # pedida: si tiene un valor, gana sobre cualquier calculo automatico.
+      puerta_protrusion_modo = (datos['puerta_protrusion_modo'] || 'AUTOMATICO').to_s.upcase
+      puerta_protrusion_override_raw = datos['puerta_protrusion_override_mm'].to_s.strip
+      puerta_protrusion_override = puerta_protrusion_override_raw.empty? ? nil : [puerta_protrusion_override_raw.to_f, 0.0].max.mm
       num_repisas     = datos['num_repisas'].to_i
       num_divisiones  = datos['num_divisiones'].to_i
       param_x_expr = datos['param_x_expr'].to_s.strip
@@ -230,6 +294,17 @@ module LPenafiel_GeneradorMueblesExacto
       # LAT_IZQ/LAT_DER: aplica automaticamente el mismo corte que ya existia
       # como ajuste manual por pieza (miter_overrides_json), sin pisar un
       # override que el usuario ya haya puesto a mano para esa pieza puntual.
+      #
+      # v6.0.1 -- bug real encontrado y corregido: la version anterior de
+      # este bloque (y su gemelo por nodo, mas abajo) SOLO agregaba un
+      # override cuando el montaje ERA Inglete, pero nunca lo sacaba cuando
+      # el usuario volvia a elegir Interior/Sobrepuesto -- ese override
+      # "automatico" viejo se quedaba pegado para siempre en el manifiesto y
+      # seguia biselando esa pieza a 45°, aunque el desplegable ya dijera
+      # otra cosa. Cada entrada automatica ahora se marca con 'auto' => true
+      # para poder distinguirla de un ajuste manual real (Materiales > pieza
+      # individual, que nunca pone esa marca) y borrarla cuando corresponda,
+      # sin tocar nunca un ajuste manual del usuario.
       miter_overrides_auto = begin
         raw_miter = @datos_modulo_actual['miter_overrides_json']
         parseado = raw_miter.is_a?(Hash) ? raw_miter : JSON.parse(raw_miter.to_s)
@@ -237,13 +312,21 @@ module LPenafiel_GeneradorMueblesExacto
       rescue JSON::ParserError
         {}
       end
-      { 'LAT_IZQ' => montaje_izq, 'LAT_DER' => montaje_der }.each do |nombre_lateral, montaje_lateral|
-        next if miter_overrides_auto.key?(nombre_lateral) || miter_overrides_auto.key?(nombre_lateral.upcase)
-        esquina_auto = case montaje_lateral
+      gestionar_inglete_auto = lambda do |overrides_hash, nombre_pieza, montaje_pieza|
+        existente = overrides_hash[nombre_pieza]
+        fue_automatico = existente.is_a?(Hash) && existente['auto'] == true
+        esquina_auto = case montaje_pieza
                         when 'INGLETE_SUPERIOR' then 'top_outer'
                         when 'INGLETE_INFERIOR' then 'bottom_outer'
                         end
-        miter_overrides_auto[nombre_lateral] = { 'corner' => esquina_auto, 'size' => espesor.to_mm } if esquina_auto
+        if esquina_auto
+          overrides_hash[nombre_pieza] = { 'corner' => esquina_auto, 'size' => espesor.to_mm, 'auto' => true } unless existente.is_a?(Hash) && !fue_automatico
+        elsif fue_automatico
+          overrides_hash.delete(nombre_pieza)
+        end
+      end
+      { 'LAT_IZQ' => montaje_izq, 'LAT_DER' => montaje_der }.each do |nombre_lateral, montaje_lateral|
+        gestionar_inglete_auto.call(miter_overrides_auto, nombre_lateral, montaje_lateral)
       end
       @datos_modulo_actual['miter_overrides_json'] = JSON.generate(miter_overrides_auto)
       @datos_modulo_actual['module_base_offset'] = [
@@ -291,16 +374,65 @@ module LPenafiel_GeneradorMueblesExacto
       x_lat_der = ancho_total - grosor_lat_der
       self.crear_pieza(entities, modulo_nombre, "LAT_DER", grosor_lat_der, prof_lat_der, alto_lat_der, x_lat_der, retranqueo_frontal_der, z_lat_der, lat_l, lat_c) if existe_lat_der
 
+      # v6 §Fase B: "2 travesaños" tambien como alternativa al panel
+      # completo en BASE/TECHO del casco general, simetrico con lo que ya
+      # existia por espacio (h_top_mode). No aplica sobremedida a los
+      # travesaños (son listones angostos, no un panel) -- mismo criterio
+      # que ya usa la version por nodo mas abajo.
+      base_modo_general = (datos['tipo_inferior'] || 'FULL').to_s.upcase
+      techo_modo_general = (datos['tipo_superior'] || 'FULL').to_s.upcase
+
       ancho_base = montaje_inferior == "EXTERIOR" ? ancho_total : ancho_util_mueble
       x_base = montaje_inferior == "EXTERIOR" ? 0.mm : grosor_lat_izq
       prof_base = prof_total - retranqueo_frontal_inferior - retranqueo_trasero_inferior
-      self.crear_pieza(entities, modulo_nombre, "BASE", ancho_base, prof_base, grosor_inferior, x_base, retranqueo_frontal_inferior, 0, hz_l, hz_c) if existe_base
+      if existe_base
+        if base_modo_general == 'TRAVESANOS'
+          ancho_trav_base = [(datos['travesano_ancho_inferior'] || 70).to_f, 20.0].max.mm
+          self.crear_pieza(entities, modulo_nombre, "BASE_TRAV_DEL", ancho_base, ancho_trav_base, grosor_inferior, x_base, 0.mm, 0, hz_l, hz_c)
+          self.crear_pieza(entities, modulo_nombre, "BASE_TRAV_TRAS", ancho_base, ancho_trav_base, grosor_inferior, x_base, prof_total - ancho_trav_base, 0, hz_l, hz_c)
+        else
+          self.crear_pieza(entities, modulo_nombre, "BASE", ancho_base, prof_base, grosor_inferior, x_base, retranqueo_frontal_inferior, 0, hz_l, hz_c)
+        end
+      end
 
       ancho_techo = montaje_superior == "EXTERIOR" ? ancho_total : ancho_util_mueble
       x_techo = montaje_superior == "EXTERIOR" ? 0.mm : grosor_lat_izq
       prof_techo = prof_total - retranqueo_frontal_superior - retranqueo_trasero_superior
       z_techo = alto_total - grosor_superior
-      self.crear_pieza(entities, modulo_nombre, "TECHO", ancho_techo, prof_techo, grosor_superior, x_techo, retranqueo_frontal_superior, z_techo, hz_l, hz_c) if existe_techo
+      if existe_techo
+        if techo_modo_general == 'TRAVESANOS'
+          ancho_trav_techo = [(datos['travesano_ancho_superior'] || 70).to_f, 20.0].max.mm
+          self.crear_pieza(entities, modulo_nombre, "TECHO_TRAV_DEL", ancho_techo, ancho_trav_techo, grosor_superior, x_techo, 0.mm, z_techo, hz_l, hz_c)
+          self.crear_pieza(entities, modulo_nombre, "TECHO_TRAV_TRAS", ancho_techo, ancho_trav_techo, grosor_superior, x_techo, prof_total - ancho_trav_techo, z_techo, hz_l, hz_c)
+        else
+          self.crear_pieza(entities, modulo_nombre, "TECHO", ancho_techo, prof_techo, grosor_superior, x_techo, retranqueo_frontal_superior, z_techo, hz_l, hz_c)
+        end
+      end
+
+      # v6 §Fase A -- ver comentario junto a "puerta_protrusion_override" mas
+      # arriba. Por puerta: la protrusion efectiva es la mayor entre el
+      # grosor de puerta (piso de siempre) y la sobremedida frontal de cada
+      # panel -- global de casco o propio del espacio -- que esa puerta
+      # realmente toca (se detecta por coincidencia de coordenadas, mismo
+      # criterio de "eps" que ya usa facadeBox en JS). Si hay un override
+      # manual, ese gana siempre y no hace falta calcular nada.
+      calcular_protrusion_puerta = lambda do |cav_x_min, cav_x_max, cav_z_min, cav_z_max, enc_nodo, sob_nodo, grosor_puerta_local|
+        next puerta_protrusion_override if puerta_protrusion_override
+        eps = 0.5.mm
+        candidatos = [grosor_puerta_local]
+        candidatos << sobremedida_frontal_izq if existe_lat_izq && (cav_x_min - grosor_lat_izq).abs <= eps
+        candidatos << sobremedida_frontal_der if existe_lat_der && (cav_x_max - (ancho_total - grosor_lat_der)).abs <= eps
+        candidatos << sobremedida_frontal_inferior if existe_base && base_modo_general != 'TRAVESANOS' && (cav_z_min - grosor_inferior).abs <= eps
+        candidatos << sobremedida_frontal_superior if existe_techo && techo_modo_general != 'TRAVESANOS' && (cav_z_max - (alto_total - grosor_superior)).abs <= eps
+        if enc_nodo.is_a?(Hash)
+          sob_nodo = {} unless sob_nodo.is_a?(Hash)
+          candidatos << (sob_nodo['frontalIzq'] || 0).to_f.mm if enc_nodo['left']
+          candidatos << (sob_nodo['frontalDer'] || 0).to_f.mm if enc_nodo['right']
+          candidatos << (sob_nodo['frontalInferior'] || 0).to_f.mm if enc_nodo['bottom']
+          candidatos << (sob_nodo['frontalSuperior'] || 0).to_f.mm if enc_nodo['top'] && enc_nodo['topMode'].to_s.upcase != 'TRAVESANOS'
+        end
+        candidatos.max
+      end
 
       respaldo_estructural = grosor_resp >= 15.mm
       cantidad_ajustes = 0
@@ -472,6 +604,21 @@ module LPenafiel_GeneradorMueblesExacto
             separator['x'].to_f.mm, separator['y'].to_f.mm, separator['z'].to_f.mm, 1, 1)
         end
 
+        # v6 §Fase B: montaje interior/sobrepuesto (+ inglete 45°) por panel
+        # de espacio, generalizando el mismo control que el casco general ya
+        # tenia (montaje_izq/der/superior/inferior, lineas ~110-135) a cada
+        # nodo de la jerarquia. Los overrides de inglete se inyectan aqui,
+        # por nodo, en @datos_modulo_actual['miter_overrides_json'] --
+        # inglete_pieza() (core/geometria.rb) lo relee en cada crear_pieza,
+        # asi que alcanza con actualizarlo antes de construir la pieza que
+        # corresponda.
+        miter_overrides_nodo = begin
+          raw_miter_nodo = @datos_modulo_actual['miter_overrides_json']
+          parseado_nodo = raw_miter_nodo.is_a?(Hash) ? raw_miter_nodo : JSON.parse(raw_miter_nodo.to_s)
+          parseado_nodo.is_a?(Hash) ? parseado_nodo : {}
+        rescue JSON::ParserError
+          {}
+        end
         hierarchy_geometry['nodes'].each_with_index do |node, node_index|
           next unless node.is_a?(Hash) && node['box'].is_a?(Hash) && node['enclosure'].is_a?(Hash)
           box = node['box']; enc = node['enclosure']; x = box['x'].to_f.mm; y = box['y'].to_f.mm; z = box['z'].to_f.mm
@@ -486,30 +633,58 @@ module LPenafiel_GeneradorMueblesExacto
           sob = node['sobremedida'].is_a?(Hash) ? node['sobremedida'] : {}
           ret_frontal_de = lambda { |clave| 0.mm - (sob["frontal#{clave}"] || 0).to_f.mm }
           ret_trasera_de = lambda { |clave| 0.mm - (sob["trasera#{clave}"] || 0).to_f.mm }
+          mount_izq_nodo = (enc['leftMount'] || 'EXTERIOR').to_s.upcase
+          mount_der_nodo = (enc['rightMount'] || 'EXTERIOR').to_s.upcase
+          mount_inf_nodo = (enc['bottomMount'] || 'INTERIOR').to_s.upcase
+          mount_sup_nodo = (enc['topMount'] || 'INTERIOR').to_s.upcase
+          # Misma regla de conflicto de esquina que el casco general: un
+          # lateral que llega de punta a punta (EXTERIOR o INGLETE_*) no
+          # puede competir por la misma esquina con un horizontal que
+          # tambien llegue de punta a punta -- gana el lateral.
+          if mount_izq_nodo != 'INTERIOR' || mount_der_nodo != 'INTERIOR'
+            mount_inf_nodo = 'INTERIOR' if mount_inf_nodo == 'EXTERIOR'
+            mount_sup_nodo = 'INTERIOR' if mount_sup_nodo == 'EXTERIOR'
+          end
           if enc['left']
             rf = ret_frontal_de.call('Izq'); rt = ret_trasera_de.call('Izq')
-            self.crear_pieza(entities, modulo_nombre, "H_CIERRE_IZQ_#{nid}", espesor, d - rf - rt, h, x, y + rf, z, 1, 1)
+            nombre_izq_nodo = "H_CIERRE_IZQ_#{nid}"
+            gestionar_inglete_auto.call(miter_overrides_nodo, nombre_izq_nodo, mount_izq_nodo)
+            @datos_modulo_actual['miter_overrides_json'] = JSON.generate(miter_overrides_nodo)
+            alto_izq_nodo = mount_izq_nodo == 'INTERIOR' ? (h - (enc['bottom'] ? espesor : 0.mm) - (enc['top'] ? espesor : 0.mm)) : h
+            z_izq_nodo = mount_izq_nodo == 'INTERIOR' && enc['bottom'] ? z + espesor : z
+            self.crear_pieza(entities, modulo_nombre, nombre_izq_nodo, espesor, d - rf - rt, alto_izq_nodo, x, y + rf, z_izq_nodo, 1, 1)
           end
           if enc['right']
             rf = ret_frontal_de.call('Der'); rt = ret_trasera_de.call('Der')
-            self.crear_pieza(entities, modulo_nombre, "H_CIERRE_DER_#{nid}", espesor, d - rf - rt, h, x + w - espesor, y + rf, z, 1, 1)
+            nombre_der_nodo = "H_CIERRE_DER_#{nid}"
+            gestionar_inglete_auto.call(miter_overrides_nodo, nombre_der_nodo, mount_der_nodo)
+            @datos_modulo_actual['miter_overrides_json'] = JSON.generate(miter_overrides_nodo)
+            alto_der_nodo = mount_der_nodo == 'INTERIOR' ? (h - (enc['bottom'] ? espesor : 0.mm) - (enc['top'] ? espesor : 0.mm)) : h
+            z_der_nodo = mount_der_nodo == 'INTERIOR' && enc['bottom'] ? z + espesor : z
+            self.crear_pieza(entities, modulo_nombre, nombre_der_nodo, espesor, d - rf - rt, alto_der_nodo, x + w - espesor, y + rf, z_der_nodo, 1, 1)
           end
           if enc['bottom']
             rf = ret_frontal_de.call('Inferior'); rt = ret_trasera_de.call('Inferior')
-            self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", w, d - rf - rt, espesor, x, y + rf, z, 1, 0)
+            ancho_base_nodo = mount_inf_nodo == 'INTERIOR' ? (w - (enc['left'] ? espesor : 0.mm) - (enc['right'] ? espesor : 0.mm)) : w
+            x_base_nodo = mount_inf_nodo == 'INTERIOR' && enc['left'] ? x + espesor : x
+            self.crear_pieza(entities, modulo_nombre, "H_BASE_#{nid}", ancho_base_nodo, d - rf - rt, espesor, x_base_nodo, y + rf, z, 1, 0)
           end
           if enc['top']
+            ancho_top_nodo = mount_sup_nodo == 'INTERIOR' ? (w - (enc['left'] ? espesor : 0.mm) - (enc['right'] ? espesor : 0.mm)) : w
+            x_top_nodo = mount_sup_nodo == 'INTERIOR' && enc['left'] ? x + espesor : x
             if enc['topMode'].to_s.upcase == 'TRAVESANOS'
               # Cierre superior alternativo: 2 travesaños (adelante y atras) en
               # vez de un techo completo -- ahorra material cuando no hace
               # falta un panel entero encima (p. ej. debajo de una encimera).
               # No aplica sobremedida: son listones angostos, no un panel.
+              # Si respeta el montaje interior/sobrepuesto en su ancho (igual
+              # que la base/techo completo).
               ancho_trav = [(enc['topTravesano'] || 70).to_f, 20.0].max.mm
-              self.crear_pieza(entities, modulo_nombre, "H_TRAV_DEL_#{nid}", w, ancho_trav, espesor, x, y, z + h - espesor, 1, 0)
-              self.crear_pieza(entities, modulo_nombre, "H_TRAV_TRAS_#{nid}", w, ancho_trav, espesor, x, y + d - ancho_trav, z + h - espesor, 1, 0)
+              self.crear_pieza(entities, modulo_nombre, "H_TRAV_DEL_#{nid}", ancho_top_nodo, ancho_trav, espesor, x_top_nodo, y, z + h - espesor, 1, 0)
+              self.crear_pieza(entities, modulo_nombre, "H_TRAV_TRAS_#{nid}", ancho_top_nodo, ancho_trav, espesor, x_top_nodo, y + d - ancho_trav, z + h - espesor, 1, 0)
             else
               rf = ret_frontal_de.call('Superior'); rt = ret_trasera_de.call('Superior')
-              self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", w, d - rf - rt, espesor, x, y + rf, z + h - espesor, 1, 0)
+              self.crear_pieza(entities, modulo_nombre, "H_TECHO_#{nid}", ancho_top_nodo, d - rf - rt, espesor, x_top_nodo, y + rf, z + h - espesor, 1, 0)
             end
           end
           self.crear_pieza(entities, modulo_nombre, "H_RESP_#{nid}", w, grosor_resp, h, x, y + d - grosor_resp, z, 0, 0) if enc['back']
@@ -720,6 +895,7 @@ module LPenafiel_GeneradorMueblesExacto
           # panel real de ese lado, y así saber qué tipo de bisagra le
           # corresponde (recta/semicodada/codada) según su altura de solape.
           cavidad_x_min = x_min; cavidad_x_max = x_min + ancho_nodo
+          cavidad_z_min = z_min; cavidad_z_max = z_min + alto_nodo
           # Los valores antiguos de vidrio se abren como puertas sólidas para conservar proyectos.
           frente = frente.gsub('_VIDRIO', '').gsub('VIDRIO', 'UNICA')
           cantidad_solicitada = node['frontCount'].to_s.upcase
@@ -757,7 +933,8 @@ module LPenafiel_GeneradorMueblesExacto
             # frente Y=0. Externa embutida: queda a ras (Y=0), dentro del hueco
             # que ya calculó facadeBox con margen uniforme. Interna: nace
             # dentro del hueco del espacio seleccionado.
-            y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -grosor_puerta)
+            protrusion_puerta = (puerta_interna || externa_embutida) ? grosor_puerta : calcular_protrusion_puerta.call(cavidad_x_min, cavidad_x_max, cavidad_z_min, cavidad_z_max, node['enclosure'], node['sobremedida'], grosor_puerta)
+            y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -protrusion_puerta)
             x_puerta_izq = x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central))
             # Con una sola puerta se respeta la bisagra elegida en "Apertura"
             # del espacio; con varias, las de los extremos abren hacia afuera
@@ -810,9 +987,17 @@ module LPenafiel_GeneradorMueblesExacto
           ancho_puerta = (ancho_total - fuga_izq - fuga_der - fuga_central * (cantidad - 1)) / cantidad
           alto_puerta = alto_total - fuga_sup - fuga_inf
           if ancho_puerta > 0 && alto_puerta > 0
+            # Frente global: por definicion toca los 4 lados del casco, asi
+            # que se pasan los bordes exactos de coincidencia (sin necesidad
+            # de detectar toque real como en el bucle por espacio).
+            protrusion_global = calcular_protrusion_puerta.call(grosor_lat_izq, ancho_total - grosor_lat_der, grosor_inferior, alto_total - grosor_superior, nil, nil, grosor_puerta)
             (1..cantidad).each do |pi|
+              # El grosor de la puerta (segundo argumento) no cambia -- solo
+              # su posicion Y se adelanta hasta igualar al panel que mas
+              # sobresale (protrusion_global), igual que en el bucle por
+              # espacio de arriba.
               pieza = self.crear_pieza(entities, modulo_nombre, "G_PUERTA_EXT_#{pi}", ancho_puerta, grosor_puerta, alto_puerta,
-                fuga_izq + ((pi - 1) * (ancho_puerta + fuga_central)), -grosor_puerta, fuga_inf, 2, 2)
+                fuga_izq + ((pi - 1) * (ancho_puerta + fuga_central)), -protrusion_global, fuga_inf, 2, 2)
               regla_apertura = (datos['global_front_hinge'] || 'ALTERNADA').to_s.upcase
               apertura = if regla_apertura == 'IZQUIERDA' || regla_apertura == 'DERECHA'
                            regla_apertura
@@ -830,13 +1015,11 @@ module LPenafiel_GeneradorMueblesExacto
       if num_cajones > 0
         fuga = [(datos['luz_frentes'] || datos['juego_general'] || 3).to_f, 1.5].max.mm
         sistema_corredera = (datos['sistema_corredera'] || "Telescopica estandar").to_s
-        holgura_lateral = if sistema_corredera.downcase.include?("oculta")
-                            21.mm
-                          elsif sistema_corredera.downcase.include?("maximo")
-                            15.mm
-                          else
-                            13.mm
-                          end
+        # Delegado a Modular3D::Herrajes (§6 nivel A): misma tabla de holguras
+        # por defecto (Oculta 21mm, Automático máximo 15mm, cualquier otro
+        # texto -- incluida "Telescopica estandar" -- 13mm), ahora editable
+        # desde Modular_3D/herrajes/correderas.json sin tocar este archivo.
+        holgura_lateral = Modular3D::Herrajes.holgura_para_sistema(sistema_corredera).mm
         retiro_cajones = (datos['ret_cajones'] || 0).to_f.mm
         ancho_disponible_cajon = num_divisiones > 0 ? ((ancho_util_mueble - (num_divisiones * espesor)) / (num_divisiones + 1)) : ancho_util_mueble
         ancho_caja_cajon = ancho_disponible_cajon - (holgura_lateral * 2)
@@ -1074,6 +1257,33 @@ module LPenafiel_GeneradorMueblesExacto
     UI.start_timer(0.35, false) do
       begin
         dialogo.execute_script("window.__modular3dIncludedTextures = #{texturas_json}; if (window.Modular3DApplyIncludedTextures) { window.Modular3DApplyIncludedTextures(window.__modular3dIncludedTextures); }") if dialogo
+      rescue
+        nil
+      end
+    end
+    # Parámetros de Diseño (§3) y Principios de Espacio (§2): mismo patrón de
+    # inyección diferida que Perfiles/Texturas, uno por uno para no acoplar
+    # el fallo de uno con el otro.
+    parametros_diseno_json = JSON.generate(Modular3D::ParametrosDiseno.listar)
+    UI.start_timer(0.35, false) do
+      begin
+        dialogo.execute_script("window.__modular3dParametrosDiseno = #{parametros_diseno_json}; if (window.Modular3DApplyParametrosDisenoList) { window.Modular3DApplyParametrosDisenoList(window.__modular3dParametrosDiseno); }") if dialogo
+      rescue
+        nil
+      end
+    end
+    principios_json = JSON.generate(Modular3D::Principios.listar)
+    UI.start_timer(0.35, false) do
+      begin
+        dialogo.execute_script("window.__modular3dPrincipios = #{principios_json}; if (window.Modular3DApplyPrincipiosList) { window.Modular3DApplyPrincipiosList(window.__modular3dPrincipios); }") if dialogo
+      rescue
+        nil
+      end
+    end
+    reglas_construccion_json = JSON.generate(Modular3D::ReglasConstruccion.listar)
+    UI.start_timer(0.35, false) do
+      begin
+        dialogo.execute_script("window.__modular3dReglasConstruccion = #{reglas_construccion_json}; if (window.Modular3DApplyReglasConstruccionList) { window.Modular3DApplyReglasConstruccionList(window.__modular3dReglasConstruccion); }") if dialogo
       rescue
         nil
       end

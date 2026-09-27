@@ -65,6 +65,80 @@ module LPenafiel_GeneradorMueblesExacto
     { ok: true, message: "#{modulos_afectados} módulo(s) y #{piezas_afectadas} pieza(s) repintadas." }
   end
 
+  # "Aplicar a la selección" de Configuración de Proyecto (§4 de la
+  # propuesta v5): a diferencia de repintar_modulos_seleccionados (que
+  # siempre fuerza material_unico + un color puntual), esto reaplica un
+  # subconjunto de la config de PROYECTO a módulos ya construidos --
+  # deliberadamente acotado a Modular3D::Proyecto::CAMPOS_APLICABLES_A_
+  # EXISTENTES (edge_mode, sistema_corredera, material_unico y material
+  # global): son datos que despiece/presupuesto/pintado ya leen del
+  # manifiesto en tiempo de exportar o repintar, no algo que la geometría ya
+  # construida necesite reconstruir para reflejar. Cambiar ancho/alto/
+  # espesor/etc. de un módulo existente sí exigiría reconstruir su
+  # geometría completa (la misma lógica que ejecutarConstruccionMueble,
+  # dentro del callback del diálogo principal) y queda fuera de este
+  # método a propósito, por la misma razón ya documentada al final de este
+  # archivo para la edición por lotes.
+  def self.aplicar_proyecto_a_seleccionados(datos_proyecto)
+    model = Sketchup.active_model
+    seleccion = model.selection.to_a
+    return { ok: false, message: 'Selecciona primero uno o más módulos Modular_3D construidos.' } if seleccion.empty?
+
+    campos_permitidos = Modular3D::Proyecto::CAMPOS_APLICABLES_A_EXISTENTES
+    modulos_afectados = 0
+    operacion_iniciada = false
+    begin
+      model.start_operation('Aplicar configuración de proyecto (lote)', true)
+      operacion_iniciada = true
+      seleccion.each do |entity|
+        manifiesto = manifiesto_de_entidad(entity)
+        next unless manifiesto && manifiesto['data'].is_a?(Hash)
+
+        datos_actualizados = manifiesto['data'].dup
+        campos_permitidos.each do |campo|
+          valor = datos_proyecto[campo]
+          next if valor.nil? || valor.to_s.strip.empty?
+          datos_actualizados[campo] = valor
+        end
+
+        manifiesto_nuevo = manifiesto.dup
+        manifiesto_nuevo['data'] = datos_actualizados
+        raw = JSON.generate(manifiesto_nuevo)
+        [entity, (entity.respond_to?(:definition) ? entity.definition : nil)].compact.each do |objeto|
+          objeto.set_attribute('Modular3D', 'manifest', raw)
+        end
+
+        # Repinta de inmediato si el material global cambió, para que el
+        # efecto sea visible sin tener que reabrir/editar el módulo -- misma
+        # llamada que ya usa repintar_modulos_seleccionados.
+        if datos_actualizados['material_unico'].to_s == 'SI' && !datos_actualizados['material_global_color'].to_s.empty?
+          @datos_modulo_actual = datos_actualizados
+          instancias = []
+          recolectar_instancias_piezas(entity, instancias)
+          instancias.each do |instancia|
+            nombre_original = instancia.definition.get_attribute('LPenafiel', 'pieza_original')
+            next unless nombre_original
+            self.aplicar_material_configurado(instancia, nombre_original)
+          end
+          @datos_modulo_actual = nil
+        end
+
+        modulos_afectados += 1
+      end
+      model.commit_operation
+      operacion_iniciada = false
+    rescue StandardError => e
+      model.abort_operation if operacion_iniciada
+      return { ok: false, message: "No se pudo aplicar la configuración de proyecto: #{e.message}" }
+    ensure
+      @datos_modulo_actual = nil
+    end
+
+    return { ok: false, message: 'La selección no contiene módulos Modular_3D reconocibles.' } if modulos_afectados.zero?
+
+    { ok: true, message: "Configuración de proyecto aplicada a #{modulos_afectados} módulo(s) seleccionado(s)." }
+  end
+
   def self.mostrar_edicion_lotes
     return unless acceso_autorizado?
 

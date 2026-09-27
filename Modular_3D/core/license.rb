@@ -67,7 +67,8 @@ module Modular3D
           machine_id: machine_id,
           force_transfer: force_transfer == true,
           plugin_version: Modular3D::VERSION,
-          sketchup_version: Sketchup.version.to_s
+          sketchup_version: Sketchup.version.to_s,
+          product_code: "modular3d_plugin"
         }
       )
       if response[:ok] && response[:token]
@@ -88,7 +89,8 @@ module Modular3D
           token: saved_token,
           machine_id: machine_id,
           plugin_version: Modular3D::VERSION,
-          sketchup_version: Sketchup.version.to_s
+          sketchup_version: Sketchup.version.to_s,
+          product_code: "modular3d_plugin"
         }
       )
       response[:ok] ? mark_verified(response) : mark_denied(response)
@@ -98,7 +100,7 @@ module Modular3D
       return validate unless authorized_cached?
       response = request(
         "/license/heartbeat",
-        { token: saved_token, machine_id: machine_id, plugin_version: Modular3D::VERSION }
+        { token: saved_token, machine_id: machine_id, plugin_version: Modular3D::VERSION, product_code: "modular3d_plugin" }
       )
       response[:ok] ? mark_verified(response) : mark_denied(response)
     end

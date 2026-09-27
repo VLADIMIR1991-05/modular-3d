@@ -65,12 +65,13 @@ module LPenafiel_GeneradorMueblesExacto
   # proveedor local usa otros cortes). Solo aplica a puertas reales (codigo
   # "PT"): un frente de cajón exterior, aunque salga a la altura de la
   # puerta y comparta su solape, no es una puerta y no lleva bisagra.
+  #
+  # Delegado a Modular3D::Herrajes (§6 Herrajes editables por JSON, nivel A):
+  # misma firma, misma tabla de valores por defecto (2 hasta 950mm, 3 hasta
+  # 1400mm, 4 hasta 2120mm, 5 en puertas más altas) -- ahora editable desde
+  # Modular_3D/herrajes/bisagras_default.json sin tocar este archivo.
   def self.bisagras_por_altura(alto_mm)
-    alto = alto_mm.to_f
-    return 2 if alto <= 950.0
-    return 3 if alto <= 1400.0
-    return 4 if alto <= 2120.0
-    5
+    Modular3D::Herrajes.bisagras_por_altura(alto_mm)
   end
 
   # Texto para la columna "Bisagrado" del despiece: solo las puertas (codigo
@@ -101,6 +102,24 @@ module LPenafiel_GeneradorMueblesExacto
     ref_recta = espesor_mm - 1.5
     ref_semicodada = espesor_mm / 2.0
     (solape_mm - ref_recta).abs <= (solape_mm - ref_semicodada).abs ? 'Recta' : 'Semicodada'
+  end
+
+  # Texto para la columna "Mecanizado" del despiece (§7 mecanizados
+  # exportables): posiciones de taladro de bisagra a lo largo del canto
+  # vertical de la puerta, en el mismo formato "X=.. Y=[..] Ø..mm" pensado
+  # para copiar/pegar hacia un post-procesador externo o revisar a mano --
+  # no es un G-code ni coordenadas listas para CNC sin revisión humana (ver
+  # el comentario de posiciones_taladro_bisagra en core/herrajes.rb). Solo
+  # las puertas reales (codigo "PT") llevan esta columna; el resto queda
+  # vacía, igual que "Bisagrado".
+  def self.texto_mecanizado_pieza(codigo, alto_mm)
+    return '' unless codigo.to_s == 'PT'
+    posiciones = Modular3D::Herrajes.posiciones_taladro_bisagra(alto_mm, 0)
+    return '' if posiciones.empty?
+    x_mm = posiciones.first['x_mm'].to_f
+    diametro = posiciones.first['diametro_mm'].to_f
+    ys = posiciones.map { |posicion| '%.1f' % posicion['y_mm'].to_f }.join(',')
+    "X=#{'%.1f' % x_mm}mm Y=[#{ys}]mm Ø#{'%.0f' % diametro}mm"
   end
 
   # ID estable para nombrar piezas generadas desde la jerarquía: usa el id del

@@ -13,6 +13,23 @@ Sketchup.require 'Modular_3D/core/config'
 Sketchup.require 'Modular_3D/core/validation'
 Sketchup.require 'Modular_3D/core/license'
 
+# Módulos de configuración reutilizable agregados en v5 (ver propuesta
+# Modular3D_v5_Mejoras_imos): Parámetros de Diseño (§3), Principios de
+# Espacio (§2), Herrajes editables por JSON nivel A (§6) y Configuración de
+# Proyecto (§4). Se cargan aquí, antes de geometria/jerarquia, porque
+# core/proyecto.rb ya los usa (Modular3D::ParametrosDiseno, Herrajes) dentro
+# de mostrar_dialogo.
+Sketchup.require 'Modular_3D/core/parametros_diseno'
+Sketchup.require 'Modular_3D/core/principios'
+Sketchup.require 'Modular_3D/core/herrajes'
+Sketchup.require 'Modular_3D/core/proyecto'
+# v6 §Fase C: Reglas de Construcción (preset con nombre del casco general,
+# inspirado en B_06_Construction_Rules_2023.pdf de imos).
+Sketchup.require 'Modular_3D/core/reglas_construccion'
+# Catálogo Global de Tipos de Módulo (ecosistema Modular-3D): reutiliza el
+# token de sesión de Modular3D::License, cargado justo arriba.
+Sketchup.require 'Modular_3D/core/catalogo'
+
 # plugin.rb quedó como el núcleo (licencia/manifiesto) del módulo
 # LPenafiel_GeneradorMueblesExacto; el resto de responsabilidades se separó
 # en estos archivos, que reabren el mismo módulo (ver el reporte de
@@ -23,13 +40,23 @@ Sketchup.require 'Modular_3D/core/componentes_dinamicos'
 Sketchup.require 'Modular_3D/core/jerarquia'
 Sketchup.require 'Modular_3D/core/despiece'
 Sketchup.require 'Modular_3D/core/presupuesto'
+# §7-9 de la propuesta v5: mecanizados exportables (columna nueva en
+# despiece.rb, arriba), plano 2D SVG y Panel de Proyecto -- ambos leen del
+# mismo manifiesto/jerarquía que ya usan despiece/presupuesto, por eso se
+# cargan justo después de esos dos.
+# v6 §Fase D-1: motor de inventario de piezas reales (sin SketchUp) que usan
+# las vistas nuevas del plano 2D -- se carga antes que plano2d.rb, que ya lo
+# usa.
+Sketchup.require 'Modular_3D/core/plano2d_inventario'
+Sketchup.require 'Modular_3D/core/plano2d'
+Sketchup.require 'Modular_3D/core/panel_proyecto'
 Sketchup.require 'Modular_3D/core/biblioteca'
 Sketchup.require 'Modular_3D/core/esquinero'
 Sketchup.require 'Modular_3D/core/habitacion'
 
 # Modular_3D
 # Autor: Lenin Vladimir Peñafiel
-# Versión: 4.9.0
+# Versión: 6.2.0
 module LPenafiel_GeneradorMueblesExacto
 
   # Una licencia real debe validarse con un servicio firmado. El nombre de
@@ -49,7 +76,7 @@ module LPenafiel_GeneradorMueblesExacto
   @contenedor_edicion = nil
   @transformacion_edicion = nil
 
-  MANIFEST_VERSION = 6
+  MANIFEST_VERSION = 8
 
   def self.migrar_manifiesto(manifiesto)
     return manifiesto unless manifiesto.is_a?(Hash)
@@ -76,6 +103,19 @@ module LPenafiel_GeneradorMueblesExacto
     data['ajuste_frontal_activo'] ||= 'NO'
     data['ajuste_frontal_orientacion'] ||= 'HORIZONTAL'
     data['ajuste_posterior_orientacion'] ||= 'HORIZONTAL'
+    # Schema 7: Parámetro de Diseño (§3) -- "ESTANDAR" reproduce exactamente
+    # los huelgos que ya traía cada módulo antes de que este campo
+    # existiera (ver core/parametros_diseno.rb), así que un módulo viejo
+    # migrado con este default no cambia ni un milímetro.
+    data['parametro_diseno_id'] ||= 'ESTANDAR'
+    # Schema 8 (v6 §Fase A): antes la puerta externa solapada siempre nacía
+    # en Y = -grosor_puerta sin enterarse de la sobremedida frontal de los
+    # paneles vecinos -- "AUTOMATICO" (mayor protrusión real, ver
+    # calcular_protrusion_puerta en jerarquia.rb) es exactamente lo que ya
+    # hacía el plugin cuando la sobremedida era 0 en todos lados, así que un
+    # módulo viejo migrado con este default no cambia ni un milímetro.
+    data['puerta_protrusion_modo'] ||= 'AUTOMATICO'
+    data['puerta_protrusion_override_mm'] ||= ''
     manifiesto['data'] = data
     manifiesto['migrated_from_schema'] = manifiesto['schema'].to_i if manifiesto['schema'].to_i < MANIFEST_VERSION
     manifiesto['schema'] = MANIFEST_VERSION

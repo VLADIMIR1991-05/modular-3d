@@ -146,9 +146,9 @@ module LPenafiel_GeneradorMueblesExacto
     path += ".csv" unless File.extname(path).downcase == ".csv"
 
     contenido = CSV.generate(:col_sep => ';', :force_quotes => true) do |csv|
-      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto', 'Inglete', 'Bisagrado']
+      csv << ['Módulo', 'Nombre', 'Cantidad', 'Medida 1', 'Canto 1', 'Medida 2', 'Canto 2', 'Placa', 'Material', 'Tipo canto', 'Color canto', 'Inglete', 'Bisagrado', 'Mecanizado']
       filas.each do |fila|
-        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete bisagrado].map { |clave| fila[clave] }
+        csv << %w[modulo nombre cantidad medida1 canto1 medida2 canto2 placa material tipo_canto color_canto inglete bisagrado mecanizado].map { |clave| fila[clave] }
       end
     end
     # "\xEF\xBB\xBF".b es ASCII-8BIT y contenido.encode('UTF-8') es UTF-8:
@@ -204,6 +204,7 @@ module LPenafiel_GeneradorMueblesExacto
     "<td#{editable ? " data-campo='color_canto'" : ""}>#{html_escape(fila['color_canto'])}</td>" \
     "<td#{editable ? " data-campo='inglete'" : ""}>#{html_escape(fila['inglete'])}</td>" \
     "<td#{editable ? " data-campo='bisagrado'" : ""}>#{html_escape(fila['bisagrado'])}</td>" \
+    "<td#{editable ? " data-campo='mecanizado'" : ""}>#{html_escape(fila['mecanizado'])}</td>" \
     "</tr>"
   end
 
@@ -217,7 +218,7 @@ module LPenafiel_GeneradorMueblesExacto
     filas_html = filas_seccion.map { |fila| fila_tr_html_despiece(fila, editable) }.join
     "<section class='modulo-page'><div class='modulo-head'>#{foto_html}<div><h3>#{html_escape(titulo)}</h3><p>#{html_escape(subtitulo)}</p></div></div>" \
     "<table data-modulo='#{html_escape(nombre_export)}' data-modulo-uuid='#{html_escape((clave_uuid || nombre_export).to_s)}'>" \
-    "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th><th>Bisagrado</th></tr></thead>" \
+    "<thead><tr><th>Vista</th><th>Nombre</th><th>Cant.</th><th>Medida 1</th><th>Canto 1</th><th>Medida 2</th><th>Canto 2</th><th>Placa</th><th>Material</th><th>Tipo canto</th><th>Color canto</th><th>Inglete</th><th>Bisagrado</th><th>Mecanizado</th></tr></thead>" \
     "<tbody>#{filas_html}</tbody>" \
     "</table></section>"
   end
@@ -373,7 +374,8 @@ module LPenafiel_GeneradorMueblesExacto
         "tipo_canto" => etiqueta_tipo_canto(pieza[:tipo_canto]),
         "color_canto" => pieza[:color_canto],
         "inglete" => pieza[:inglete],
-        "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm], pieza[:tipo_bisagra])
+        "bisagrado" => texto_bisagrado_pieza(pieza[:codigo], pieza[:alto_real_mm], pieza[:tipo_bisagra]),
+        "mecanizado" => texto_mecanizado_pieza(pieza[:codigo], pieza[:alto_real_mm])
       }
     end
 
