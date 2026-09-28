@@ -1,11 +1,19 @@
-# Modular_3D 6.4.2 · Corrige resaltado de espacios en el visor
+# Modular_3D 6.4.3 · Puerta y frente de cajón alineados + riel oculta
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.2  
+**Versión:** 6.4.3  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.3
+
+Responde a "la puerta... está dentro del módulo y no fuera como el frente del cajón... debe estar alineado con el frente del cajón" y al pedido de agregar una opción de riel oculta con 3mm de holgura por lado (en vez de los 13mm fijos de la telescópica).
+
+- **Puerta y frente de cajón ahora sobresalen exactamente lo mismo.** Causa real: el frente del cajón (falso o por cajón) usaba un grosor de tablero fijo para decidir cuánto sobresalir, mientras que la puerta calculaba su salida real según la sobremedida del panel vecino que tocaba (`calcularProtrusionPuerta`) — dos fórmulas distintas que solo coincidían por casualidad. Ahora el frente del cajón usa la MISMA fórmula que usaría una puerta en ese lugar, en los 3 motores (construcción real, visor en vivo, y el mismo cálculo se corrigió en ambos estilos de frente: falso y por cajón).
+- **Nueva opción "Riel oculta" en "Sistema de corredera"** (holgura de 3mm por lado, para correderas invisibles montadas por debajo del cajón, no por los costados). El valor que ya existía con ese nombre estaba mal (21mm, más que la telescópica estándar) — no tenía sentido para un sistema que se monta abajo; se corrigió a 3mm.
+- El módulo con árbol de espacios ("3 Configuración") ahora también respeta el "Sistema de corredera" elegido — antes esa holgura estaba fija en 13mm sin importar la opción seleccionada, solo el flujo más simple/antiguo la aplicaba de verdad.
 
 ## Cambios 6.4.2
 

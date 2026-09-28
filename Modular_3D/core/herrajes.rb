@@ -50,9 +50,14 @@ module Modular3D
     # con acento nunca haría match contra el "Telescopica estandar" sin
     # acento que realmente manda el formulario, y silenciosamente caería en
     # el primer elemento de la lista en vez del que corresponde.
+    # "Oculta" (corredera invisible/undermount, se monta debajo del cajon en
+    # vez de en los costados) corregido a 3mm: el valor anterior (21mm) venia
+    # de una tabla vieja y no tenia sentido para este sistema -- al montarse
+    # abajo, la holgura lateral que necesita es minima, no mayor que la
+    # telescopica estandar de costado.
     DEFAULT_CORREDERAS = [
       { 'nombre' => 'Telescopica estandar', 'holgura_lateral_mm' => 13.0, 'referencia' => '' },
-      { 'nombre' => 'Oculta', 'holgura_lateral_mm' => 21.0, 'referencia' => '' },
+      { 'nombre' => 'Oculta', 'holgura_lateral_mm' => 3.0, 'referencia' => '' },
       { 'nombre' => 'Automatico maximo', 'holgura_lateral_mm' => 15.0, 'referencia' => '' }
     ].freeze
 

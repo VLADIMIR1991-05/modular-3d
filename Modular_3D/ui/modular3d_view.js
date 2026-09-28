@@ -634,8 +634,15 @@
           // fachada y hacia que el primero/ultimo salieran mas altos que los
           // del medio). Igual que en Ruby (jerarquia.rb).
           var fugaFrenteExt = gap;
+          // El frente de cajon sobresale exactamente igual que sobresaldria
+          // una puerta ahi (misma calcularProtrusionPuerta, la sobremedida
+          // del panel vecino que realmente toca) -- antes usaba un valor fijo
+          // (-general-3) que podia no coincidir con lo que calculaba la
+          // puerta en ese mismo lugar, y quedaban visiblemente desalineados.
+          var grosorPuertaFrente = Math.max(number(data, 'puerta_grosor', general), 3);
+          var protrusionFrente = calcularProtrusionPuerta(b.x, b.x + b.w, b.z, b.z + b.h, enclosure, sob, grosorPuertaFrente);
           if (frenteCajonActivo && estiloFrenteCajon === 'FALSO') {
-            addPiece('Frente falso · ' + nodeLabel, Math.max(1,fb.w), Math.max(1,fb.h), general, fb.x, fb.z, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
+            addPiece('Frente falso · ' + nodeLabel, Math.max(1,fb.w), Math.max(1,fb.h), general, fb.x, fb.z, -protrusionFrente, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawer_front_style'));
           } else {
             var frentesVisibles = estiloFrenteCajon === 'UNICO_INFERIOR' ? 1 : Math.max(1, drawerCount);
             var alturaFrenteUniforme = Math.max(1, (fb.h - fugaFrenteExt * Math.max(0, frentesVisibles - 1)) / frentesVisibles);
@@ -649,7 +656,7 @@
               var indiceFrente = estiloFrenteCajon === 'UNICO_INFERIOR' ? 0 : hd;
               var altoFrente = estiloFrenteCajon === 'UNICO_INFERIOR' ? fb.h : alturaFrenteUniforme;
               var zFrente = fb.z + indiceFrente * (alturaFrenteUniforme + fugaFrenteExt);
-              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,fb.w), altoFrente, general, fb.x, zFrente, -general-3, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
+              addPiece('Frente cajón · ' + nodeLabel + ' ' + (hd + 1), Math.max(1,fb.w), altoFrente, general, fb.x, zFrente, -protrusionFrente, COLORS.drawer, 'front', false, localMeta('drawer-front','h_drawers'));
             }
           }
         }

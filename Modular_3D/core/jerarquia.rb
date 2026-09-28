@@ -802,10 +802,20 @@ module LPenafiel_GeneradorMueblesExacto
                                        0.mm
                                      end
 
+            # El frente de cajon (falso o por cajon) sobresale exactamente
+            # igual que sobresaldria una puerta en ese mismo lugar -- misma
+            # formula (calcular_protrusion_puerta, la sobremedida del panel
+            # vecino que realmente toca), en vez de un grosor de tablero fijo
+            # aparte. Antes divergian: la puerta podia sobresalir mas (o
+            # menos) que el frente de cajon segun la sobremedida configurada,
+            # y quedaban visiblemente desalineados entre si.
+            grosor_puerta_frente = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
+            protrusion_frente = calcular_protrusion_puerta.call(x_min, x_min + ancho_nodo, z_min, z_min + alto_nodo, node['enclosure'], node['sobremedida'], grosor_puerta_frente)
+
             if frente_cajon_activo && estilo_frente == 'FALSO'
               if frente_ancho > 0.mm && frente_alto > 0.mm
                 pieza_frente_falso = self.crear_pieza(entities, modulo_nombre, "H_CJ_#{nid}_FRENTE_FALSO", frente_ancho, espesor, frente_alto,
-                  frente_x_min, -espesor, frente_z_min, 2, 2)
+                  frente_x_min, -protrusion_frente, frente_z_min, 2, 2)
                 pieza_frente_falso.definition.set_attribute('LPenafiel', 'lleva_tiradera', lleva_tiradera ? 'SI' : 'NO') if pieza_frente_falso.respond_to?(:definition)
               end
             else
@@ -816,7 +826,11 @@ module LPenafiel_GeneradorMueblesExacto
             # por espacio con "Espacio entre cajones" -- si el sistema de
             # corredera necesita mas holgura mecanica real, se sube ahi.
             fuga_h = [(node['drawerGap'] || 1.5).to_f, 0.5].max.mm
-            holgura = 13.mm
+            # Antes fijo en 13mm (solo telescopica) -- ahora usa el mismo
+            # "Sistema de corredera" configurable que ya tenia el camino
+            # viejo de cajones (spaces_config), para poder elegir Oculta
+            # (3mm) o Automatico maximo aca tambien.
+            holgura = Modular3D::Herrajes.holgura_para_sistema((datos['sistema_corredera'] || 'Telescopica estandar').to_s).mm
             ancho_caja = ancho_nodo - (holgura * 2)
             # Altura de cajon: automatica (reparte el alto disponible en
             # partes iguales) salvo que se pida una altura manual y esta
@@ -886,7 +900,7 @@ module LPenafiel_GeneradorMueblesExacto
                   z_frente_local = z_frente_abs - base_z
                   if frente_ancho > 0.mm && alto_frente_ext > 0.mm
                     pieza_frente_ext = self.crear_pieza(grupo_cajon.entities, modulo_nombre, "#{prefix}_FRENTE_EXT", frente_ancho, espesor, alto_frente_ext,
-                      frente_x_min - base_x, -espesor - y_min, z_frente_local, 2, 2)
+                      frente_x_min - base_x, -protrusion_frente - y_min, z_frente_local, 2, 2)
                     pieza_frente_ext.definition.set_attribute('LPenafiel', 'lleva_tiradera', lleva_tiradera ? 'SI' : 'NO') if pieza_frente_ext.respond_to?(:definition)
                   end
                 end
