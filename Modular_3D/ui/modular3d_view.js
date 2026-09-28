@@ -14,6 +14,11 @@
 
   var scene, camera, renderer, controls, model, grid, floor, selected, selectionBox, spaceSelection;
   var meshes = [], spaceMeshes = [], selectedSpaceId = null, currentData = {}, needsRender = true, orthographic = false;
+  // Desplazamiento vertical temporal para el "levante" del casco cuando el
+  // modulo lleva zocalo -- ver donde se fija su valor, junto a los
+  // laterales del casco general. addPiece lo suma a la posicion Z de cada
+  // pieza; se vuelve a poner en 0 mientras se dibuja el zocalo mismo.
+  var zOffsetCarcasa = 0;
   var selectionMode = 'space', isolated = false;
   var exploded = 0, transparent = false, shadows = true, edgesVisible = true;
   var technical = false, dimensionsVisible = false, gridWanted = true, sky, dimensionGroup;
@@ -228,7 +233,7 @@
     var geometry = miter ? (miter.axis === 'horizontal' ? chamferedBoxGeometryHorizontal(width, height, depth, miter.corner, miter.size) : chamferedBoxGeometry(width, height, depth, miter.corner, miter.size)) : new THREE.BoxGeometry(width, height, depth);
     var pieceMaterial=material(style.color, glass);applyTexture(pieceMaterial,style.texture,style.scale,style.rotation);var piece = new THREE.Mesh(geometry, pieceMaterial);
     // Modelo: X=derecha, Y=fondo, Z=arriba. Three.js usa Z=-fondo.
-    piece.position.set(x + width / 2, y + height / 2, -(z + depth / 2));
+    piece.position.set(x + width / 2, y + zOffsetCarcasa + height / 2, -(z + depth / 2));
     piece.castShadow = shadows;
     piece.receiveShadow = shadows;
     piece.userData = {
@@ -346,6 +351,19 @@
     var depthRight = Math.max(1, depth - setbackFrontRight - setbackBackRight);
     var heightLeft = mountLeft === 'INTERIOR' ? innerH : height, heightRight = mountRight === 'INTERIOR' ? innerH : height;
     var zLeft = mountLeft === 'INTERIOR' ? bottomT : 0, zRight = mountRight === 'INTERIOR' ? bottomT : 0;
+
+    // zOffsetCarcasa: espejo del "levante" del casco en jerarquia.rb -- si
+    // el modulo lleva zocalo, TODO lo que se dibuja de aqui en adelante
+    // (laterales, base, techo, interior, puertas, cajones) sube zocaloAlto
+    // para quedar apoyado encima del zocalo, que se dibuja mas abajo con
+    // zOffsetCarcasa en 0 a proposito (relativo al piso real, no al casco
+    // ya levantado).
+    var zocaloAltoCasco = 126;
+    var tipoModuloCasco = String(data.tipo_modulo || 'PERSONALIZADO').toUpperCase();
+    var llevaZocaloCasco = ['BAJO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
+    var altoCarcasaOffset = llevaZocaloCasco ? zocaloAltoCasco : 0;
+    zOffsetCarcasa = altoCarcasaOffset;
+
     if (hasLeft) addPiece('Lateral izquierdo', leftT, heightLeft, depthLeft, 0, zLeft, setbackFrontLeft, COLORS.lateral, 'lateral', false, {pieceId:'shell-left',materialKey:'LAT_IZQ',role:'shell-left',sourceField:'grosor_izq'});
     if (hasRight) addPiece('Lateral derecho', rightT, heightRight, depthRight, width - rightT, zRight, setbackFrontRight, COLORS.lateral, 'lateral', false, {pieceId:'shell-right',materialKey:'LAT_DER',role:'shell-right',sourceField:'grosor_der'});
 
@@ -410,37 +428,39 @@
        espejo exacto de jerarquia.rb (mismos nombres de variable, mismas
        condiciones). Sin continuidad entre módulos vecinos: cada módulo
        dibuja sus propias piezas como si estuviera solo. */
-    var zocaloAlto = 126, zocaloGrosor = 15, zocaloRetranqueo = 70;
+    // zOffsetCarcasa en 0 a proposito para todo este bloque: estas piezas
+    // van relativas al piso/tope real del modulo, no al casco ya levantado
+    // (se restaura al final del bloque, ver zOffsetCarcasa = altoCarcasaOffset).
+    zOffsetCarcasa = 0;
+    var zocaloGrosor = 15, zocaloRetranqueo = 70;
     var cornisaGrosor = 15, cornisaRetranqueo = 20;
     var remateAncho = 100, remateAltoTotal = 2420;
-    var tipoModulo = String(data.tipo_modulo || 'PERSONALIZADO').toUpperCase();
-    var llevaZocalo = ['BAJO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
-    var llevaPremeson = tipoModulo === 'BAJO';
-    var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
+    var llevaPremeson = tipoModuloCasco === 'BAJO';
+    var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
     var cornisaActiva = cornisaDisponible && String(data.cornisa_activa || 'NO') === 'SI';
-    var llevaRemates = ['AUXILIAR', 'CLOSET'].indexOf(tipoModulo) >= 0;
+    var llevaRemates = ['AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
 
-    if (llevaZocalo) {
-      addPiece('Zócalo', usableW, zocaloAlto, zocaloGrosor, leftT, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'zocalo', materialKey:'ZOCALO', role:'zocalo', sourceField:'tipo_modulo'});
+    if (llevaZocaloCasco) {
+      addPiece('Zócalo', width, zocaloAltoCasco, zocaloGrosor, 0, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'zocalo', materialKey:'ZOCALO', role:'zocalo', sourceField:'tipo_modulo'});
       var remateZocaloLado = String(data.remate_zocalo_lado || 'NINGUNO').toUpperCase();
       var fondoRemateZocalo = depth - zocaloRetranqueo;
       if (fondoRemateZocalo > 0) {
-        if (remateZocaloLado === 'IZQ' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo izq.', zocaloGrosor, zocaloAlto, fondoRemateZocalo, leftT, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_izq', materialKey:'REMATE_ZOCALO_IZQ', role:'zocalo', sourceField:'remate_zocalo_lado'});
-        if (remateZocaloLado === 'DER' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo der.', zocaloGrosor, zocaloAlto, fondoRemateZocalo, width - rightT - zocaloGrosor, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_der', materialKey:'REMATE_ZOCALO_DER', role:'zocalo', sourceField:'remate_zocalo_lado'});
+        if (remateZocaloLado === 'IZQ' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo izq.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, 0, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_izq', materialKey:'REMATE_ZOCALO_IZQ', role:'zocalo', sourceField:'remate_zocalo_lado'});
+        if (remateZocaloLado === 'DER' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo der.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, width - zocaloGrosor, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_der', materialKey:'REMATE_ZOCALO_DER', role:'zocalo', sourceField:'remate_zocalo_lado'});
       }
     }
     if (llevaPremeson) {
-      addPiece('Premesón', usableW, general, depth, leftT, height, 0, COLORS.horizontal, 'premeson', false, {pieceId:'premeson', materialKey:'PREMESON', role:'premeson', sourceField:'tipo_modulo'});
+      addPiece('Premesón', width, general, depth, 0, height + altoCarcasaOffset, 0, COLORS.horizontal, 'premeson', false, {pieceId:'premeson', materialKey:'PREMESON', role:'premeson', sourceField:'tipo_modulo'});
     }
     if (cornisaActiva) {
       var cornisaAltura = Math.max(20, number(data, 'cornisa_altura', 100));
-      var zCornisa = height - cornisaAltura;
-      addPiece('Cornisa', usableW, cornisaAltura, cornisaGrosor, leftT, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'cornisa', materialKey:'CORNISA', role:'cornisa', sourceField:'cornisa_activa'});
+      var zCornisa = height + altoCarcasaOffset;
+      addPiece('Cornisa', width, cornisaAltura, cornisaGrosor, 0, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'cornisa', materialKey:'CORNISA', role:'cornisa', sourceField:'cornisa_activa'});
       var remateCornisaLado = String(data.remate_cornisa_lado || 'NINGUNO').toUpperCase();
       var fondoRemateCornisa = depth - cornisaRetranqueo;
       if (fondoRemateCornisa > 0) {
-        if (remateCornisaLado === 'IZQ' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa izq.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, leftT, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_izq', materialKey:'REMATE_CORNISA_IZQ', role:'cornisa', sourceField:'remate_cornisa_lado'});
-        if (remateCornisaLado === 'DER' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa der.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, width - rightT - cornisaGrosor, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_der', materialKey:'REMATE_CORNISA_DER', role:'cornisa', sourceField:'remate_cornisa_lado'});
+        if (remateCornisaLado === 'IZQ' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa izq.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, 0, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_izq', materialKey:'REMATE_CORNISA_IZQ', role:'cornisa', sourceField:'remate_cornisa_lado'});
+        if (remateCornisaLado === 'DER' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa der.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, width - cornisaGrosor, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_der', materialKey:'REMATE_CORNISA_DER', role:'cornisa', sourceField:'remate_cornisa_lado'});
       }
     }
     if (llevaRemates) {
@@ -448,6 +468,7 @@
       if (String(data.remate_inicial || 'NO') === 'SI') addPiece('Remate inicial', remateAncho, remateAltoTotal, grosorFrenteRemate, -remateAncho, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_inicial', materialKey:'REMATE_INICIAL', role:'remate', sourceField:'remate_inicial'});
       if (String(data.remate_final || 'NO') === 'SI') addPiece('Remate final', remateAncho, remateAltoTotal, grosorFrenteRemate, width, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_final', materialKey:'REMATE_FINAL', role:'remate', sourceField:'remate_final'});
     }
+    zOffsetCarcasa = altoCarcasaOffset;
 
     if (!hasHierarchy && physicalX) for (var c = 0; c < colSizes.length - 1; c += 1) {
       addPiece('División vertical ' + (c + 1), general, innerH, interiorDepth, colStarts[c] + colSizes[c], bottomT, interiorSetback, COLORS.interior, 'interior');

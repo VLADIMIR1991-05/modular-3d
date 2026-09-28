@@ -1,11 +1,19 @@
-# Modular_3D 6.4.0 · Términos y condiciones al iniciar sesión
+# Modular_3D 6.4.1 · Corrige posición de zócalo/premesón/cornisa
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.0  
+**Versión:** 6.4.1  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.1
+
+Corrige 2 bugs reales reportados al probar v6.4.0 en SketchUp por primera vez: "el zócalo y las cornisas están creando dentro del módulo... debería ir por fuera" y "si el módulo es de 600 de ancho no debe crear un zócalo de 570mm sino de 600mm".
+
+- **Zócalo/cornisa ya no quedan embebidos dentro del casco.** El bug real: el zócalo se creaba en el mismo nivel (z=0) donde ya empieza la base del módulo, y la cornisa se restaba desde arriba del alto total en vez de agregarse por encima — ambas terminaban superpuestas con piezas del casco en vez de visibles por fuera. Corregido de raíz: cuando un módulo lleva zócalo, TODO el casco (laterales, base, techo, interior, ajustes, respaldo, puertas, cajones) se levanta 126mm para quedar apoyado ENCIMA del zócalo, que ahora sí ocupa el piso real. La cornisa se apoya sobre el tope real del casco ya levantado. Corregido en los 3 motores de geometría que tiene el plugin (construcción real en Ruby, visor 3D en vivo, plano 2D/despiece) para que los tres muestren exactamente lo mismo.
+- **Zócalo, premesón y cornisa ahora cubren el ancho TOTAL del módulo**, no solo el hueco interior entre laterales — un módulo de 600mm de ancho ahora genera un zócalo (y cornisa, y premesón) de 600mm, tapando también el grosor de los laterales, como se esperaba desde el diseño original.
+- **Validado con números reales antes de empaquetar**: para un módulo de 760mm de alto con zócalo, el casco queda de 126 a 886mm y el zócalo de 0 a 126mm — se tocan exactamente, sin superposición ni hueco.
 
 ## Cambios 6.4.0
 
