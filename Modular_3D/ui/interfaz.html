@@ -138,7 +138,7 @@
           <h3>Puertas frente a sobremedida</h3>
           <small>Si un lateral, base o techo sobresale hacia adelante por su propia sobremedida (arriba, o en "Componentes del espacio" de cada espacio en "3 Configuración"), la puerta solapada avanza para quedar al ras del panel que más sobresale, en vez de quedar "embutida" detrás. Solo afecta a puertas solapadas (no a embutidas ni internas).</small>
           <div class="row"><label for="puerta_protrusion_modo">Modo</label><select id="puerta_protrusion_modo"><option value="AUTOMATICO">Automático (silencioso)</option><option value="AVISAR">Automático y avisar si hay diferencia notable</option></select></div>
-          <div class="row"><label for="puerta_protrusion_override_mm">Forzar salida de puerta (mm)</label><input type="number" id="puerta_protrusion_override_mm" placeholder="Automático" step="1"></div>
+          <div class="row"><label for="puerta_protrusion_override_mm">Forzar salida de puerta (mm) — dejar VACÍO para automático, escribir 0 fuerza todas las puertas a quedar a ras (sin sobresalir nada)</label><input type="number" id="puerta_protrusion_override_mm" placeholder="Automático (vacío = calculado solo)" step="1"></div>
           <small>Dejalo vacío para que se calcule solo (gana la sobremedida mayor entre las piezas que esa puerta toca). Escribí un valor para fijarlo a mano en todas las puertas solapadas del módulo.</small>
           <div id="puerta_protrusion_aviso" class="hint-text"></div>
         </div>
