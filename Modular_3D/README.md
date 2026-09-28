@@ -1,11 +1,21 @@
-# Modular_3D 6.3.0 · Zócalo/Premesón/Cornisa + Continuidad entre módulos
+# Modular_3D 6.4.0 · Términos y condiciones al iniciar sesión
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.3.0  
+**Versión:** 6.4.0  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.0
+
+Responde al pedido "al iniciar sesion aceptara el usuario unos terminos y condiciones... solo si acepta puede ingresar por unica vez". El servidor de licencias (`api.modular-3d.com`) ya exige esta aceptación desde el 2026-09-28 — **instalar esta versión es obligatorio para poder iniciar sesión**, una versión anterior del plugin no sabe mostrar el modal y solo se ve el mensaje de error sin forma de continuar.
+
+- **Modal de términos y condiciones en el primer login.** Al iniciar sesión, si el servidor indica que todavía no aceptaste, aparece un modal con el texto completo, un checkbox de confirmación y los botones "Acepto y continuar"/"Cancelar" — nunca se entra sin marcar el checkbox y aceptar. Se pide una sola vez por usuario (en cualquier equipo autorizado de tu licencia); una vez aceptado, no se vuelve a preguntar.
+- **"Leer términos y condiciones"** en la pantalla de login: podés leerlos completos ANTES de intentar iniciar sesión, sin necesitar red ni escribir tu contraseña primero.
+- **Nuevo endpoint del lado servidor** (`/auth/accept-terms`): reenvía las mismas credenciales, registra la aceptación con fecha y versión del texto, y devuelve la sesión ya iniciada en el mismo paso — no hace falta escribir la contraseña dos veces.
+- **Datos de contacto al activar un usuario nuevo.** El panel administrativo (donde se crean las licencias) ahora pide también apellido, celular y dirección — no afecta a los usuarios ya activos. Se agregó un botón "WhatsApp" junto a cada usuario para poder escribirle manualmente (con un mensaje ya sugerido) cuando su licencia está por vencer o ya venció.
+- **Nota honesta de alcance:** el texto de términos y condiciones es un borrador razonable escrito para cubrir lo esencial (licencia de uso, qué datos se guardan, vigencia, responsabilidad, soporte) — no es una revisión legal profesional; conviene que lo revises vos (o un abogado) antes de depender de él para algo serio. Todo lo demás (modal, endpoint, datos de contacto, botón de WhatsApp) ya está probado en producción real, no solo en teoría.
 
 ## Cambios 6.3.0
 
