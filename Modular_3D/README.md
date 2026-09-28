@@ -1,11 +1,18 @@
-# Modular_3D 6.4.1 · Corrige posición de zócalo/premesón/cornisa
+# Modular_3D 6.4.2 · Corrige resaltado de espacios en el visor
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.1  
+**Versión:** 6.4.2  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.2
+
+Corrige un efecto secundario de la corrección 6.4.1: "en el visualizador los espacios deben sincronizarse tal como son" — al elegir un espacio de la lista ("Zona A", "Zona B", etc.) en un módulo con zócalo, el recuadro naranja de resaltado en el visor 3D no coincidía con la posición real de las piezas.
+
+- **Causa real**: el "levante" del casco (para que el zócalo quede por fuera, ver 6.4.1) se aplicó dentro de `addPiece` (lo que dibuja cada pieza), pero las cajas invisibles de selección de espacio (`addSpaceHit`, usadas para el clic y el resaltado naranja de "Zona A"/"Zona B"/etc.) tenían su propio cálculo de posición aparte, sin ese mismo desplazamiento — quedaban ancladas a la posición vieja mientras las piezas ya se habían movido.
+- Revisé todo el archivo del visor buscando cualquier otro lugar que posicionara algo en 3D sin pasar por el mismo mecanismo (`addPiece`) y confirmé que este era el único caso suelto.
 
 ## Cambios 6.4.1
 

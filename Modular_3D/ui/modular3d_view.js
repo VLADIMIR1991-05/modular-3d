@@ -101,7 +101,7 @@
   function addSpaceHit(node) {
     var b=node&&node.box;if(!b||b.w<=0||b.h<=0||b.d<=0)return;
     var geometry=new THREE.BoxGeometry(b.w,b.h,b.d),hit=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xff6b1a,transparent:true,opacity:0.012,depthWrite:false,side:THREE.DoubleSide}));
-    hit.position.set(b.x+b.w/2,b.z+b.h/2,-(b.y+b.d/2));hit.userData={spaceId:node.id,spaceNode:node,spaceVolume:b.w*b.h*b.d};hit.renderOrder=900;scene.add(hit);spaceMeshes.push(hit);
+    hit.position.set(b.x+b.w/2,b.z+zOffsetCarcasa+b.h/2,-(b.y+b.d/2));hit.userData={spaceId:node.id,spaceNode:node,spaceVolume:b.w*b.h*b.d};hit.renderOrder=900;scene.add(hit);spaceMeshes.push(hit);
   }
 
   function selectSpace(nodeId, emitEvent) {
