@@ -126,12 +126,13 @@
     .license-options input { width: auto; }
     .license-message { display: none; margin-bottom: 12px; padding: 9px; border-radius: 5px; color: #7a271a; background: #fef3f2; border: 1px solid #fecdca; font-size: 11px; }
     .license-message.show { display: block; }
-    .license-session { display: none; flex: 0 1 auto; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 999px; background: rgba(0,0,0,.15); min-width: 0; }
+    .license-session { display: none; flex: 0 1 auto; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 7px 10px; border-radius: 12px; background: rgba(0,0,0,.15); min-width: 0; }
     .license-session.show { display: flex; }
     .license-session button { flex: 0 0 auto; width: auto; padding: 4px 9px; border: 1px solid rgba(255,255,255,.45); background: transparent; font-size: 9px; }
-    #license_identity { overflow: hidden; font-size: 11px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
-    .license-days { flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-width: 92px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.3); font-size: 9px; opacity: .92; }
-    .license-days-track { width: 92px; height: 6px; border-radius: 999px; background: rgba(255,255,255,.28); overflow: hidden; }
+    #license_identity { flex: 0 1 auto; overflow: hidden; font-size: 11px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+    .license-days-text { flex: 0 0 auto; font-size: 9px; opacity: .92; }
+    .license-days { flex: 1 0 100%; opacity: .92; }
+    .license-days-track { width: 100%; height: 6px; border-radius: 999px; background: rgba(255,255,255,.28); overflow: hidden; }
     .license-days-fill { height: 100%; width: 0%; border-radius: 999px; background: #2563eb; transition: width .3s ease, background .3s ease; }
     body.license-locked main, body.license-locked header { pointer-events: none; user-select: none; }
     .link-button { margin-top: 4px; padding: 6px; color: var(--brand-dark); border: none; background: none; text-decoration: underline; font-size: 11px; font-weight: 600; }

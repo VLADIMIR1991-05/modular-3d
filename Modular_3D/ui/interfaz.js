@@ -41,8 +41,9 @@
           if (isFinite(msRestantes)) diasRestantes = Math.max(0, Math.ceil(msRestantes / 86400000));
         }
       }
-      if (diasRestantes == null) { barra.hidden = true; return; }
+      if (diasRestantes == null) { barra.hidden = true; texto.hidden = true; return; }
       barra.hidden = false;
+      texto.hidden = false;
       var pct = Math.max(0, Math.min(100, (diasRestantes / totalDias) * 100));
       relleno.style.width = pct + '%';
       relleno.style.background = colorPorPorcentajeLicencia(pct);

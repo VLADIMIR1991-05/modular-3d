@@ -1,11 +1,18 @@
-# Modular_3D 6.4.5 · Pestañas fijas, cabecera reorganizada y caché de assets
+# Modular_3D 6.4.6 · Barra de días a todo el ancho, sin separador
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.5  
+**Versión:** 6.4.6  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.6
+
+Ajuste puntual sobre el rediseño de 6.4.5, según la captura marcada: "la x marca lo que quiero que retires y le pongas así como está en la imagen, a todo el ancho y debajo de todo".
+
+- **Se quitó la línea/separador vertical** que quedaba entre el correo y "X días".
+- **La barra de días ahora ocupa todo el ancho de la píldora de sesión** (antes era una barra corta de 92px) y queda en su propia fila, debajo de todo (correo, días y "Cerrar sesión" arriba en una fila; la barra sola, a todo lo ancho, en la fila de abajo).
 
 ## Cambios 6.4.5
 
