@@ -1,11 +1,19 @@
-# Modular_3D 6.4.10 · Scroll del configurador y del visor restaurado
+# Modular_3D 6.4.11 · "Construir módulo" ya no queda inalcanzable en ventanas chicas
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.10  
+**Versión:** 6.4.11  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.11
+
+Responde a "sigue sin poder scrolear... no sé si el lado izquierdo o también el derecho, el visualizador" -- esta vez se probó en un navegador real (Chromium headless a distintos altos de ventana) en vez de solo leer el CSS, para confirmar el bug de verdad en vez de adivinar.
+
+- **Panel de configuración (izquierda):** su scroll SÍ funciona correctamente (confirmado con la prueba) -- el `grid-template-rows` de 6.4.10 lo dejó bien. Si en tu pantalla no ves una barra de scroll visible es porque el contenido de esa pestaña ya entra completo en tu ventana actual (no hay nada más abajo que ver en ese caso).
+- **Visor 3D (derecha) -- bug real encontrado y corregido:** en una ventana lo bastante baja, "Validar módulo"/"Construir módulo" (los botones de abajo de todo) quedaban recortados fuera de la ventana SIN NINGUNA forma de llegar a ellos -- `aside.m3dv-panel` tenía `overflow:hidden!important` a propósito (para que el visor 3D "quedara fijo" y no se moviera con el scroll del árbol de piezas), pero eso significaba que si el contenido fijo (cabecera, visor, barra de vistas, explosión/giro) más los botones de abajo no entraban juntos en el alto disponible, la parte de abajo se perdía para siempre -- en el peor caso, "Construir módulo" se volvía imposible de pulsar. Se le agregó scroll de respaldo a todo el panel: en una ventana con espacio de sobra no cambia nada (no aparece ninguna barra), pero en una ventana chica ahora siempre se puede bajar hasta el botón de construir.
+- Verificado con una prueba automatizada real (no solo lectura de CSS): a 900px de alto de ventana, "Construir módulo" pasó de estar fuera de la ventana a quedar alcanzable haciendo scroll.
 
 ## Cambios 6.4.10
 
