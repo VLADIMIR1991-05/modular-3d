@@ -84,6 +84,16 @@
       aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
       .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
       .step-footer { position: relative; bottom:auto; z-index:5; }
+      /* Scrollbar ancha y siempre visible (no la delgada/semi-invisible
+         que usa Chromium por defecto): si la rueda del mouse no se
+         entrega bien dentro del navegador embebido de SketchUp, esto deja
+         un control con el que arrastrar el scroll a mano, sin depender de
+         la rueda para nada -- funciona con clic normal, no con gestos. */
+      .config-pane, aside.m3dv-panel, .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
+      .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar, .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
+      .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track, .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+      .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb, .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+      .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover, .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
     }
     .piece-info { display: none; margin: 7px 0; padding: 7px; border-left: 3px solid var(--brand); background: rgba(240, 100, 36, .14); font-size: 11px; }
     .piece-info.show { display: block; }
@@ -194,13 +204,13 @@
     .m3dv-toolbar button{min-height:29px;padding:4px 3px;border:1px solid #45515b;background:#303942;color:#f3f5f6;font-size:8px}.m3dv-toolbar button.active,.m3dv-toolbar button:hover{border-color:var(--brand);background:var(--brand);color:#161a1d}
     .m3dv-explosion{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;padding:7px 10px;background:#20272d;color:#aeb8c0;font-size:9px}.m3dv-explosion input{padding:0;text-align:initial;accent-color:var(--brand)}
     .m3dv-autorotate-row{grid-template-columns:auto 1fr auto;border-top:1px solid #2c343b}.m3dv-autorotate-row button{width:auto;padding:5px 9px;border:1px solid #45515b;border-radius:5px;background:#303942;color:#f3f5f6;font-size:9px;font-weight:700;cursor:pointer}.m3dv-autorotate-row button.active{background:var(--brand);color:#161a1d;border-color:var(--brand)}
-    .m3dv-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px;background:#181e23}.m3dv-card{min-width:0;padding:8px;border:1px solid #35404a;border-radius:7px;background:#20272d}.m3dv-card h3{margin:0 0 6px;color:#ff854c;font-size:9px}
+    .m3dv-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:9px;background:#181e23}.m3dv-card{min-width:0;overflow:hidden;padding:8px;border:1px solid #35404a;border-radius:7px;background:#20272d}.m3dv-card h3{margin:0 0 6px;color:#ff854c;font-size:9px}
     .m3dv-search{margin:0 0 6px;padding:6px!important;border-color:#46525c!important;background:#11161b!important;color:#fff!important;text-align:left!important;font-size:9px}
     .m3dv-tree{display:grid;gap:3px;max-height:150px;overflow:auto}.m3dv-tree-item{padding:6px 7px;text-align:left;border:0;background:#303941;color:#dbe1e5;font-size:10px}.m3dv-tree-item.active{background:#237fc0;color:#fff}
     .m3dv-select-mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px;background:#1e272e}.m3dv-select-mode button{padding:7px;font-size:10px;background:#35414a}.m3dv-select-mode button.active{background:var(--brand);color:#fff}
     .m3dv-piece-actions{display:grid;grid-template-columns:1fr;gap:4px;margin-top:8px}.m3dv-piece-actions button{padding:6px 5px;font-size:9px;text-align:left;white-space:nowrap}
     .piece-selection-note{color:#7fc8f4;font-size:9px;display:block;margin-top:5px}
-    .m3dv-piece{display:grid;gap:7px;font-size:8px}.m3dv-piece>strong{display:block;color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m3dv-piece div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#9eabb5}.m3dv-piece div span{flex:0 0 auto}.m3dv-piece b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;text-align:right}.m3dv-health{padding:4px 10px 8px;background:#20272d;color:#72d492;font-size:8px;text-align:center}
+    .m3dv-piece{display:grid;gap:7px;font-size:8px;min-width:0}.m3dv-piece>strong{display:block;color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m3dv-piece div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#9eabb5;min-width:0}.m3dv-piece div span{flex:0 0 auto}.m3dv-piece b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;text-align:right}.m3dv-health{padding:4px 10px 8px;background:#20272d;color:#72d492;font-size:8px;text-align:center}
     .m3dv-actions{padding:0 9px 9px;background:#181e23}.m3dv-actions button{margin-top:6px}.m3dv-actions .secondary{background:#20272d;color:#ff854c}
     .hierarchy-card{border:2px solid var(--brand);background:linear-gradient(135deg,#20272d,#241d18)}
     .hierarchy-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hierarchy-title .compact{width:auto;padding:7px 10px}.hierarchy-title-actions{display:flex;gap:5px}.hierarchy-title-actions button{white-space:nowrap}

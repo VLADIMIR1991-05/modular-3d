@@ -1,11 +1,18 @@
-# Modular_3D 6.4.12 · Tema oscuro en todo el plugin + scroll con rueda garantizado
+# Modular_3D 6.4.13 · Scrollbar visible para arrastrar + Propiedades técnicas contenidas
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.12  
+**Versión:** 6.4.13  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.13
+
+Responde a que "sigo sin poder mover el scroll" persistía incluso después de dos rondas de arreglos de CSS/JS que sí funcionaban en pruebas reales de navegador, y a "esta parte de propiedades técnicas haz que encuadren dentro del recuadro".
+
+- **Propiedades técnicas (panel derecho) ya no se sale de su recuadro.** Los valores (580 mm, 570 mm, PVC, etc.) se salían del borde de la tarjeta hacia la derecha. Causa real: `.m3dv-body` usaba columnas `1fr 1fr` sin límite mínimo -- si el contenido de una columna quería ser más ancho (por los valores sin salto de línea), la columna podía crecer más de lo debido. Corregido con `minmax(0,1fr)` en las columnas y `overflow:hidden` en la tarjeta, para que el contenido siempre quede contenido dentro del recuadro, nunca por fuera.
+- **Scrollbar ancha y siempre visible, para arrastrar con el mouse.** Si la rueda del mouse no se entrega bien al contenido dentro del navegador embebido de SketchUp (posible causa de fondo, fuera del alcance de lo que HTML/CSS/JS puede arreglar si es un problema de cómo SketchUp reenvía el evento de scroll a su ventana interna), ahora hay una alternativa que no depende de la rueda para nada: una barra de scroll bien ancha (14px, se pone naranja al pasar el mouse) que se puede arrastrar con clic normal, en el panel de configuración, el visor 3D, el árbol de piezas y demás listas largas.
 
 ## Cambios 6.4.12
 
