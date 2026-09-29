@@ -1,11 +1,22 @@
-# Modular_3D 6.4.4 · Licencia siempre al día + barra de días rediseñada
+# Modular_3D 6.4.5 · Pestañas fijas, cabecera reorganizada y caché de assets
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.4  
+**Versión:** 6.4.5  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.5
+
+Responde a "esto debe quedar fijo al deslizar" (pestañas 1-5), "organiza mejor esos espacios que no me parece nada profesional" (cabecera con el correo/días/botón amontonados) y "aun aparece los 6 dias restantes" después de instalar 6.4.4.
+
+- **Pestañas (1 Medidas...5 Catálogo) ahora quedan fijas arriba al desplazar** el panel de configuración — antes se iban con el scroll como el resto del contenido.
+- **Cabecera reorganizada.** El correo, los días restantes y "Cerrar sesión" ahora van agrupados dentro de una píldora propia con separación clara (antes iban sueltos, pegados unos a otros, con la barra de días quedando visualmente encimada al correo) — la marca queda a la izquierda y Soporte/WhatsApp/versión a la derecha, cada uno con su espacio.
+- **Causa real de por qué "aun aparece los 6 dias" incluso instalando 6.4.4 — dos problemas distintos, los dos ya corregidos:**
+  1. **El bug de fondo estaba en el servidor, no en el plugin.** Extender la fecha de un usuario desde el panel admin solo actualizaba el registro de la cuenta, pero el plugin instalado consulta un registro POR PRODUCTO que nunca se actualizaba — por eso el panel mostraba 2027 y el plugin seguía leyendo la fecha vieja. Ya corregido en el servidor de licencias (repo aparte) y ya se sincronizaron manualmente en la base de datos real los usuarios que habían quedado desincronizados por este bug — tu cuenta ya debería mostrar la fecha correcta la próxima vez que abras el configurador, sin que dependa de esta actualización del plugin.
+  2. **`interfaz.css`/`interfaz.js` y el resto de los `.js` del plugin no tenían ninguna forma de decirle a SketchUp "esta es una versión nueva, no uses la copia vieja que ya tenías en caché"** — el navegador embebido de SketchUp puede quedarse con la versión anterior de estos archivos aunque el `.rbz` ya haya instalado los nuevos en disco. Se agregó `?v=6.4.5` a cada uno; a partir de ahora, cada número de versión nuevo fuerza a SketchUp a leer los archivos actualizados de verdad.
+  - **Nota importante para que cualquier corrección de código Ruby (como la de 6.4.4) tome efecto:** hace falta **reiniciar SketchUp por completo** después de instalar un `.rbz` con cambios en archivos `.rb` — cerrar y volver a abrir solo el panel del plugin no alcanza, porque Ruby no vuelve a cargar un archivo que ya cargó en esa sesión de SketchUp.
 
 ## Cambios 6.4.4
 

@@ -2,7 +2,7 @@
 
 module Modular3D
   PRODUCT_NAME = "Modular_3D"
-  VERSION = "6.4.4"
+  VERSION = "6.4.5"
   AUTHOR = "Lenin Vladimir Peñafiel Buestan"
   PREFERENCES_KEY = "com.lpenafiel.modular3d"
   LICENSE_ENABLED = true
