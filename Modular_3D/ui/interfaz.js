@@ -1031,10 +1031,14 @@
     // el motor lo resuelva solo, se mueve el scrollTop a mano: se busca el
     // ancestro real más cercano con overflow (empezando en el elemento bajo
     // el cursor, así el árbol de piezas anidado dentro del visor sigue
-    // scrolleando primero él mismo antes que el panel completo). Si el 3D
-    // (OrbitControls, para el zoom) ya manejó el evento, event.defaultPrevented
-    // ya viene en true y esto no hace nada -- así el zoom del visor nunca
-    // se pisa con el scroll del panel.
+    // scrolleando primero él mismo antes que el panel completo). Si no hay
+    // ningún ancestro con overflow:auto (ventana angosta, layout de una
+    // sola columna -- ver el punto de corte de 991/992px en interfaz.css),
+    // se cae al scroll de la página completa (document.documentElement),
+    // que es lo que sí puede moverse ahí. Si el 3D (OrbitControls, para el
+    // zoom) ya manejó el evento, event.defaultPrevented ya viene en true y
+    // esto no hace nada -- así el zoom del visor nunca se pisa con el
+    // scroll del panel.
     function contenedorScrolleable(el) {
       while (el && el !== document.body && el !== document.documentElement) {
         if (el.scrollHeight > el.clientHeight + 1) {
@@ -1043,6 +1047,8 @@
         }
         el = el.parentElement;
       }
+      var doc = document.documentElement;
+      if (doc.scrollHeight > doc.clientHeight + 1) return doc;
       return null;
     }
     document.addEventListener('wheel', function(event) {
@@ -1055,39 +1061,3 @@
       contenedor.scrollTop += event.deltaY;
       event.preventDefault();
     }, { passive: false });
-
-    // Deslizador nativo (<input type="range">) para navegar el panel: la
-    // barra de scroll propia hecha con divs (versión anterior) nunca llegó a
-    // verse ni a funcionar dentro del navegador embebido de SketchUp pese a
-    // varias correcciones. Se reemplaza por un control cuyo tipo YA se sabe
-    // que se ve y funciona ahí mismo (los deslizadores "Explosión" y
-    // "Velocidad de giro" son del mismo tipo y sí aparecen correctamente).
-    function inicializarDeslizadorScroll(contenedor, idSlider) {
-      var slider = document.getElementById(idSlider);
-      if (!contenedor || !slider) return;
-      var moviendoSlider = false;
-      function refrescar() {
-        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxScroll <= 1) {
-          slider.closest('.scroll-slider-row').hidden = true;
-          return;
-        }
-        slider.closest('.scroll-slider-row').hidden = false;
-        if (!moviendoSlider) {
-          slider.value = Math.round((contenedor.scrollTop / maxScroll) * 1000);
-        }
-      }
-      slider.addEventListener('input', function() {
-        moviendoSlider = true;
-        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        contenedor.scrollTop = (slider.value / 1000) * maxScroll;
-      });
-      slider.addEventListener('change', function() { moviendoSlider = false; });
-      contenedor.addEventListener('scroll', refrescar);
-      window.addEventListener('resize', refrescar);
-      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
-      refrescar();
-      window.setInterval(refrescar, 1000);
-    }
-    inicializarDeslizadorScroll(document.querySelector('.config-pane'), 'config_pane_slider');
-    inicializarDeslizadorScroll(document.querySelector('aside.m3dv-panel'), 'm3dv_panel_slider');

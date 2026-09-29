@@ -1,7 +1,26 @@
-# Modular_3D 6.4.17 · Barra de navegación reemplazada por deslizador nativo
+# Modular_3D 6.4.18 · Causa raíz real del scroll: corte de ancho mal calibrado
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.17  
+**Versión:** 6.4.18  
+
+## Cambios 6.4.18
+
+Dijiste, con toda razón, que el deslizador de 6.4.17 "es ridículo": querías el movimiento vertical, no horizontal, y además moviéndolo horizontalmente no pasaba nada -- y pediste una auditoría a fondo de la causa real antes de corregir, no otro parche a ciegas. Esto es lo que se encontró.
+
+**Causa raíz real (afectó a las 3 soluciones de scroll intentadas en esta sesión, no solo al deslizador):**
+
+`.config-pane` y `aside.m3dv-panel` (el panel de configuración y el visor 3D) sólo recibían `overflow-y:auto` -- lo que los vuelve "scrolleables" de verdad -- dentro de una regla `@media (min-width:981px)`. Pero la fila `main { grid-template-columns: minmax(480px,1fr) 480px; }` (sin media query, siempre activa) necesita como mínimo 480+480px de columnas + 12px de espacio + 20px de relleno = **992px reales**, no 981px. Y el paso a una sola columna apilada (donde antes hacía falta) sólo se activaba por debajo de 720px.
+
+Eso dejaba una **franja de ancho lógico entre ~721px y ~991px** donde ninguna de las dos reglas aplicaba: ni el scroll interno de los paneles (necesitaba ≥981px, y en la práctica ≥992px) ni el apilado de una sola columna con scroll de página completa (necesitaba <720px). En esa franja, `.config-pane` quedaba con `overflow-y` en su valor por defecto (`visible`), que hace que **mover `scrollTop` por código no tenga absolutamente ningún efecto visual** -- sin importar si lo mueve la rueda del mouse, una barra propia hecha con divs, o un `<input type="range">`. Las tres soluciones de este hilo (6.4.14, y el deslizador de 6.4.17) apuntaban exactamente a esa propiedad rota; ninguna podía haber funcionado nunca mientras la ventana real estuviera en esa franja de ancho -- lo cual es fácil que pase con el escalado de pantalla de Windows (125%/150%/200%): una ventana que se ve grande en una captura de pantalla (en píxeles físicos) puede tener un ancho lógico/CSS bastante menor, que es contra lo que la media query realmente compara.
+
+Esto también explica por qué mis pruebas automatizadas (que corrían a 1280px o más de ancho) nunca detectaron el problema: nunca pisaban esa franja intermedia.
+
+**Corregido:**
+- El punto de corte del scroll interno sube de 981px a **992px** (el mínimo real que exigen las dos columnas).
+- El punto de corte del apilado a una sola columna sube de 720px a **991px**, exactamente pegado al de arriba -- ya no queda ningún ancho intermedio sin una de las dos formas de scroll activa.
+- **Se retiran los deslizadores horizontales** de 6.4.17 ("esas barras horizontales no me sirven de nada") -- con el corte de ancho corregido, la scrollbar **nativa** del navegador (ya estilizada en el mismo tono oscuro que usaban el árbol de piezas y "Velocidad de giro") vuelve a ser suficiente, sin necesitar ningún control adicional.
+- El respaldo de scroll con la rueda del mouse ahora también revisa el scroll de la página completa como última opción, por si el ancho real cae en una ventana muy angosta donde todo se apila en una sola columna.
+- Verificado con pruebas automatizadas reales (simulando la rueda del mouse, no solo moviendo `scrollTop` por código) en 4 anchos distintos: 850px, 991px, 992px y 1900px -- en los 4 el scroll ahora funciona, y ninguno produce desbordamiento horizontal de la página.
 
 ## Cambios 6.4.17
 

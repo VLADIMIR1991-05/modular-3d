@@ -48,7 +48,27 @@
     .editor-focus { border-color: var(--brand) !important; box-shadow: 0 0 0 3px rgba(240, 100, 36, .18); }
     .row.editor-focus { border-radius: 6px; background: rgba(240, 100, 36, .14); }
     aside { position: sticky; top: 62px; align-self: start; }
-    @media (min-width:981px) {
+    /* BUG RAIZ encontrado en 6.4.18: este bloque (el que hace que los
+       paneles tengan scroll interno de verdad) sólo se activaba desde
+       min-width:981px -- pero main (ver más abajo, sin media query) exige
+       minmax(480px,1fr) + 480px fijos + 12px de gap + 20px de padding =
+       992px como mínimo real para sus dos columnas. Entre 981px y 992px
+       ya faltaban 11px; y por debajo de 981px el layout de una sola
+       columna (antes en max-width:720px) ni siquiera se activaba todavía.
+       Resultado: en cualquier ventana entre ~721px y ~991px de ancho
+       LÓGICO (que es lo que Windows con escalado de pantalla >100% deja
+       de ancho real aunque la ventana física se vea grande en una
+       captura), .config-pane y aside.m3dv-panel quedaban con
+       overflow-y:visible (su valor por defecto) -- es decir, scrollTop no
+       tenía ningún efecto NI EN LA SCROLLBAR NATIVA, NI EN LA BARRA
+       PROPIA DE DIVS, NI EN EL DESLIZADOR: ninguna de las tres soluciones
+       podía haber funcionado nunca en ese rango de ancho, sin importar
+       qué tan bien se viera en las pruebas (que corrían en anchos ≥1280px
+       por defecto y nunca pisaron esta zona muerta). Se sube el punto de
+       corte a 992px (el mínimo real) y se alinea exactamente con el punto
+       donde main pasa a una sola columna más abajo, para que no quede
+       ningún rango de ancho sin una de las dos formas de scroll activa. */
+    @media (min-width:992px) {
       body { display:flex; flex-direction:column; overflow:hidden; }
       header { flex:0 0 auto; }
       /* Alto real sin numeros magicos: main es flex:1 1 auto dentro de un
@@ -68,6 +88,11 @@
          se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
       main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
       .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
+      .config-pane, aside.m3dv-panel { scrollbar-width: auto; }
+      .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 14px; }
+      .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+      .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+      .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
       /* El visor 3D queda fijo: aside pasa a columna flex donde
          .m3dv-body (árbol de piezas / propiedades) hace scroll interno
          PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
@@ -90,16 +115,15 @@
       .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
       .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
     }
-    /* La barra de scroll dibujada a mano con divs (position:absolute) de
-       6.4.14 nunca llegó a verse en el navegador embebido de SketchUp real,
-       pese a funcionar en pruebas de escritorio -- se reemplaza por un
-       <input type="range"> nativo, el mismo tipo de control que ya usan
-       "Explosión"/"Velocidad de giro" (que SÍ se ven y funcionan ahí, según
-       tus propias capturas). Menos elegante que una scrollbar de verdad,
-       pero no depende de que el motor decida pintarla. */
+    /* 6.4.14 probó una barra propia con divs, 6.4.17 un deslizador
+       horizontal -- ninguna de las dos era el problema real: el bug de
+       verdad era el corte de 981px/992px de arriba, que dejaba
+       .config-pane/aside.m3dv-panel sin overflow-y:auto (así que
+       scrollTop no hacía nada, sin importar qué control lo moviera).
+       Corregido eso, la scrollbar NATIVA del navegador (estilizada arriba
+       en el mismo tono oscuro que ya usaban .m3dv-body/.m3dv-tree) vuelve
+       a ser suficiente; se retiran ambos intentos anteriores. */
     .config-pane-sticky { position: sticky; top: 0; z-index: 3; background: var(--canvas); padding-bottom: 6px; }
-    .scroll-slider-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 4px 2px; font-size: 10px; color: var(--muted); }
-    .scroll-slider-row input[type=range] { flex: 1; padding: 0; accent-color: var(--brand); }
     .piece-info { display: none; margin: 7px 0; padding: 7px; border-left: 3px solid var(--brand); background: rgba(240, 100, 36, .14); font-size: 11px; }
     .piece-info.show { display: block; }
     .metric { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); }
@@ -182,7 +206,17 @@
     .terms-actions .license-options { margin-top: 4px; }
     .terms-actions button.secondary { margin-top: 0; }
     small { color: var(--muted); }
-    @media (max-width: 720px) {
+    /* Pareja exacta del punto de corte de arriba (992px): antes este límite
+       era 720px, dejando una franja de ~271px (721px a 991px) donde NINGUNA
+       de las dos reglas aplicaba -- ni el scroll interno de paneles (de
+       arriba, desde 992px) ni el apilado de una sola columna (de aquí,
+       hasta 720px). En esa franja .config-pane/aside.m3dv-panel medían su
+       alto por su propio contenido (sin overflow-y:auto) y el documento
+       tampoco quedaba fijo, así que en teoría el scroll de la PÁGINA
+       completa debía tomar el relevo -- pero si el navegador embebido no
+       entrega bien la rueda del mouse ahí tampoco (motivo original de todos
+       los intentos de esta sesión), no había ninguna forma de bajar. */
+    @media (max-width: 991px) {
       main { grid-template-columns: 1fr; }
       aside { position: static; }
       .panel-grid { grid-template-columns: 1fr; }
