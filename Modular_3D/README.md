@@ -1,11 +1,18 @@
-# Modular_3D 6.4.11 · "Construir módulo" ya no queda inalcanzable en ventanas chicas
+# Modular_3D 6.4.12 · Tema oscuro en todo el plugin + scroll con rueda garantizado
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.11  
+**Versión:** 6.4.12  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.12
+
+Dos pedidos: "pon todo el plugin en este estilo que se complemente" (el tema oscuro del panel MODULAR-3D VIEW, para cuidar mejor la vista) y seguir de cerca "sigo sin poder scrolear" en la pestaña de Configuración.
+
+- **Tema oscuro en todo el plugin.** Antes solo el panel del visor 3D (derecha) era oscuro; el resto (pestañas, tarjetas, campos, materiales, catálogo, login) era claro/blanco, un choque visual fuerte entre ambos lados. Ahora todo el plugin reutiliza la MISMA paleta oscura que ya tenía el visor (fondos `#151a1f`/`#20272d`, texto claro `#eef2f5`, acentos naranja de marca sin cambios) -- probado visualmente pestaña por pestaña (Medidas, Configuración, Materiales, login, términos y condiciones) para confirmar que todo quede legible y con buen contraste antes de empaquetar.
+- **Scroll con rueda del mouse, a prueba del navegador embebido de SketchUp.** Aunque las pruebas en Chromium confirmaron que el CSS de 6.4.11 ya dejaba todo scrolleable, el navegador embebido de SketchUp puede comportarse distinto entregando la rueda del mouse a un contenedor `overflow:auto` anidado dentro de flex/grid. Se agregó un manejo manual de la rueda (busca el contenedor scrolleable real bajo el cursor y mueve su `scrollTop` a mano) como respaldo explícito, sin depender de que el motor del navegador lo resuelva solo -- y sin interferir con el zoom del visor 3D (si OrbitControls ya manejó el evento para hacer zoom, este respaldo se queda quieto).
 
 ## Cambios 6.4.11
 

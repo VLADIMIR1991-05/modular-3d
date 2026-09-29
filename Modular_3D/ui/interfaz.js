@@ -1016,3 +1016,36 @@
       var node=el(id); if(node) node.addEventListener('input', function(){updateParametricFeedback();actualizarVista();});
     });
     updateParametricFeedback();
+
+    // Respaldo manual de scroll con la rueda del mouse: el navegador
+    // embebido de SketchUp (a diferencia de un navegador normal) a veces no
+    // entrega el wheel al contenedor overflow:auto correcto cuando está
+    // anidado dentro de flex/grid (reportado como "sigo sin poder
+    // scrolear" incluso con el CSS ya corregido). En vez de confiar en que
+    // el motor lo resuelva solo, se mueve el scrollTop a mano: se busca el
+    // ancestro real más cercano con overflow (empezando en el elemento bajo
+    // el cursor, así el árbol de piezas anidado dentro del visor sigue
+    // scrolleando primero él mismo antes que el panel completo). Si el 3D
+    // (OrbitControls, para el zoom) ya manejó el evento, event.defaultPrevented
+    // ya viene en true y esto no hace nada -- así el zoom del visor nunca
+    // se pisa con el scroll del panel.
+    function contenedorScrolleable(el) {
+      while (el && el !== document.body && el !== document.documentElement) {
+        if (el.scrollHeight > el.clientHeight + 1) {
+          var overflowY = getComputedStyle(el).overflowY;
+          if (overflowY === 'auto' || overflowY === 'scroll') return el;
+        }
+        el = el.parentElement;
+      }
+      return null;
+    }
+    document.addEventListener('wheel', function(event) {
+      if (event.defaultPrevented) return;
+      var contenedor = contenedorScrolleable(event.target);
+      if (!contenedor) return;
+      var enTope = contenedor.scrollTop <= 0 && event.deltaY < 0;
+      var enFondo = contenedor.scrollTop + contenedor.clientHeight >= contenedor.scrollHeight - 1 && event.deltaY > 0;
+      if (enTope || enFondo) return;
+      contenedor.scrollTop += event.deltaY;
+      event.preventDefault();
+    }, { passive: false });
