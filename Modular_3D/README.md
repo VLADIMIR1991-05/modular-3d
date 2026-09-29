@@ -1,7 +1,15 @@
-# Modular_3D 6.4.16 · Botón "Crear módulo" arriba, junto a Zócalo/Premesón
+# Modular_3D 6.4.17 · Barra de navegación reemplazada por deslizador nativo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.16  
+**Versión:** 6.4.17  
+
+## Cambios 6.4.17
+
+Pediste confirmar el scroll y luego señalaste que, aunque el congelamiento ya estaba resuelto, "lo que hasta ahora no puedes poner es el scrool o la barra para navegar" -- la scrollbar propia (hecha con divs, de 6.4.14) seguía sin aparecer/funcionar en tu SketchUp real, pese a que en las pruebas automatizadas sí se movía correctamente.
+
+- **Se retiró por completo la scrollbar propia (divs + arrastre con mouse)** y se reemplazó por un **deslizador `<input type="range">` nativo** ("⇅ Desplazar"), uno para el panel de configuración (izquierda) y otro para MODULAR-3D VIEW (derecha). Se eligió este tipo de control porque es EL MISMO que ya usan "Explosión" y "Velocidad de giro" -- controles que en tus propias capturas de pantalla sí se ven y funcionan en tu navegador embebido de SketchUp. En vez de seguir depurando a ciegas un control que no puedo reproducir del lado del bug, se cambió a uno cuyo tipo ya está probado en tu entorno real.
+- El deslizador mueve el contenido del panel (`scrollTop`) al arrastrarlo, y se actualiza solo si el panel se desplaza por otro medio (rueda del mouse, etc.). Se oculta automáticamente si el contenido ya cabe completo (no hay nada que desplazar).
+- Se eliminó el código muerto de la scrollbar anterior (`inicializarScrollbarPropia` y su `MutationObserver`) en `interfaz.js`.
 
 ## Nota de fusión (este repositorio)
 
