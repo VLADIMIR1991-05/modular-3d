@@ -199,7 +199,15 @@ module Modular3D
     end
 
     def mark_verified(response)
-      ttl = [[response[:ttl_seconds].to_i, 60].max, Modular3D::LICENSE_SESSION_MAX_SECONDS].min
+      # El servidor (Cloudflare Worker) nunca manda ttl_seconds -- por eso
+      # [nil.to_i, 60].max daba SIEMPRE 60 segundos de cache real, sin
+      # importar LICENSE_SESSION_MAX_SECONDS: cada build (que llama
+      # ensure_authorized) y cada heartbeat de 15min terminaban haciendo un
+      # request en vivo al servidor de todos modos. Si el servidor no manda
+      # ttl_seconds, se confia en la sesion recien validada por el techo
+      # completo (LICENSE_SESSION_MAX_SECONDS = 24h), no por 60 segundos.
+      ttl_servidor = response[:ttl_seconds].to_i
+      ttl = ttl_servidor > 0 ? [ttl_servidor, Modular3D::LICENSE_SESSION_MAX_SECONDS].min : Modular3D::LICENSE_SESSION_MAX_SECONDS
       @verified_until = Time.now + ttl
       @last_status = response.merge(ok: true, verified_until: @verified_until.utc.iso8601)
     end

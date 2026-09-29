@@ -997,6 +997,15 @@
     updateStepStatus('inicial');
     if (window.__modular3dInitial) window.Modular3DLoadInitial(window.__modular3dInitial);
     window.Modular3DLicense.check();
+    // Cada 15 minutos (LICENSE_HEARTBEAT_SECONDS en config.rb), sin importar
+    // si la sesion sigue en cache: licenciaHeartbeat siempre hace un request
+    // real al servidor y su respuesta (con el expires_at real) pasa por
+    // receive() -> actualizarBarraLicencia(), asi que los "dias restantes"
+    // se refrescan solos con esta cadencia si un admin extendio la licencia
+    // mientras el dialogo ya estaba abierto -- la validacion completa de
+    // sesion (authorized_cached?) tiene su propio techo de 24h aparte
+    // (LICENSE_SESSION_MAX_SECONDS), pero este heartbeat de 15min no
+    // depende de ese techo.
     window.setInterval(function() {
       if (!document.body.classList.contains('license-locked') && window.sketchup && sketchup.licenciaHeartbeat) {
         sketchup.licenciaHeartbeat();

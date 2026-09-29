@@ -1,11 +1,19 @@
-# Modular_3D 6.4.8 · Visor 3D sin recortar + "Espacio Libre"
+# Modular_3D 6.4.9 · Días cada 15min, validación completa cada 24h
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.8  
+**Versión:** 6.4.9  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.9
+
+Responde a "le acabo de cambiar los días pero en la barra no se actualiza... quiero que se actualice cada 15min, lo de la validación de la licencia sería cada 24h".
+
+- **Bug real encontrado y corregido:** el servidor de licencias nunca manda `ttl_seconds` en su respuesta -- por eso `mark_verified` calculaba `[0, 60].max` = **60 segundos** de sesión en caché, siempre, sin importar `LICENSE_SESSION_MAX_SECONDS`. Efecto práctico: cada vez que el plugin construía un módulo (que primero llama a `ensure_authorized`) volvía a llamar al servidor de verdad porque la caché de 60 segundos ya había expirado casi siempre. Corregido: si el servidor no manda `ttl_seconds` (nunca lo manda hoy), se confía en la sesión recién validada por el techo completo, no por 60 segundos.
+- **`LICENSE_SESSION_MAX_SECONDS` pasa de 72h a 24h**, tal como pediste para "la validación completa".
+- **La barra de días ya se refrescaba cada 15 minutos** (`LICENSE_HEARTBEAT_SECONDS`, ya existía) -- ese heartbeat SIEMPRE hace un request real al servidor sin importar la caché de sesión, así que si un administrador extiende tu licencia mientras el configurador ya está abierto, el cambio se refleja solo, sin cerrar y volver a abrir nada, dentro de esos 15 minutos (no es instantáneo: el plugin consulta, no recibe un aviso push).
 
 ## Cambios 6.4.8
 
