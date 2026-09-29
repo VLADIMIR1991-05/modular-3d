@@ -1,8 +1,18 @@
-# Modular_3D 6.4.19 · Configurador y visor 3D: dos scrolls independientes siempre
+# Modular_3D 6.4.20 · Barra de scroll propia y visible, una por panel
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.19  
+**Versión:** 6.4.20  
 
+## Cambios 6.4.20
+
+En 6.4.19 el scroll interno ya funcionaba en los dos paneles por separado, pero dependía de que el navegador embebido de SketchUp pintara su propia scrollbar nativa -- y dijiste "no se ve que esta arreglado... debe tener una barra lateral deslizable para cada uno". Aquí se agrega una barra 100% propia, visible siempre que haya contenido para desplazar, una para el configurador y otra para el visor 3D -- sin depender de si el navegador decide mostrar su scrollbar nativa o no.
+
+- **Barra de scroll propia** (franja angosta con manija arrastrable) en el borde derecho de CADA panel por separado -- una para `.config-pane`, otra para `aside.m3dv-panel`. Se arrastra con el mouse igual que una scrollbar normal.
+- Se apaga la scrollbar nativa del navegador (`scrollbar-width:none` / `::-webkit-scrollbar{display:none}`) para no duplicar: ahora la única que se ve es la propia, bajo control total del plugin.
+- **Se evitó a propósito el bug de 6.4.14** (el `MutationObserver` que se disparaba a sí mismo y congeló el diálogo entero): esta barra usa `ResizeObserver` sobre el panel que se scrollea, no sobre sí misma, así que nuestro propio refresco nunca puede volver a dispararse solo. Verificado con una prueba real: el hilo de JavaScript siguió respondiendo con normalidad durante y después de usar la barra.
+- Verificado arrastrando cada barra por separado con eventos de mouse reales: mover la del configurador no mueve el visor, y viceversa.
+
+## Cambios 6.4.19
 ## Cambios 6.4.19
 
 Confirmaste que la barra lateral del visor sí se activaba al achicar la ventana, pero señalaste el problema de fondo: el configurador (izquierda) y el visor 3D (derecha) deben ser **dos secciones independientes, cada una con su propio scroll, en cualquier dimensión de ventana** -- no una que se apile sobre la otra compartiendo un solo scroll de página cuando la ventana se hace angosta.

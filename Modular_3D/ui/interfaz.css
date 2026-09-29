@@ -89,12 +89,31 @@
        completo y, como body tiene overflow:hidden, todo lo que sobraba
        se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
     main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
-    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
-    .config-pane, aside.m3dv-panel { scrollbar-width: auto; }
-    .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 14px; }
-    .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-    .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-    .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
+    /* .scroll-dock envuelve cada panel (.config-pane y aside.m3dv-panel por
+       separado) y es lo que en realidad mide main como columna -- adentro
+       va el panel scrolleable Y, como HERMANO suyo (no como hijo), la
+       barra propia (.scroll-thumb-track). Tiene que ser hermano y no hijo
+       del panel: un hijo absolute-positioned DENTRO de un contenedor con
+       overflow:auto se mueve junto con su contenido al scrollear -- para
+       que la barra se quede fija en su sitio mientras el panel scrollea
+       por dentro, tiene que vivir fuera de esa caja de scroll. */
+    .scroll-dock { position:relative; height:100%; min-height:0; }
+    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:14px; padding-bottom:12px; }
+    /* La scrollbar nativa del navegador se oculta a propósito: 6.4.14-6.4.19
+       dependieron en algún punto de que el navegador embebido de SketchUp
+       pintara SU PROPIA barra (nativa o vía ::-webkit-scrollbar), y aunque
+       el bug real resultó ser el corte de ancho de 6.4.18 (ya corregido),
+       seguía sin quedar 100% claro si ese navegador respeta el estilo de
+       scrollbar o usa una superpuesta del sistema operativo (autoocultable
+       en Windows/Mac). La barra de abajo es 100% propia -- CSS + JS bajo
+       nuestro control total, cero dependencia de cómo el motor decida
+       pintar su scrollbar -- así que la nativa se apaga para no duplicar. */
+    .config-pane, aside.m3dv-panel { scrollbar-width: none; }
+    .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { display: none; }
+    .scroll-thumb-track { position:absolute; top:0; right:2px; bottom:0; width:9px; z-index:4; border-radius:5px; background:rgba(255,255,255,.05); pointer-events:none; }
+    .scroll-thumb-track.hidden-track { display:none; }
+    .scroll-thumb { position:absolute; left:0; right:0; min-height:34px; border-radius:5px; background:#4a5660; cursor:pointer; pointer-events:auto; }
+    .scroll-thumb:hover, .scroll-thumb.dragging { background:var(--brand); }
     /* El visor 3D queda fijo: aside pasa a columna flex donde
        .m3dv-body (árbol de piezas / propiedades) hace scroll interno
        PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan

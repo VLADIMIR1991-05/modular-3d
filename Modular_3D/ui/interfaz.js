@@ -1061,3 +1061,67 @@
       contenedor.scrollTop += event.deltaY;
       event.preventDefault();
     }, { passive: false });
+
+    // Barra de scroll propia, una por panel (.config-pane y aside.m3dv-panel
+    // son independientes -- cada una la suya). Se construye con divs (no con
+    // el pseudo-elemento ::-webkit-scrollbar, que ya está apagado en CSS)
+    // para no depender en absoluto de cómo el navegador embebido de
+    // SketchUp decida pintar (o no) su propia scrollbar.
+    // NOTA sobre el bug de 6.4.14: aquella barra usaba un MutationObserver
+    // que se disparaba a sí mismo en un ciclo infinito (colgó el diálogo
+    // entero) porque observaba TODO el panel mientras su propio refresco
+    // escribía dentro de ese mismo panel. Esta versión usa ResizeObserver
+    // sobre el CONTENEDOR SCROLLEABLE en vez de sobre el panel completo:
+    // sólo se dispara si el tamaño de caja del contenedor cambia, y nuestro
+    // refresco jamás toca esa caja (sólo escribe en la barra, que vive
+    // afuera, como hermana) -- no hay forma de que se retroalimente solo.
+    function inicializarScrollbarPropia(track) {
+      var contenedor = document.querySelector(track.getAttribute('data-scroll-target'));
+      var thumb = track.querySelector('.scroll-thumb');
+      if (!contenedor || !thumb) return;
+      var arrastrando = false, y0 = 0, scrollTop0 = 0;
+      function refrescar() {
+        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
+        if (maxScroll <= 1) { track.classList.add('hidden-track'); return; }
+        track.classList.remove('hidden-track');
+        var altoTrack = track.clientHeight;
+        var ratio = contenedor.clientHeight / contenedor.scrollHeight;
+        var altoThumb = Math.max(34, altoTrack * ratio);
+        var maxTopThumb = altoTrack - altoThumb;
+        var topThumb = maxTopThumb > 0 ? (contenedor.scrollTop / maxScroll) * maxTopThumb : 0;
+        thumb.style.height = altoThumb + 'px';
+        thumb.style.top = topThumb + 'px';
+      }
+      contenedor.addEventListener('scroll', refrescar);
+      window.addEventListener('resize', refrescar);
+      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
+      thumb.addEventListener('mousedown', function(event) {
+        arrastrando = true;
+        thumb.classList.add('dragging');
+        y0 = event.clientY;
+        scrollTop0 = contenedor.scrollTop;
+        event.preventDefault();
+      });
+      document.addEventListener('mousemove', function(event) {
+        if (!arrastrando) return;
+        var altoTrack = track.clientHeight, altoThumb = thumb.offsetHeight;
+        var maxTopThumb = altoTrack - altoThumb;
+        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
+        if (maxTopThumb <= 0 || maxScroll <= 0) return;
+        var deltaScroll = ((event.clientY - y0) / maxTopThumb) * maxScroll;
+        contenedor.scrollTop = Math.max(0, Math.min(maxScroll, scrollTop0 + deltaScroll));
+      });
+      document.addEventListener('mouseup', function() {
+        if (!arrastrando) return;
+        arrastrando = false;
+        thumb.classList.remove('dragging');
+      });
+      track.addEventListener('click', function(event) {
+        if (event.target !== track) return;
+        var direccion = (event.clientY - track.getBoundingClientRect().top) < thumb.offsetTop ? -1 : 1;
+        contenedor.scrollTop += direccion * contenedor.clientHeight * 0.85;
+      });
+      refrescar();
+      window.setInterval(refrescar, 1000);
+    }
+    document.querySelectorAll('.scroll-thumb-track').forEach(inicializarScrollbarPropia);
