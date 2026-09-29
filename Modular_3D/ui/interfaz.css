@@ -129,8 +129,8 @@
     .license-session { display: none; align-items: center; gap: 8px; }
     .license-session.show { display: flex; }
     .license-session button { width: auto; padding: 4px 7px; border: 1px solid rgba(255,255,255,.45); background: transparent; font-size: 9px; }
-    .license-days { display: flex; align-items: center; gap: 5px; font-size: 9px; opacity: .92; }
-    .license-days-track { width: 56px; height: 6px; border-radius: 999px; background: rgba(255,255,255,.28); overflow: hidden; }
+    .license-days { display: flex; flex-direction: column; align-items: stretch; gap: 3px; font-size: 9px; opacity: .92; }
+    .license-days-track { width: 92px; height: 6px; border-radius: 999px; background: rgba(255,255,255,.28); overflow: hidden; }
     .license-days-fill { height: 100%; width: 0%; border-radius: 999px; background: #2563eb; transition: width .3s ease, background .3s ease; }
     body.license-locked main, body.license-locked header { pointer-events: none; user-select: none; }
     .link-button { margin-top: 4px; padding: 6px; color: var(--brand-dark); border: none; background: none; text-decoration: underline; font-size: 11px; font-weight: 600; }

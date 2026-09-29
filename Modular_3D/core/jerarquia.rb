@@ -29,7 +29,7 @@ module LPenafiel_GeneradorMueblesExacto
     end
 
     dialogo.add_action_callback("licenciaEstado") do |_action_context|
-      enviar_estado_licencia.call(Modular3D::License.status)
+      enviar_estado_licencia.call(Modular3D::License.refresh_status)
     end
 
     dialogo.add_action_callback("licenciaLogin") do |_action_context, email, password, force_transfer|

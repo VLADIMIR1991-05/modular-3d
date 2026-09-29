@@ -145,6 +145,36 @@ module Modular3D
       ensure_authorized
     end
 
+    # Se usa al abrir el diálogo del configurador: fuerza una llamada real a
+    # /license/validate en vez de devolver la caché de hasta 72h
+    # (LICENSE_SESSION_MAX_SECONDS). Así, si un administrador extendió la
+    # licencia desde el panel, el plugin lo refleja de inmediato (fecha
+    # límite, días restantes) sin esperar a que la caché expire ni reiniciar
+    # SketchUp. Usa el token ya guardado, no pide contraseña.
+    #
+    # Si el servidor no responde (sin internet, mantenimiento, etc.) pero la
+    # sesión seguía siendo válida localmente, no se desconecta al usuario:
+    # se conserva el estado en caché y se reintenta en el próximo heartbeat.
+    def refresh_status
+      return mark_verified(ok: true, mode: "development") unless enabled?
+      return { ok: false, code: "LOGIN_REQUIRED" } if saved_token.empty?
+
+      had_valid_cache = authorized_cached?
+      cached_status = @last_status
+      cached_until = @verified_until
+
+      response = validate
+      return response if response[:ok]
+
+      if response[:code] == "SERVER_UNAVAILABLE" && had_valid_cache
+        @last_status = cached_status
+        @verified_until = cached_until
+        return cached_status
+      end
+
+      response
+    end
+
     def request(path, payload)
       uri = URI.parse("#{Modular3D::LICENSE_API_URL}#{path}")
       raise "La API de licencias debe usar HTTPS." if uri.scheme != "https" && uri.host != "127.0.0.1" && uri.host != "localhost"

@@ -1,11 +1,19 @@
-# Modular_3D 6.4.3 · Puerta y frente de cajón alineados + riel oculta
+# Modular_3D 6.4.4 · Licencia siempre al día + barra de días rediseñada
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.3  
+**Versión:** 6.4.4  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.4
+
+Responde a "le quedan 6 días... yo le aumenté un año pero no se puede ver, pero en la licencia sí está la fecha límite 2027, corrige eso" y al pedido de que la barra de días sea más larga y quede debajo de las letras, dentro del cuadro naranja.
+
+- **La fecha/días restantes ahora se actualiza al abrir el configurador, no solo cada 72 horas.** Causa real: al abrir el diálogo, el plugin pedía el estado de la licencia con `Modular3D::License.status`, que devuelve lo último guardado en caché mientras no hayan pasado `LICENSE_SESSION_MAX_SECONDS` (72h) desde el último chequeo real al servidor — si un administrador extendía la licencia desde el panel, el plugin seguía mostrando los días/fecha viejos hasta que esa caché expirara sola o se reiniciara SketchUp. Ahora ese primer chequeo, al abrir el diálogo, llama de verdad a `/license/validate` (con el token ya guardado, sin pedir contraseña), así que una extensión hecha por el administrador se ve de inmediato la próxima vez que se abre el configurador.
+  - Para no desconectar a nadie por un corte de internet momentáneo: si esa llamada falla por no poder contactar al servidor y la sesión anterior todavía era válida localmente, el plugin se queda con el estado en caché (no bloquea) y reintenta en el próximo heartbeat (cada 15 minutos) o en la próxima apertura.
+- **Barra de días restantes: más larga (92px, antes 56px) y ahora debajo del texto "X días"** (antes iban en la misma fila, lado a lado), sin salir del cuadro naranja de la sesión.
 
 ## Cambios 6.4.3
 
