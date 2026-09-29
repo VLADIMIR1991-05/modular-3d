@@ -84,17 +84,28 @@
       aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
       .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
       .step-footer { position: relative; bottom:auto; z-index:5; }
-      /* Scrollbar ancha y siempre visible (no la delgada/semi-invisible
-         que usa Chromium por defecto): si la rueda del mouse no se
-         entrega bien dentro del navegador embebido de SketchUp, esto deja
-         un control con el que arrastrar el scroll a mano, sin depender de
-         la rueda para nada -- funciona con clic normal, no con gestos. */
-      .config-pane, aside.m3dv-panel, .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
-      .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar, .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
-      .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track, .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-      .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb, .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-      .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover, .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
+      /* Scrollbar propia, dibujada a mano con divs normales en vez de
+         confiar en que el navegador embebido de SketchUp pinte una
+         ::-webkit-scrollbar visible y arrastrable -- en la práctica no lo
+         hacía (probablemente Windows la oculta/adelgaza según su propia
+         configuración de "ocultar barras de desplazamiento
+         automáticamente", algo que ninguna hoja de estilos puede forzar).
+         Esto es un control 100% propio (ver #config_pane_scrollbar/
+         #m3dv_panel_scrollbar e interfaz.js): nunca depende de cómo el
+         motor decida pintar (o no) su propio scrollbar nativo. */
+      .config-pane, aside.m3dv-panel { position: relative; }
+      .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 0; }
+      .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
+      .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
+      .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+      .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+      .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
     }
+    .custom-scrollbar { position: absolute; top: 4px; right: 3px; bottom: 4px; width: 12px; z-index: 30; }
+    .custom-scrollbar[hidden] { display: none; }
+    .custom-scrollbar-track { position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.08); }
+    .custom-scrollbar-thumb { position: absolute; left: 1px; right: 1px; min-height: 34px; border-radius: 999px; background: #5c6b78; cursor: pointer; }
+    .custom-scrollbar-thumb:hover, .custom-scrollbar-thumb.dragging { background: var(--brand); }
     .piece-info { display: none; margin: 7px 0; padding: 7px; border-left: 3px solid var(--brand); background: rgba(240, 100, 36, .14); font-size: 11px; }
     .piece-info.show { display: block; }
     .metric { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); }

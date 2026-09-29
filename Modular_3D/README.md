@@ -1,11 +1,19 @@
-# Modular_3D 6.4.13 · Scrollbar visible para arrastrar + Propiedades técnicas contenidas
+# Modular_3D 6.4.14 · Checks para activar/desactivar zócalo y premesón + scrollbar propia
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.13  
+**Versión:** 6.4.14  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.14
+
+Dos pedidos: "que exista una check para activar o desactivar zócalo y también activar o desactivar premesón" (ubicado en la barra de MODULAR-3D VIEW, junto a "Abierto", según pediste) -- "no solo visual, si se activa sale también en el despiece y si no va se retira del despiece" -- y, en paralelo, una vuelta más al problema del scroll.
+
+- **Checks "Zócalo" y "Premesón"** en la barra del visor 3D (junto a "Abierto"), marcados por defecto (para no cambiar el comportamiento de módulos ya guardados). Solo aparecen cuando aplican: "Zócalo" en Bajo/Auxiliar/Closet, "Premesón" solo en Bajo -- igual que ya hacía el check de Cornisa.
+- **No es solo visual: afecta la construcción real Y el despiece.** Se aplicó el mismo check en los 3 motores del plugin: la construcción real en SketchUp (`jerarquia.rb`), el despiece/plano 2D (`plano2d_inventario.rb` -- de acá sale también el presupuesto, así que se actualiza solo) y el visor 3D en vivo. Desmarcar "Zócalo" quita la pieza de los tres lugares a la vez; volver a marcarlo la trae de vuelta.
+- **Scrollbar propia (dibujada con divs normales, ya no con el scrollbar nativo del navegador).** Después de que la scrollbar nativa estilizada no apareciera visible en tu SketchUp real (probablemente por una configuración de Windows que ninguna hoja de estilos puede forzar), se reemplazó por un control 100% propio: una franja angosta con una manija que se arrastra con el mouse y mueve el contenido a mano, sin depender en absoluto de cómo el navegador embebido decida pintar (o no) su scrollbar. Verificado que el arrastre mueve el contenido correctamente.
 
 ## Cambios 6.4.13
 

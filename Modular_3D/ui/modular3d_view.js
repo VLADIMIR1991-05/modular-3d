@@ -360,7 +360,7 @@
     // ya levantado).
     var zocaloAltoCasco = 126;
     var tipoModuloCasco = String(data.tipo_modulo || 'PERSONALIZADO').toUpperCase();
-    var llevaZocaloCasco = ['BAJO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
+    var llevaZocaloCasco = ['BAJO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0 && String(data.zocalo_activo || 'SI') !== 'NO';
     var altoCarcasaOffset = llevaZocaloCasco ? zocaloAltoCasco : 0;
     zOffsetCarcasa = altoCarcasaOffset;
 
@@ -435,7 +435,7 @@
     var zocaloGrosor = 15, zocaloRetranqueo = 70;
     var cornisaGrosor = 15, cornisaRetranqueo = 20;
     var remateAncho = 100, remateAltoTotal = 2420;
-    var llevaPremeson = tipoModuloCasco === 'BAJO';
+    var llevaPremeson = tipoModuloCasco === 'BAJO' && String(data.premeson_activo || 'SI') !== 'NO';
     var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
     var cornisaActiva = cornisaDisponible && String(data.cornisa_activa || 'NO') === 'SI';
     var llevaRemates = ['AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;

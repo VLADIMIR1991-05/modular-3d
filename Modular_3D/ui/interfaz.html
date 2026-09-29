@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modular_3D</title>
-  <link rel="stylesheet" href="interfaz.css?v=6.4.13">
+  <link rel="stylesheet" href="interfaz.css?v=6.4.14">
 </head>
 <body class="license-locked">
   <div id="license_overlay" class="license-overlay">
@@ -60,11 +60,12 @@
         <div class="license-days-track"><div class="license-days-fill" id="license_days_fill"></div></div>
       </div>
     </div>
-    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.13</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.14</div>
   </header>
 
   <main>
     <section class="config-pane">
+      <div class="custom-scrollbar" id="config_pane_scrollbar" hidden><div class="custom-scrollbar-track"></div><div class="custom-scrollbar-thumb"></div></div>
       <nav class="tabs">
         <button class="tab active" data-page="inicial" data-help="Define tipo de módulo, nombre, ancho, altura, profundidad, espesores y luces generales.">1 Medidas</button>
         <button class="tab" data-page="paneles" data-help="Edita tapa, base, laterales, respaldo y ajustes posteriores. Selecciona una pieza en 3D para abrirla.">2 Casco</button>
@@ -404,7 +405,8 @@
     </section>
 
     <aside class="card m3dv-panel">
-      <div class="m3dv-head"><h2>MODULAR-3D VIEW</h2><div class="m3dv-head-actions"><label class="m3dv-doors-toggle" title="Vuelve las puertas invisibles en tiempo real para ver qué hay construido dentro del módulo"><input type="checkbox" id="view_doors_open"> Abierto</label><button type="button" id="view_fullscreen" class="m3dv-fullscreen-btn" title="Ampliar el visualizador 3D a pantalla completa">⛶ Ampliar</button></div></div>
+      <div class="custom-scrollbar" id="m3dv_panel_scrollbar" hidden><div class="custom-scrollbar-track"></div><div class="custom-scrollbar-thumb"></div></div>
+      <div class="m3dv-head"><h2>MODULAR-3D VIEW</h2><div class="m3dv-head-actions"><label class="m3dv-doors-toggle cascada-zocalo-check" title="Desmarca para construir este módulo sin zócalo"><input type="checkbox" id="zocalo_activo" checked> Zócalo</label><label class="m3dv-doors-toggle cascada-premeson-check" title="Desmarca para construir este módulo sin premesón (solo módulos Bajo)"><input type="checkbox" id="premeson_activo" checked> Premesón</label><label class="m3dv-doors-toggle" title="Vuelve las puertas invisibles en tiempo real para ver qué hay construido dentro del módulo"><input type="checkbox" id="view_doors_open"> Abierto</label><button type="button" id="view_fullscreen" class="m3dv-fullscreen-btn" title="Ampliar el visualizador 3D a pantalla completa">⛶ Ampliar</button></div></div>
       <div class="m3dv-stage" id="view_stage">
         <button type="button" class="update-badge" id="btn_actualizar_modulo">Actualizar módulo</button>
         <div class="m3dv-dimensions">
@@ -448,11 +450,11 @@
 
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/OrbitControls.js"></script>
-  <script src="modular3d_view.js?v=6.4.13"></script>
-  <script src="reglas_visibilidad.js?v=6.4.13"></script>
-  <script src="interfaz.js?v=6.4.13"></script>
-<script src="hierarchical_config.js?v=6.4.13"></script>
-<script src="material_config.js?v=6.4.13"></script>
-<script src="catalogo.js?v=6.4.13"></script>
+  <script src="modular3d_view.js?v=6.4.14"></script>
+  <script src="reglas_visibilidad.js?v=6.4.14"></script>
+  <script src="interfaz.js?v=6.4.14"></script>
+<script src="hierarchical_config.js?v=6.4.14"></script>
+<script src="material_config.js?v=6.4.14"></script>
+<script src="catalogo.js?v=6.4.14"></script>
 </body>
 </html>

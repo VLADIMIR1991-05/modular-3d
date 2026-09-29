@@ -364,7 +364,11 @@ module LPenafiel_GeneradorMueblesExacto
       # casco ya levantado.
       zocalo_alto = 126.mm
       tipo_modulo = (datos['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase
-      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo)
+      # zocalo_activo/premeson_activo son checks manuales (visor 3D, junto a
+      # "Abierto"): por defecto SI para no romper modulos guardados antes de
+      # que existiera este check (ausente = comportamiento historico, que
+      # siempre llevaba zocalo/premeson en estos tipos de modulo).
+      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo) && datos['zocalo_activo'].to_s != 'NO'
       alto_carcasa_offset = lleva_zocalo ? zocalo_alto : 0.mm
       offset_creacion_base = @offset_creacion || Geom::Vector3d.new(0, 0, 0)
       @offset_creacion = offset_creacion_base + Geom::Vector3d.new(0, 0, alto_carcasa_offset)
@@ -1274,7 +1278,7 @@ module LPenafiel_GeneradorMueblesExacto
       remate_ancho = 100.mm
       remate_alto_total = 2420.mm
 
-      lleva_premeson = tipo_modulo == 'BAJO'
+      lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
       cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
       lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)

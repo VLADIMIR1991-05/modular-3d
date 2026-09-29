@@ -61,7 +61,7 @@ module LPenafiel_GeneradorMueblesExacto
 
       zocalo_alto = 126.0
       tipo_modulo = (datos['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase
-      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo)
+      lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo) && datos['zocalo_activo'].to_s != 'NO'
       alto_carcasa_offset = lleva_zocalo ? zocalo_alto : 0.0
       z_offset_carcasa = alto_carcasa_offset
 
@@ -234,7 +234,7 @@ module LPenafiel_GeneradorMueblesExacto
       remate_ancho = 100.0
       remate_alto_total = 2420.0
 
-      lleva_premeson = tipo_modulo == 'BAJO'
+      lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
       cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
       lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)

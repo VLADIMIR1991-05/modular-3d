@@ -362,6 +362,8 @@
       { selector: '.campo-travesano-superior', cuando: { field: 'tipo_superior', test: 'equals', value: 'TRAVESANOS' } },
       { selector: '.cascada-zocalo', cuando: { field: 'tipo_modulo', test: 'notEquals', value: 'PERSONALIZADO' } },
       { selector: '.cascada-zocalo-lado', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['BAJO', 'AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-zocalo-check', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['BAJO', 'AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-premeson-check', cuando: { field: 'tipo_modulo', test: 'equals', value: 'BAJO' } },
       { selector: '.cascada-cornisa', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] } },
       { selector: '.cascada-cornisa-detalle', cuando: { all: [ { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] }, { field: 'cornisa_activa', test: 'equals', value: 'SI' } ] } },
       { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } }
@@ -1049,3 +1051,65 @@
       contenedor.scrollTop += event.deltaY;
       event.preventDefault();
     }, { passive: false });
+
+    // Scrollbar propia (dibujada con divs normales, no con el pseudo-elemento
+    // ::-webkit-scrollbar del navegador): en el navegador embebido de
+    // SketchUp la barra nativa no aparecía visible ni arrastrable (posible
+    // configuración de Windows de "ocultar barras de desplazamiento
+    // automáticamente", que ninguna hoja de estilos puede forzar a mostrar).
+    // Esto es un control 100% propio que nunca depende de cómo el motor
+    // decida pintar su scrollbar nativo: un simple div que se arrastra con
+    // el mouse y mueve scrollTop a mano.
+    function inicializarScrollbarPropia(contenedor, idBarra) {
+      var barra = document.getElementById(idBarra);
+      if (!contenedor || !barra) return;
+      var track = barra.querySelector('.custom-scrollbar-track');
+      var thumb = barra.querySelector('.custom-scrollbar-thumb');
+      var arrastrando = false, y0 = 0, scrollTop0 = 0;
+      function refrescar() {
+        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
+        if (maxScroll <= 1) { barra.hidden = true; return; }
+        barra.hidden = false;
+        var altoTrack = barra.clientHeight;
+        var ratio = contenedor.clientHeight / contenedor.scrollHeight;
+        var altoThumb = Math.max(34, altoTrack * ratio);
+        var maxTopThumb = altoTrack - altoThumb;
+        var topThumb = maxTopThumb > 0 ? (contenedor.scrollTop / maxScroll) * maxTopThumb : 0;
+        thumb.style.height = altoThumb + 'px';
+        thumb.style.top = topThumb + 'px';
+      }
+      contenedor.addEventListener('scroll', refrescar);
+      window.addEventListener('resize', refrescar);
+      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
+      if (window.MutationObserver) new MutationObserver(refrescar).observe(contenedor, { childList: true, subtree: true, attributes: true });
+      thumb.addEventListener('mousedown', function(event) {
+        arrastrando = true;
+        thumb.classList.add('dragging');
+        y0 = event.clientY;
+        scrollTop0 = contenedor.scrollTop;
+        event.preventDefault();
+      });
+      document.addEventListener('mousemove', function(event) {
+        if (!arrastrando) return;
+        var altoTrack = barra.clientHeight, altoThumb = thumb.offsetHeight;
+        var maxTopThumb = altoTrack - altoThumb;
+        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
+        if (maxTopThumb <= 0 || maxScroll <= 0) return;
+        var deltaScroll = ((event.clientY - y0) / maxTopThumb) * maxScroll;
+        contenedor.scrollTop = Math.max(0, Math.min(maxScroll, scrollTop0 + deltaScroll));
+      });
+      document.addEventListener('mouseup', function() {
+        if (!arrastrando) return;
+        arrastrando = false;
+        thumb.classList.remove('dragging');
+      });
+      track.addEventListener('click', function(event) {
+        if (event.target !== track) return;
+        var direccion = (event.clientY - track.getBoundingClientRect().top) < thumb.offsetTop ? -1 : 1;
+        contenedor.scrollTop += direccion * contenedor.clientHeight * 0.85;
+      });
+      refrescar();
+      window.setInterval(refrescar, 1000);
+    }
+    inicializarScrollbarPropia(document.querySelector('.config-pane'), 'config_pane_scrollbar');
+    inicializarScrollbarPropia(document.querySelector('aside.m3dv-panel'), 'm3dv_panel_scrollbar');
