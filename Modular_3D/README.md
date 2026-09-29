@@ -1,11 +1,22 @@
-# Modular_3D 6.4.6 · Barra de días a todo el ancho, sin separador
+# Modular_3D 6.4.7 · Módulos sin fusionarse, cajón a mitad de salida, materiales simplificados
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.6  
+**Versión:** 6.4.7  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.7
+
+Tres pedidos en un solo mensaje: módulos que "se unen" cuando se crean varios en fila, el cajón sigue saliendo mucho, y "4 Materiales... es todo un champú, le pongo un color solo al lateral y me pinta todo el módulo".
+
+- **Cada módulo nuevo se coloca 20mm hacia atrás (Y) respecto al anterior.** Sin este retranqueo, dos módulos creados en fila quedaban con el frente exactamente en el mismo plano Y, y SketchUp fusionaba visualmente los bordes/caras compartidas entre ambos como si fueran una sola pieza continua. Con el desplazamiento de 20mm ya no coinciden esos planos.
+- **El cajón interactivo ahora sale la mitad de lejos que antes.** Salía `0.7 × fondo del cajón` (tope 500mm) -- se cambió a `0.35 × fondo` (tope 250mm), exactamente la mitad en ambos casos.
+- **"4 Materiales" simplificado y con el bug real corregido:**
+  - **Causa real de "le pongo un color solo al lateral y me pinta todo el módulo":** no existe (ni existía) un grupo "Lateral" separado -- "Casco" siempre incluyó los 2 laterales + base + techo juntos, todo de una. No es un bug de prioridad/cascada (esa parte ya funcionaba bien), es que el nombre del grupo no avisaba su alcance real. Se renombró a **"Casco (laterales, base y techo)"** en todos los desplegables y tarjetas, y se agregó un aviso arriba de la sección: para pintar UNA sola pieza (ej. solo el lateral izquierdo) hay que usar "Editar una pieza individual" (seleccionarla en el visualizador), no el grupo.
+  - **Se redujeron los grupos siempre visibles de 10 a 6** (Casco, Interior, Frentes y puertas, Cajones interiores, Respaldo, Herrajes). Los otros 4 (Ajuste, Zócalo, Cornisa, Remates) -- que casi nunca hace falta tocar porque por defecto heredan el color del Casco -- quedaron detrás de un desplegable "Opciones avanzadas", sin perder nada de funcionalidad.
+  - **Bug real corregido:** los desplegables "Grupo heredado" (al editar una pieza individual) y "Grupo" (al asignar una textura) no tenían las opciones Zócalo/Cornisa/Remates -- si elegías una pieza de esos grupos para darle un acabado individual, el grupo que se guardaba no era el correcto. Ya están las 10 opciones completas en ambos.
 
 ## Cambios 6.4.6
 

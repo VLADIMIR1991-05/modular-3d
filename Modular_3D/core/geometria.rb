@@ -186,7 +186,13 @@ module LPenafiel_GeneradorMueblesExacto
     caja_ultimo = bounds_de_piezas(@ultimo_modulo_piezas)
     return Geom::Vector3d.new(0, 0, 0) if caja_ultimo.empty?
     separacion = 100.mm
-    Geom::Vector3d.new(caja_ultimo.max.x + separacion, caja_ultimo.min.y, caja_ultimo.min.z)
+    # 20mm hacia atras (Y+, ya que -Y es el frente) respecto al modulo
+    # anterior: sin este retranqueo, dos modulos creados en fila quedaban
+    # con el frente exactamente coincidente (mismo plano Y), lo que hacia
+    # que SketchUp fusionara visualmente los bordes/caras compartidas entre
+    # ambos como si fueran una sola pieza.
+    retranqueo_modulo_nuevo = 20.mm
+    Geom::Vector3d.new(caja_ultimo.max.x + separacion, caja_ultimo.min.y + retranqueo_modulo_nuevo, caja_ultimo.min.z)
   end
 
   def self.nombre_modulo_unico(nombre_base)

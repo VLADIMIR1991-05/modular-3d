@@ -152,8 +152,13 @@
   // tiempo para no amontonar la pestana con controles que no aplican. Las
   // condiciones viven como datos en el motor compartido
   // (reglas_visibilidad.js): el swatch de cada grupo se registra en un
-  // bucle porque son 7 grupos con el mismo patrón (checkbox
-  // material_<grupo>_custom -> su propio .material-swatch-row).
+  // bucle porque son 10 grupos con el mismo patrón (checkbox
+  // material_<grupo>_custom -> su propio .material-swatch-row). 6 se
+  // muestran siempre en "Materiales por grupo" (casco, interior, frentes,
+  // cajones, respaldo, herrajes); los otros 4 (ajuste, zocalo, cornisa,
+  // remates) viven detrás de un <details> "Opciones avanzadas" en
+  // interfaz.html -- misma logica, solo que casi nunca hace falta
+  // tocarlos porque heredan el color del Casco por defecto.
   if (window.Modular3DReglas) window.Modular3DReglas.registrar([
     { selector: '.material-unico-detalle', cuando: { field: 'material_unico', test: 'checked' } },
     { selector: '#material_piece_detalle', cuando: { field: 'material_piece_custom', test: 'equals', value: 'SI' } }

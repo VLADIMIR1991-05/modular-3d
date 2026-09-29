@@ -95,7 +95,11 @@ module LPenafiel_GeneradorMueblesExacto
   def self.agregar_interactividad_cajon(instancia, fondo_caja)
     return unless instancia && instancia.respond_to?(:definition) && instancia.definition
     definicion = instancia.definition
-    salida = -[fondo_caja * 0.7, 500.mm].min.to_mm.round
+    # Salia el doble de lo que debia: 0.7 del fondo (topaba en 500mm) hacia
+    # que el cajon sobresaliera casi entero del casco. Se recorto a la
+    # mitad (0.35, tope 250mm) para que solo salga lo necesario para ver
+    # el contenido, no el cajon completo.
+    salida = -[fondo_caja * 0.35, 250.mm].min.to_mm.round
     # Solo dos valores (cerrado/abierto): con un punto intermedio de mas
     # (0, mitad, salida, 0) cada clic solo avanza UN paso de la lista en vez
     # de alternar cerrado<->abierto -- por eso el cajon salia un poco con el
