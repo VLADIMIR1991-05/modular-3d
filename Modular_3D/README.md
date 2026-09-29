@@ -1,11 +1,18 @@
-# Modular_3D 6.4.7 · Módulos sin fusionarse, cajón a mitad de salida, materiales simplificados
+# Modular_3D 6.4.8 · Visor 3D sin recortar + "Espacio Libre"
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.7  
+**Versión:** 6.4.8  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.8
+
+Responde a "en esta parte me parece que había más funciones hacia abajo" (MODULAR-3D VIEW) y a "donde dice módulo seguido de medidas quiero que diga Espacio Libre".
+
+- **Regresión real de 6.4.6, ya corregida:** al reorganizar la cabecera para que la barra de días fuera a todo el ancho (debajo de correo/días/Cerrar sesión), la cabecera pasó a ocupar 2 filas y quedó más alta que antes. El alto del panel del visor 3D (`aside.m3dv-panel`) y del panel de configuración (`.config-pane`) se calculaba con un número fijo en píxeles que asumía la altura vieja de la cabecera (`calc(100vh - 74px)`) -- al quedar la cabecera más alta, ese cálculo ya no cuadraba y recortaba la parte de abajo del visor (velocidad de giro, árbol de piezas, "Validar módulo"/"Construir módulo"). Se quitaron esos números fijos: ahora el alto se calcula solo mediante flexbox/grid (`height:100%` + `flex:1 1 auto`), sin depender de cuánto mida la cabecera -- que además cambia de alto ella misma según si hay sesión iniciada o no, así que un número fijo nunca iba a ser 100% confiable.
+- **"Módulo" (la etiqueta del espacio antes de subdividirlo) ahora se llama "Espacio Libre"** en el badge naranja del visor (ej. "Espacio Libre · 570 × 730 × 557 mm"), para que no se confunda con el módulo completo -- es solo el hueco interior disponible, antes de dividirlo en zonas/espacios.
 
 ## Cambios 6.4.7
 

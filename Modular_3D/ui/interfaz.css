@@ -51,14 +51,22 @@
     @media (min-width:981px) {
       body { display:flex; flex-direction:column; overflow:hidden; }
       header { flex:0 0 auto; }
-      main { flex:1 1 auto; width:100%; height:calc(100vh - 54px); min-height:0; overflow:hidden; align-items:stretch; }
-      .config-pane { height:calc(100vh - 74px); min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
+      /* Alto real sin numeros magicos: main es flex:1 1 auto dentro de un
+         body flex-column de altura 100vh, asi que su alto real ya es
+         exactamente "lo que queda debajo del header", sea el header alto
+         o bajo (cambia segun el estado de la sesion de licencia: 1 o 2
+         filas). Poner aqui un height:calc(100vh - Npx) con un numero fijo
+         se desincroniza en cuanto el header cambia de alto (paso exactamente
+         eso en 6.4.6, cortando la parte de abajo del visor 3D) -- min-height:0
+         sigue siendo necesario para que el scroll interno de abajo funcione. */
+      main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; }
+      .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
       /* El visor 3D queda fijo: aside pasa a columna flex donde SOLO
          .m3dv-body (árbol de piezas / propiedades) hace scroll interno.
          Todo lo demás (cabecera, visor, barra de vistas, explosión/giro)
          nunca se mueve ni se tapa, así el módulo se ve actualizarse en 3D
          en todo momento sin importar cuánto se scrollee el resto. */
-      aside.m3dv-panel { position:relative; top:auto; height:calc(100vh - 74px); min-height:0; display:flex; flex-direction:column; overflow:hidden!important; }
+      aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow:hidden!important; }
       aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
       .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
       .step-footer { position: relative; bottom:auto; z-index:5; }

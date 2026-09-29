@@ -83,7 +83,7 @@
   function geometry(){var nodes=[],seps=[],rootBox=bounds();solve(tree,rootBox,nodes,seps);nodes.forEach(function(n){n.display_name=label(n);var esFrenteCajon=n.content==='CAJONES_FRENTES';if((n.front&&n.front!=='NINGUNO'&&String(n.front).indexOf('INTERNA')<0)||esFrenteCajon)n.front_box=facadeBox(n,rootBox,seps);});return{root:tree,nodes:nodes,separators:seps};}
   function nodePath(n){var parts=[],cur=n;while(cur&&cur.id!=='root'){var p=parentOf(cur.id);parts.unshift(String((p.children||[]).indexOf(cur)+1));cur=p;}return parts;}
   function alpha(index){var result='',value=Math.max(0,index);do{result=String.fromCharCode(65+(value%26))+result;value=Math.floor(value/26)-1;}while(value>=0);return result;}
-  function label(n){if(n.id==='root')return 'Módulo';var p=nodePath(n),zone=alpha((parseInt(p[0],10)||1)-1),suffix=p.slice(1).join('.');if(p.length===1)return 'Zona '+zone;if(p.length===2)return 'Espacio '+zone+'.'+suffix;return 'Subespacio '+zone+'.'+suffix;}
+  function label(n){if(n.id==='root')return 'Espacio Libre';var p=nodePath(n),zone=alpha((parseInt(p[0],10)||1)-1),suffix=p.slice(1).join('.');if(p.length===1)return 'Zona '+zone;if(p.length===2)return 'Espacio '+zone+'.'+suffix;return 'Subespacio '+zone+'.'+suffix;}
   // El antiguo diagrama plano en HTML/CSS (mountPlan, .hierarchy-node,
   // .hierarchy-separator, .hierarchy-parent-front) se retiró: visor 2D y 3D
   // quedaron unificados en modular3d_view.js (botón "Vista 2D" del panel
