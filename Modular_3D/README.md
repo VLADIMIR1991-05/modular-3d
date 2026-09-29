@@ -1,11 +1,17 @@
-# Modular_3D 6.4.15 · URGENTE: corrige el congelamiento total del diálogo
+# Modular_3D 6.4.16 · Botón "Crear módulo" arriba, junto a Zócalo/Premesón
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.15  
+**Versión:** 6.4.16  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.16
+
+Confirmaste que 6.4.15 arregló el congelamiento (pestañas fijas, todo lo demás con scroll/zoom normal) y pediste un botón "Crear" debajo de Zócalo/Premesón para construir el módulo sin tener que bajar hasta el botón de abajo del todo.
+
+- **Nuevo botón "✓ Crear módulo"** en la cabecera de MODULAR-3D VIEW, en su propia fila debajo de Zócalo/Premesón/Abierto/Ampliar. Hace exactamente lo mismo que "Construir módulo" (el de abajo del panel, que sigue estando ahí) -- es un acceso directo, no una acción nueva ni distinta.
 
 ## Cambios 6.4.15
 

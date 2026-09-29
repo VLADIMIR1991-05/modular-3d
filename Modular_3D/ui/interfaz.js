@@ -983,6 +983,10 @@
     el('btn_revisar').addEventListener('click', function() { mostrarPagina('resultado'); });
     el('btn_construir').addEventListener('click', construir);
     el('btn_actualizar_modulo').addEventListener('click', actualizarModuloExistente);
+    // Acceso rapido a "Construir modulo" desde arriba de todo (junto a
+    // Zocalo/Premeson/Abierto), para no tener que bajar hasta el boton de
+    // abajo del panel cada vez -- misma accion exacta, no una nueva.
+    el('btn_construir_rapido').addEventListener('click', construir);
     el('license_login').addEventListener('click', function() { window.Modular3DLicense.login(); });
     el('license_password').addEventListener('keydown', function(event) { if (event.key === 'Enter') window.Modular3DLicense.login(); });
     el('license_logout').addEventListener('click', function() { if (window.sketchup && sketchup.licenciaLogout) sketchup.licenciaLogout(); });
