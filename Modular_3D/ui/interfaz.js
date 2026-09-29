@@ -1081,7 +1081,21 @@
       contenedor.addEventListener('scroll', refrescar);
       window.addEventListener('resize', refrescar);
       if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
-      if (window.MutationObserver) new MutationObserver(refrescar).observe(contenedor, { childList: true, subtree: true, attributes: true });
+      // OJO: refrescar() escribe thumb.style.height/top, que es una mutacion
+      // de atributo DENTRO del propio contenedor observado -- sin este
+      // filtro, el observer se disparaba a si mismo en un ciclo infinito
+      // (cada refrescar() generaba la mutacion que volvia a llamar a
+      // refrescar()), colgando el hilo de JS por completo: el dialogo
+      // quedaba congelado, sin poder escribir en los campos de login ni
+      // terminar de dibujar el visor 3D. Se ignoran las mutaciones que
+      // ocurren dentro de la barra propia; el resto (cambios de contenido
+      // reales, o display:none/'' de otros campos) si vuelve a refrescar.
+      if (window.MutationObserver) {
+        new MutationObserver(function(mutaciones) {
+          var relevante = mutaciones.some(function(m) { return !barra.contains(m.target); });
+          if (relevante) refrescar();
+        }).observe(contenedor, { childList: true, subtree: true, attributes: true });
+      }
       thumb.addEventListener('mousedown', function(event) {
         arrastrando = true;
         thumb.classList.add('dragging');

@@ -1,11 +1,19 @@
-# Modular_3D 6.4.14 · Checks para activar/desactivar zócalo y premesón + scrollbar propia
+# Modular_3D 6.4.15 · URGENTE: corrige el congelamiento total del diálogo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.14  
+**Versión:** 6.4.15  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.15
+
+**Bug crítico de 6.4.14, corregido de inmediato:** "se bugeó, se quedó así y no me deja ni escribir" -- el diálogo entero se congelaba (ni el login aceptaba texto, ni el visor 3D terminaba de dibujarse).
+
+- **Causa real:** la scrollbar propia de 6.4.14 usaba un `MutationObserver` mirando el panel completo (`attributes:true, subtree:true`) para refrescarse solo cuando el contenido cambiaba de tamaño -- pero la propia función que la refresca (`refrescar()`) escribe `thumb.style.height`/`top`, que ES una mutación de atributo dentro de ese mismo panel observado. Resultado: cada refresco generaba la mutación que volvía a disparar el observer, que volvía a refrescar, en un ciclo infinito que colgaba el hilo de JavaScript por completo -- de ahí que nada más funcionara (ni el teclado, ni el resto del dibujado).
+- **Corregido:** el observer ahora ignora las mutaciones que ocurren dentro de la barra de scroll propia (donde antes se mordía la cola a sí mismo); solo reacciona a cambios reales de contenido en el resto del panel. Verificado con una prueba automatizada real: la página ahora carga y acepta texto con normalidad, sin ningún indicio de bucle o cuelgue.
+- **Disculpas por el susto** -- este bug se coló pese a la validación de sintaxis porque es un error de comportamiento en tiempo de ejecución (un bucle de eventos), no un error de sintaxis; a partir de ahora, cualquier `MutationObserver` que agregue en este proyecto va a revisar explícitamente este mismo riesgo antes de subirlo.
 
 ## Cambios 6.4.14
 
