@@ -58,8 +58,15 @@
          filas). Poner aqui un height:calc(100vh - Npx) con un numero fijo
          se desincroniza en cuanto el header cambia de alto (paso exactamente
          eso en 6.4.6, cortando la parte de abajo del visor 3D) -- min-height:0
-         sigue siendo necesario para que el scroll interno de abajo funcione. */
-      main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; }
+         sigue siendo necesario para que el scroll interno de abajo funcione.
+         grid-template-rows:minmax(0,1fr) es la parte que faltaba en 6.4.8:
+         sin esto, la unica fila implicita del grid no tenia una altura
+         DEFINIDA (quedaba "auto", del tamaño de su contenido), asi que el
+         height:100% de .config-pane/aside.m3dv-panel de abajo no tenia
+         nada real de que ser el 100% -- crecian a su alto de contenido
+         completo y, como body tiene overflow:hidden, todo lo que sobraba
+         se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
+      main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
       .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
       /* El visor 3D queda fijo: aside pasa a columna flex donde SOLO
          .m3dv-body (árbol de piezas / propiedades) hace scroll interno.

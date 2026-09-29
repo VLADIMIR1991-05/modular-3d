@@ -1,11 +1,18 @@
-# Modular_3D 6.4.9 · Días cada 15min, validación completa cada 24h
+# Modular_3D 6.4.10 · Scroll del configurador y del visor restaurado
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.9  
+**Versión:** 6.4.10  
 
 ## Nota de fusión (este repositorio)
 
 Este código venía desarrollándose en paralelo en dos sesiones distintas: este repositorio de git (hasta v4.9.0, con la biblioteca de texturas de 8 fabricantes ya incorporada) y un paquete aparte que avanzó por su cuenta hasta v6.2.0. Como ambos son la misma línea de desarrollo (v6.2.0 continúa exactamente donde este repo había quedado en 4.9.0), la fusión fue directa: se trajo todo el código de v6.2.0 a este repositorio, lote por lote y verificado byte a byte contra el original, y se conservó intacta la carpeta `Modular_3D/textures/` de este repo (el paquete v6.2.0 no la traía por el límite de tamaño de subida, no porque se haya quitado a propósito). Los dos bugs geométricos reales que v6.2.0 encontró y corrigió (protrusión de puerta e inglete que quedaba pegado) quedan documentados en la sección "Cambios 6.0.0"/"Cambios 6.0.1" más abajo. El backend del Catálogo Global (`api.modular-3d.com`) ya está desplegado en producción y confirmado compatible con el cliente de esta versión.
+
+## Cambios 6.4.10
+
+Corrige el fix de 6.4.8, que quedó incompleto: "solo me deja ver lo que está aquí y no puedo deslizar para ver más funciones... el lado izquierdo o también el derecho, el visualizador".
+
+- **Causa real:** 6.4.8 le quitó a `main`/`.config-pane`/`aside.m3dv-panel` el `height:calc(100vh - Npx)` con número fijo (correcto, porque se desincronizaba con el alto real de la cabecera) pero les dejó un `height:100%` que dependía de que la fila del grid de `main` tuviera una altura definida -- y no la tenía (quedaba "auto", del tamaño del contenido). Con eso, tanto el panel de configuración (izquierda) como el visor 3D (derecha) simplemente CRECÍAN al alto completo de su contenido en vez de quedarse del alto de la ventana, y como el `body` tiene `overflow:hidden`, todo lo que sobraba se recortaba sin ninguna barra de scroll -- ni a la izquierda ni a la derecha, exactamente lo reportado.
+- **Fix real:** se agregó `grid-template-rows:minmax(0,1fr)` a `main`, que le da a esa fila una altura definida y flexible (llena exactamente lo que queda debajo de la cabecera, sea cual sea su alto). Con eso, el `height:100%` de ambos paneles ya tiene de qué ser el 100%, y su scroll interno (el de la izquierda siempre, el de la derecha solo en el árbol de piezas) vuelve a funcionar.
 
 ## Cambios 6.4.9
 
