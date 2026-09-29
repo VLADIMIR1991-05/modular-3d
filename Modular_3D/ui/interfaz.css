@@ -20,8 +20,15 @@
     /* Configurador a la izquierda con espacio para respirar, visor 3D a la
        derecha ocupando el resto -- el visor queda fijo (ver aside.m3dv-panel
        más abajo) para que el módulo se vea actualizarse en 3D todo el
-       tiempo, sin que el scroll del árbol/materiales lo tape. */
-    main { display: grid; grid-template-columns: minmax(480px, 1fr) 480px; gap: 12px; padding: 10px; max-width: 1700px; margin: 0 auto; min-height: 0; }
+       tiempo, sin que el scroll del árbol/materiales lo tape. Las dos
+       columnas son INDEPENDIENTES entre sí (cada una con su propio scroll
+       vertical, ver más abajo) en cualquier ancho de ventana -- por eso
+       usan minmax(300px, ...) en vez de un mínimo fijo de 480px: antes,
+       con 480px fijos, una ventana angosta forzaba el layout a colapsar a
+       una sola columna apilada (main{grid-template-columns:1fr} más abajo
+       en 6.4.18), y ahí las dos partes compartían un único scroll de
+       página en vez de tener cada una el suyo. */
+    main { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(300px, 460px); gap: 12px; padding: 10px; max-width: 1700px; margin: 0 auto; min-height: 0; }
     .tabs { position: sticky; top: 0; z-index: 3; display: flex; gap: 4px; overflow-x: auto; margin: 0 0 10px; padding: 8px 0 6px; background: var(--canvas); box-shadow: 0 4px 6px -4px rgba(0,0,0,.35); }
     .tab { width: auto; padding: 8px 10px; border: 1px solid var(--line); color: var(--ink); background: var(--surface); box-shadow: none; white-space: nowrap; }
     .tab.active { color: #fff; border-color: var(--brand); background: var(--brand); }
@@ -47,74 +54,68 @@
     .panel-card.piece-card-selected { border-color: #55bfe9; background: rgba(85,191,233,.15); box-shadow: 0 0 0 3px rgba(85,191,233,.18); }
     .editor-focus { border-color: var(--brand) !important; box-shadow: 0 0 0 3px rgba(240, 100, 36, .18); }
     .row.editor-focus { border-radius: 6px; background: rgba(240, 100, 36, .14); }
-    aside { position: sticky; top: 62px; align-self: start; }
     /* BUG RAIZ encontrado en 6.4.18: este bloque (el que hace que los
-       paneles tengan scroll interno de verdad) sólo se activaba desde
-       min-width:981px -- pero main (ver más abajo, sin media query) exige
-       minmax(480px,1fr) + 480px fijos + 12px de gap + 20px de padding =
-       992px como mínimo real para sus dos columnas. Entre 981px y 992px
-       ya faltaban 11px; y por debajo de 981px el layout de una sola
-       columna (antes en max-width:720px) ni siquiera se activaba todavía.
-       Resultado: en cualquier ventana entre ~721px y ~991px de ancho
-       LÓGICO (que es lo que Windows con escalado de pantalla >100% deja
-       de ancho real aunque la ventana física se vea grande en una
-       captura), .config-pane y aside.m3dv-panel quedaban con
-       overflow-y:visible (su valor por defecto) -- es decir, scrollTop no
-       tenía ningún efecto NI EN LA SCROLLBAR NATIVA, NI EN LA BARRA
-       PROPIA DE DIVS, NI EN EL DESLIZADOR: ninguna de las tres soluciones
-       podía haber funcionado nunca en ese rango de ancho, sin importar
-       qué tan bien se viera en las pruebas (que corrían en anchos ≥1280px
-       por defecto y nunca pisaron esta zona muerta). Se sube el punto de
-       corte a 992px (el mínimo real) y se alinea exactamente con el punto
-       donde main pasa a una sola columna más abajo, para que no quede
-       ningún rango de ancho sin una de las dos formas de scroll activa. */
-    @media (min-width:992px) {
-      body { display:flex; flex-direction:column; overflow:hidden; }
-      header { flex:0 0 auto; }
-      /* Alto real sin numeros magicos: main es flex:1 1 auto dentro de un
-         body flex-column de altura 100vh, asi que su alto real ya es
-         exactamente "lo que queda debajo del header", sea el header alto
-         o bajo (cambia segun el estado de la sesion de licencia: 1 o 2
-         filas). Poner aqui un height:calc(100vh - Npx) con un numero fijo
-         se desincroniza en cuanto el header cambia de alto (paso exactamente
-         eso en 6.4.6, cortando la parte de abajo del visor 3D) -- min-height:0
-         sigue siendo necesario para que el scroll interno de abajo funcione.
-         grid-template-rows:minmax(0,1fr) es la parte que faltaba en 6.4.8:
-         sin esto, la unica fila implicita del grid no tenia una altura
-         DEFINIDA (quedaba "auto", del tamaño de su contenido), asi que el
-         height:100% de .config-pane/aside.m3dv-panel de abajo no tenia
-         nada real de que ser el 100% -- crecian a su alto de contenido
-         completo y, como body tiene overflow:hidden, todo lo que sobraba
-         se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
-      main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
-      .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
-      .config-pane, aside.m3dv-panel { scrollbar-width: auto; }
-      .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 14px; }
-      .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-      .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-      .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
-      /* El visor 3D queda fijo: aside pasa a columna flex donde
-         .m3dv-body (árbol de piezas / propiedades) hace scroll interno
-         PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
-         baja que ni siquiera cabe todo lo de ARRIBA y ABAJO de .m3dv-body
-         (cabecera del visor, barra de vistas, explosión/giro, salud,
-         "Validar/Construir módulo"), antes esos botones quedaban
-         recortados y SIN NINGUNA forma de llegar a ellos (aside tenía
-         overflow:hidden!important) -- "Construir módulo" se volvía
-         imposible de pulsar. Ahora aside tiene su propio scroll de
-         respaldo: en una ventana con espacio de sobra no cambia nada (no
-         hay overflow, no aparece scrollbar), pero en una ventana chica
-         siempre se puede bajar hasta el botón de construir. */
-      aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
-      aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
-      .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
-      .step-footer { position: relative; bottom:auto; z-index:5; }
-      .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
-      .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
-      .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-      .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-      .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
-    }
+       paneles tengan scroll interno de verdad) sólo se activaba desde una
+       media query de ancho mínimo, y esa condición no coincidía con el
+       punto real donde las dos columnas de main dejaban de caber -- había
+       una franja de ancho donde ninguna forma de scroll funcionaba, sin
+       importar qué control se usara encima (barra con divs, deslizador,
+       rueda del mouse).
+       En 6.4.19 se corrige de raíz de otra forma: en vez de intentar
+       hacer coincidir dos puntos de corte, se quita la media query por
+       completo. El configurador y el visor 3D son DOS SECCIONES
+       INDEPENDIENTES, cada una con su propio scroll vertical, SIEMPRE,
+       sin importar el ancho de la ventana -- para eso main (más arriba)
+       ya no usa columnas de ancho fijo sino minmax(300px, ...), así que
+       las dos caben una al lado de la otra incluso en ventanas angostas
+       (se comprimen, pero nunca se apilan ni comparten un scroll de
+       página común). Ya no existe ningún ancho de ventana donde el
+       comportamiento cambie de modo. */
+    body { display:flex; flex-direction:column; overflow:hidden; }
+    header { flex:0 0 auto; }
+    /* Alto real sin numeros magicos: main es flex:1 1 auto dentro de un
+       body flex-column de altura 100vh, asi que su alto real ya es
+       exactamente "lo que queda debajo del header", sea el header alto
+       o bajo (cambia segun el estado de la sesion de licencia: 1 o 2
+       filas). Poner aqui un height:calc(100vh - Npx) con un numero fijo
+       se desincroniza en cuanto el header cambia de alto (paso exactamente
+       eso en 6.4.6, cortando la parte de abajo del visor 3D) -- min-height:0
+       sigue siendo necesario para que el scroll interno de abajo funcione.
+       grid-template-rows:minmax(0,1fr) es la parte que faltaba en 6.4.8:
+       sin esto, la unica fila implicita del grid no tenia una altura
+       DEFINIDA (quedaba "auto", del tamaño de su contenido), asi que el
+       height:100% de .config-pane/aside.m3dv-panel de abajo no tenia
+       nada real de que ser el 100% -- crecian a su alto de contenido
+       completo y, como body tiene overflow:hidden, todo lo que sobraba
+       se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
+    main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
+    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:7px; padding-bottom:12px; }
+    .config-pane, aside.m3dv-panel { scrollbar-width: auto; }
+    .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 14px; }
+    .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+    .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+    .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
+    /* El visor 3D queda fijo: aside pasa a columna flex donde
+       .m3dv-body (árbol de piezas / propiedades) hace scroll interno
+       PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
+       baja que ni siquiera cabe todo lo de ARRIBA y ABAJO de .m3dv-body
+       (cabecera del visor, barra de vistas, explosión/giro, salud,
+       "Validar/Construir módulo"), antes esos botones quedaban
+       recortados y SIN NINGUNA forma de llegar a ellos (aside tenía
+       overflow:hidden!important) -- "Construir módulo" se volvía
+       imposible de pulsar. Ahora aside tiene su propio scroll de
+       respaldo: en una ventana con espacio de sobra no cambia nada (no
+       hay overflow, no aparece scrollbar), pero en una ventana chica
+       siempre se puede bajar hasta el botón de construir. */
+    aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
+    aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
+    .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+    .step-footer { position: relative; bottom:auto; z-index:5; }
+    .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
+    .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
+    .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+    .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+    .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
     /* 6.4.14 probó una barra propia con divs, 6.4.17 un deslizador
        horizontal -- ninguna de las dos era el problema real: el bug de
        verdad era el corte de 981px/992px de arriba, que dejaba
@@ -216,9 +217,12 @@
        completa debía tomar el relevo -- pero si el navegador embebido no
        entrega bien la rueda del mouse ahí tampoco (motivo original de todos
        los intentos de esta sesión), no había ninguna forma de bajar. */
-    @media (max-width: 991px) {
-      main { grid-template-columns: 1fr; }
-      aside { position: static; }
+    /* main ya NO colapsa a una sola columna en ninguna ventana angosta (ver
+       nota junto a main más arriba) -- configurador y visor 3D siguen
+       siendo dos columnas independientes siempre. Esto sólo apila las
+       grillas INTERNAS de 2 columnas (tarjetas de pieza, diseñador libre)
+       para que sigan siendo legibles cuando su columna se comprime mucho. */
+    @media (max-width: 640px) {
       .panel-grid { grid-template-columns: 1fr; }
       .designer-layout { grid-template-columns: 1fr; }
     }

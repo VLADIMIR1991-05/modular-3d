@@ -1,8 +1,17 @@
-# Modular_3D 6.4.18 · Causa raíz real del scroll: corte de ancho mal calibrado
+# Modular_3D 6.4.19 · Configurador y visor 3D: dos scrolls independientes siempre
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.18  
+**Versión:** 6.4.19  
 
+## Cambios 6.4.19
+
+Confirmaste que la barra lateral del visor sí se activaba al achicar la ventana, pero señalaste el problema de fondo: el configurador (izquierda) y el visor 3D (derecha) deben ser **dos secciones independientes, cada una con su propio scroll, en cualquier dimensión de ventana** -- no una que se apile sobre la otra compartiendo un solo scroll de página cuando la ventana se hace angosta.
+
+- **Se quitó por completo el "modo de una sola columna"** que existía para ventanas angostas (antes activo por debajo de 991px). En 6.4.18 ese modo apilaba el configurador arriba y el visor abajo, compartiendo un único scroll de página -- exactamente lo contrario de lo que pediste.
+- **Las dos columnas ahora son siempre independientes:** en vez de un ancho fijo (480px cada una, que obligaba a apilar por debajo de cierto ancho), usan un ancho flexible (`minmax(300px, ...)`) que se comprime en ventanas angostas pero nunca colapsa a una columna -- así que el configurador y el visor están siempre uno al lado del otro, cada uno con su propio scroll vertical interno, sin importar qué tan angosta esté la ventana.
+- Verificado con pruebas automatizadas reales en 7 anchos distintos (400px a 1900px): en todos, ambos paneles son scrolleables por separado, y desplazar uno nunca mueve el otro ni la página. Sólo por debajo de ~630px (más angosto que cualquier uso real) aparece una barra horizontal para llegar a la segunda columna -- pero el scroll independiente de cada panel se mantiene incluso ahí.
+
+## Cambios 6.4.18
 ## Cambios 6.4.18
 
 Dijiste, con toda razón, que el deslizador de 6.4.17 "es ridículo": querías el movimiento vertical, no horizontal, y además moviéndolo horizontalmente no pasaba nada -- y pediste una auditoría a fondo de la causa real antes de corregir, no otro parche a ciegas. Esto es lo que se encontró.
