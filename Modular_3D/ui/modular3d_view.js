@@ -477,8 +477,14 @@
       var topeCasco = height + altoCarcasaOffset;
       var remateAltoTotal = cornisaActiva ? (zCornisa + cornisaAltura) : (llevaPremeson ? (topeCasco + general) : topeCasco);
       var grosorFrenteRemate = Math.max(3, number(data, 'puerta_grosor', general));
-      if (String(data.remate_inicial || 'NO') === 'SI') addPiece('Remate inicial', remateAncho, remateAltoTotal, grosorFrenteRemate, -remateAncho, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_inicial', materialKey:'REMATE_INICIAL', role:'remate', sourceField:'remate_inicial'});
-      if (String(data.remate_final || 'NO') === 'SI') addPiece('Remate final', remateAncho, remateAltoTotal, grosorFrenteRemate, width, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_final', materialKey:'REMATE_FINAL', role:'remate', sourceField:'remate_final'});
+      // Igual que en jerarquia.rb: el remate sigue el mismo montaje que la
+      // puerta (Solapada sobresale -grosor, Embutida queda a ras en Y=0) --
+      // antes SIEMPRE sobresalía, así que con montaje Embutida quedaba
+      // exactamente 1 grosor de puerta desalineado de la puerta real.
+      var montajePuertaGeneral = String(data.montaje_puerta || 'SOLAPADA').toUpperCase();
+      var yFrenteRemate = montajePuertaGeneral === 'EMBUTIDA' ? 0 : -grosorFrenteRemate;
+      if (String(data.remate_inicial || 'NO') === 'SI') addPiece('Remate inicial', remateAncho, remateAltoTotal, grosorFrenteRemate, -remateAncho, 0, yFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_inicial', materialKey:'REMATE_INICIAL', role:'remate', sourceField:'remate_inicial'});
+      if (String(data.remate_final || 'NO') === 'SI') addPiece('Remate final', remateAncho, remateAltoTotal, grosorFrenteRemate, width, 0, yFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_final', materialKey:'REMATE_FINAL', role:'remate', sourceField:'remate_final'});
     }
     zOffsetCarcasa = altoCarcasaOffset;
 

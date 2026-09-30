@@ -1,7 +1,15 @@
-# Modular_3D 6.4.37 · Remate de zócalo/cornisa ya no se solapa con la pieza misma
+# Modular_3D 6.4.38 · Remate Izq/Der ahora sigue el montaje de la puerta (Solapada/Embutida)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.37  
+**Versión:** 6.4.38  
+
+## Cambios 6.4.38
+
+Encontrada la causa real de "la puerta sigue embutiéndose": tu módulo tiene **"Montaje de puerta" = Embutida** (pestaña 3, "Puertas exteriores") -- una elección de diseño completamente válida (puertas a ras en vez de sobrepuestas). El problema era que el **remate Izq/Der SIEMPRE se construía sobresaliendo** (estilo Solapada, -grosor), sin importar esa configuración. Con montaje Embutida, la puerta queda a ras (Y=0) pero el remate seguía saliendo -15mm -- una diferencia de EXACTAMENTE 1 grosor de puerta, el número exacto que mediste.
+
+Diagnóstico verificado paso a paso: confirmé que el cálculo de posición de la puerta ya daba 0 de diferencia contra el remate en el caso Solapada (ejecutando el cálculo real, no solo leyéndolo); confirmé por el nombre de la pieza ("H_PUERTA_EXT_...") que no era un problema de puerta interna/externa; y cuando diste la medida exacta (15mm = el grosor de la puerta) encontré que faltaba sincronizar el remate con el montaje global.
+
+Corregido: el remate ahora respeta el mismo "Montaje de puerta" que las puertas reales -- Solapada sigue sobresaliendo -grosor (como siempre), Embutida ahora también queda a ras en Y=0, igual que la puerta. Verificado con números exactos vía Playwright: en ambos modos, puerta y remate terminan en la MISMA posición (Solapada: 7.5=7.5; Embutida: -7.5=-7.5). Corregido en los tres lugares (geometría 3D real, plano 2D/inventario, vista previa en vivo).
 
 ## Cambios 6.4.37
 

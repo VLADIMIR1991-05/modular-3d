@@ -1394,13 +1394,22 @@ module LPenafiel_GeneradorMueblesExacto
                               tope_casco
                             end
         grosor_frente_remate = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
+        # El remate tiene que quedar en el MISMO plano que la puerta, sea cual
+        # sea su montaje: Solapada (la puerta sobresale -grosor, cubriendo el
+        # hueco por fuera) o Embutida (la puerta queda a ras, Y=0, dentro del
+        # hueco). Antes el remate SIEMPRE sobresalía (-grosor) sin importar
+        # este ajuste, así que con montaje Embutida la puerta y el remate NO
+        # coincidían aunque nada estuviera mal configurado (diferencia de
+        # exactamente 1 grosor de puerta, el síntoma reportado).
+        montaje_puerta_general = (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase
+        y_frente_remate = montaje_puerta_general == 'EMBUTIDA' ? 0.mm : (0.mm - grosor_frente_remate)
         remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
         remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'
         if remate_inicial
-          self.crear_pieza(entities, modulo_nombre, "REMATE_INICIAL", remate_ancho, grosor_frente_remate, remate_alto_total, 0.mm - remate_ancho, 0.mm - grosor_frente_remate, 0.mm, 0, 0)
+          self.crear_pieza(entities, modulo_nombre, "REMATE_INICIAL", remate_ancho, grosor_frente_remate, remate_alto_total, 0.mm - remate_ancho, y_frente_remate, 0.mm, 0, 0)
         end
         if remate_final
-          self.crear_pieza(entities, modulo_nombre, "REMATE_FINAL", remate_ancho, grosor_frente_remate, remate_alto_total, ancho_total, 0.mm - grosor_frente_remate, 0.mm, 0, 0)
+          self.crear_pieza(entities, modulo_nombre, "REMATE_FINAL", remate_ancho, grosor_frente_remate, remate_alto_total, ancho_total, y_frente_remate, 0.mm, 0, 0)
         end
       end
 

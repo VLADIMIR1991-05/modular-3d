@@ -280,8 +280,12 @@ module LPenafiel_GeneradorMueblesExacto
                               tope_casco
                             end
         grosor_frente_remate = [f(datos['puerta_grosor'], espesor), 3.0].max
-        agregar.call('REMATE_INICIAL', 'REMATE', 0.0 - remate_ancho, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_inicial'] || 'NO').to_s == 'SI'
-        agregar.call('REMATE_FINAL', 'REMATE', ancho_total, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_final'] || 'NO').to_s == 'SI'
+        # Igual que en jerarquia.rb: el remate sigue el mismo montaje que la
+        # puerta (Solapada sobresale -grosor, Embutida queda a ras en Y=0).
+        montaje_puerta_general = (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase
+        y_frente_remate = montaje_puerta_general == 'EMBUTIDA' ? 0.0 : (0.0 - grosor_frente_remate)
+        agregar.call('REMATE_INICIAL', 'REMATE', 0.0 - remate_ancho, y_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_inicial'] || 'NO').to_s == 'SI'
+        agregar.call('REMATE_FINAL', 'REMATE', ancho_total, y_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_final'] || 'NO').to_s == 'SI'
       end
       z_offset_carcasa = alto_carcasa_offset
 
