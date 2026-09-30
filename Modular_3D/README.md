@@ -1,8 +1,25 @@
-# Modular_3D 6.4.27 · Causa raíz real: se vuelve a la técnica de altura de la versión original
+# Modular_3D 6.4.28 · Prueba definitiva: ¿se está actualizando interfaz.js/css?
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.27  
+**Versión:** 6.4.28  
 
+## Cambios 6.4.28
+
+6.4.27 corrigió (con buena evidencia) la causa real del alto del panel, y aun así seguiste sin ver las flechas. Eso, sumado a que en TODA esta sesión ninguna solución relacionada con `interfaz.js`/`interfaz.css` se ha visto nunca -- mientras que los cambios que viven en `interfaz.html` (checks de Zócalo/Premesón, botón "Crear módulo", etc.) sí aparecen siempre -- apunta otra vez a que esos dos archivos específicos podrían estar sirviéndose desde una copia vieja, pese al intento de 6.4.24.
+
+Esta versión **no cambia nada de la barra de scroll** -- es sólo una prueba, así de simple:
+
+- En el pie de página (abajo del "WhatsApp"), junto al número de versión, ahora aparece **`[JS:XXXXXX]`** con un código al azar, generado de nuevo cada vez que `interfaz.js` se interpreta desde cero.
+- **Por favor, hacé esto:**
+  1. Abrí el plugin y anotá (o mandame captura de) el código que aparece, por ejemplo `[JS:9KDH4U]`.
+  2. Cerrá el diálogo del plugin por completo.
+  3. Volvé a abrirlo.
+  4. Fijate si el código cambió o es el mismo de antes.
+
+- **Si el código CAMBIA cada vez**: interfaz.js sí se está recargando de disco -- el problema de la barra es otra cosa, y seguimos investigando desde ahí (por ejemplo, revisando si aparece algún error si conseguimos abrir las herramientas de desarrollador del navegador embebido).
+- **Si el código se queda IGUAL siempre** (aunque cierres y abras varias veces, aunque instales una versión nueva): eso confirma que `interfaz.js` (y probablemente `interfaz.css`) se están sirviendo desde una copia vieja guardada en disco o en memoria, no la que acabás de instalar -- en ese caso el problema no es nada que pueda arreglar con más cambios de código; hay que resolver primero por qué esos archivos no se actualizan (por ejemplo, revisando si hay un antivirus bloqueando la sobreescritura, o si el proceso de instalación del `.rbz` está fallando silenciosamente para esos dos archivos en particular).
+
+## Cambios 6.4.27
 ## Cambios 6.4.27
 
 Insististe en que "antes funcionaba perfectamente bien" y pediste revisar desde la versión 4 -- tenías razón en insistir. Encontré la diferencia real comparando el código contra el archivo original que diste al empezar (antes de que yo tocara nada, v4.6.0-beta.1).

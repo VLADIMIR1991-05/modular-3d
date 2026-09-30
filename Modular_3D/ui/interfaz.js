@@ -1,3 +1,21 @@
+    // MARCA DE CARGA TEMPORAL (para descartar de una vez caché de
+    // interfaz.js): un id al azar generado cada vez que este archivo se
+    // interpreta de cero. Si al cerrar y volver a abrir el diálogo el
+    // número mostrado en el pie de página SIGUE SIENDO EL MISMO, es prueba
+    // directa de que interfaz.js no se está recargando de disco -- si
+    // CAMBIA mientras la barra de scroll sigue sin aparecer, el archivo sí
+    // se recarga y el problema es otra cosa. Se quita en cuanto se
+    // resuelva esto.
+    window.__cargaJsId = Math.random().toString(36).slice(2, 8).toUpperCase();
+    document.addEventListener('DOMContentLoaded', function() {
+      var marca = document.getElementById('marca_carga_js');
+      if (marca) marca.textContent = ' [JS:' + window.__cargaJsId + ']';
+    });
+    if (document.readyState !== 'loading') {
+      var marcaYa = document.getElementById('marca_carga_js');
+      if (marcaYa) marcaYa.textContent = ' [JS:' + window.__cargaJsId + ']';
+    }
+
     // Barra de "dias restantes" de la licencia: 100% (azul) al activarse,
     // bajando de color hacia verde-amarillo-naranja-rojo (mezclando, no un
     // salto brusco) a medida que se acerca el vencimiento. Depende de que

@@ -9,6 +9,12 @@
       --ok: #34d399;
       --danger: #f87171;
     }
+    /* MARCA DE CARGA TEMPORAL: si interfaz.css se recarga de disco, esta
+       regla oculta el texto "CSS-OK" del pie de página. Si se sigue viendo
+       ese texto literal ahí, es prueba directa de que interfaz.css se está
+       sirviendo desde una copia vieja (de antes de esta regla) y no de la
+       recién instalada -- se quita en cuanto se resuelva esto. */
+    #marca_carga_css { display: none; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body { margin: 0; color: var(--ink); background: var(--canvas); font: 12px/1.3 "Segoe UI", sans-serif; }
