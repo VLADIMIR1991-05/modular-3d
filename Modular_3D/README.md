@@ -1,8 +1,16 @@
-# Modular_3D 6.4.20 · Barra de scroll propia y visible, una por panel
+# Modular_3D 6.4.21 · Botón "Ocultar/mostrar" ya no se corta
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.20  
+**Versión:** 6.4.21  
 
+## Cambios 6.4.21
+
+Pediste reducir el tamaño de letra un par de puntos "para que se pueda leer" -- el botón "Ocultar/mostrar" (en Propiedades técnicas, al seleccionar una pieza) se veía cortado como "Ocultar/mos".
+
+- **Causa:** ese botón usaba `font-size:9px` con `white-space:nowrap` dentro de una tarjeta con `overflow:hidden` -- el texto completo no cabía en una sola línea y el sobrante se recortaba de raíz, sin ni siquiera puntos suspensivos.
+- **Corregido:** se bajó a `font-size:7px` y se permite que el texto pase a una segunda línea si hace falta (`white-space:normal`) en vez de cortarse. Verificado con una prueba real: el botón "Ocultar/mostrar" ahora entra completo, sin desbordar ni recortarse, incluso en la tarjeta más angosta.
+
+## Cambios 6.4.20
 ## Cambios 6.4.20
 
 En 6.4.19 el scroll interno ya funcionaba en los dos paneles por separado, pero dependía de que el navegador embebido de SketchUp pintara su propia scrollbar nativa -- y dijiste "no se ve que esta arreglado... debe tener una barra lateral deslizable para cada uno". Aquí se agrega una barra 100% propia, visible siempre que haya contenido para desplazar, una para el configurador y otra para el visor 3D -- sin depender de si el navegador decide mostrar su scrollbar nativa o no.
