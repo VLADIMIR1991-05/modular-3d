@@ -1,7 +1,21 @@
-# Modular_3D 6.4.29 · Diagnóstico ampliado: números reales del alto del panel
+# Modular_3D 6.4.30 · Causa real encontrada: alto del panel fijado en píxeles
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.29  
+**Versión:** 6.4.30  
+
+## Cambios 6.4.30
+
+Tu captura de 6.4.29 dio la respuesta definitiva: `cpScrollH=1025` y `cpClientH=1025` -- **exactamente iguales**. Eso confirma la causa real: en tu navegador, el panel de configuración (`.config-pane`) no estaba recibiendo un alto fijo desde el diseño de la página (la técnica de `calc()`/porcentajes heredados a través de una cuadrícula CSS) -- simplemente crecía libre hasta el tamaño de todo su contenido (1025px), aunque la ventana solo tenía espacio real para una parte de eso. Por eso nunca aparecían flechas: el script las oculta cuando no detecta contenido de sobra, y en tu caso el panel "creía" que no le sobraba nada porque nunca se le dijo cuál era su límite real. El recorte pasaba por fuera, en silencio.
+
+Esta versión deja de depender de esa herencia de alto por CSS (que resultó no funcionar de forma confiable en tu navegador) y en su lugar **mide y fija el alto del panel directamente en píxeles por código**, cada vez que la ventana cambia de tamaño:
+
+- Se calcula: alto de la ventana − alto real del encabezado − márgenes = alto exacto disponible.
+- Ese número se aplica directo como el alto de `.config-pane` y del panel `MODULAR-3D VIEW`, sin pasarle la decisión al navegador.
+- Esto no depende de ninguna característica moderna de CSS ni de que el navegador resuelva correctamente cuadrículas/porcentajes -- es aritmética simple aplicada directo al elemento, así que debería funcionar igual en un navegador viejo o nuevo.
+
+Se deja el mismo diagnóstico del pie de página, ahora mostrando `cpEstiloAlto=` (el alto que se le puso al panel) junto a `cpScrollH=`/`cpClientH=` -- si el arreglo funciona, `cpScrollH` debe salir MAYOR que `cpClientH` (eso es lo que hace aparecer las flechas).
+
+**Por favor probá esta versión y contame si ahora sí aparecen y funcionan las flechas para subir/bajar**, tanto en el panel de configuración (izquierda) como en el visor 3D (derecha).
 
 ## Cambios 6.4.29
 

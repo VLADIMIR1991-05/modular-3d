@@ -1,22 +1,23 @@
-    // MARCA DE CARGA TEMPORAL: confirmado que interfaz.js SÍ se recarga
-    // fresco en cada apertura (el código [JS:XXXXXX] cambió entre dos
-    // aperturas seguidas) -- se descarta caché por completo. Ahora se
-    // agrega el número real detrás de esa confirmación: el alto medido del
-    // header, el valor que --header-h quedó usando, y scrollHeight/
-    // clientHeight de .config-pane -- para confirmar o descartar que la
-    // medición dinámica del header (agregada en 6.4.27) esté fallando en
-    // este navegador. Se quita en cuanto se resuelva esto.
+    // MARCA DE CARGA TEMPORAL: el diagnóstico de 6.4.29 (cpScrollH=cpClientH
+    // idénticos, 1025=1025) confirmó la causa real: en el navegador embebido
+    // del usuario, `.config-pane` no recibía un alto definido a través de la
+    // cadena main(grid) -> .scroll-dock(100%) -> .config-pane(100%) y crecía
+    // libre al tamaño de su contenido, ocultando el scroll por fuera en vez
+    // de mostrarlo. 6.4.30 fija el alto en píxeles directo sobre el elemento
+    // (actualizarAlturaPaneles) en vez de depender de %/calc() heredado. Esta
+    // marca se deja para confirmar visualmente el arreglo (cpScrollH debe
+    // quedar MAYOR que cpClientH cuando hay contenido de sobra) y se quita
+    // en la próxima versión si el usuario confirma que ya funciona.
     window.__cargaJsId = Math.random().toString(36).slice(2, 8).toUpperCase();
     function actualizarMarcaDiagnostico() {
       var marca = document.getElementById('marca_carga_js');
       if (!marca) return;
       var header = document.querySelector('header');
       var cp = document.querySelector('.config-pane');
-      var headerH = getComputedStyle(document.documentElement).getPropertyValue('--header-h');
       var partes = [
         'JS:' + window.__cargaJsId,
         'headerOffsetH=' + (header ? header.offsetHeight : '?'),
-        '--header-h=' + headerH.trim(),
+        'cpEstiloAlto=' + (cp ? cp.style.height : '?'),
         'cpScrollH=' + (cp ? cp.scrollHeight : '?'),
         'cpClientH=' + (cp ? cp.clientHeight : '?'),
         'winH=' + window.innerHeight
@@ -1054,24 +1055,54 @@
     updateParametricFeedback();
 
     // Alto real del header, medido de verdad (no un número fijo adivinado):
-    // interfaz.css usa este valor (--header-h) para calcular cuánto le
-    // queda a `main` (calc(100vh - var(--header-h))) -- la técnica exacta
-    // de la versión original del plugin, que el usuario confirma que
-    // scrolleaba bien, sólo que ahora el número se actualiza solo cada vez
-    // que el header cambia de alto (1 o 2 filas según el estado de la
-    // sesión de licencia) en vez de quedar fijo y desincronizarse (ese fue
-    // el bug de 6.4.6).
+    // se sigue guardando en --header-h por si algún selector de CSS lo usa,
+    // pero YA NO es el mecanismo que fija el alto de los paneles (ver abajo).
     function actualizarAltoHeader() {
       var header = document.querySelector('header');
       if (!header) return;
       document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
     }
-    actualizarAltoHeader();
-    window.addEventListener('resize', actualizarAltoHeader);
-    if (window.ResizeObserver) {
-      new ResizeObserver(actualizarAltoHeader).observe(document.querySelector('header'));
+
+    // Alto de los paneles scrolleables fijado en píxeles por JS, directo
+    // sobre el propio elemento (no por calc()/% heredado de `main`/grid).
+    // Diagnóstico de 6.4.29 confirmó que en el navegador real del usuario
+    // (Chrome 64 embebido) el `.config-pane` NO recibía un alto definido a
+    // través de la cadena main(grid) -> .scroll-dock(100%) -> .config-pane
+    // (100%): cpScrollH y cpClientH salían idénticos (1025=1025), es decir
+    // el panel crecía libre al tamaño de su contenido en vez de recortarse
+    // al alto disponible -- un bug real de esa versión de Grid/Flex, no un
+    // problema del contenido ni del cálculo de --header-h (que sí medía
+    // bien: headerOffsetH=74, --header-h=74px). La única técnica que no
+    // depende de que el navegador propague porcentajes/():  medir y poner
+    // el alto en px directamente sobre cada panel.
+    function actualizarAlturaPaneles() {
+      var header = document.querySelector('header');
+      var main = document.querySelector('main');
+      if (!header || !main) return;
+      var estiloMain = window.getComputedStyle(main);
+      var paddingV = (parseFloat(estiloMain.paddingTop) || 0) + (parseFloat(estiloMain.paddingBottom) || 0);
+      var disponible = window.innerHeight - header.offsetHeight - paddingV;
+      if (disponible < 120) disponible = 120;
+      var pxAltura = disponible + 'px';
+      document.querySelectorAll('.scroll-dock').forEach(function(dock) {
+        dock.style.height = pxAltura;
+      });
+      var cp = document.querySelector('.config-pane');
+      if (cp) cp.style.height = pxAltura;
+      var panel = document.querySelector('aside.m3dv-panel');
+      if (panel) panel.style.height = pxAltura;
     }
-    window.setInterval(actualizarAltoHeader, 500);
+
+    function refrescarLayoutVertical() {
+      actualizarAltoHeader();
+      actualizarAlturaPaneles();
+    }
+    refrescarLayoutVertical();
+    window.addEventListener('resize', refrescarLayoutVertical);
+    if (window.ResizeObserver) {
+      new ResizeObserver(refrescarLayoutVertical).observe(document.querySelector('header'));
+    }
+    window.setInterval(refrescarLayoutVertical, 500);
 
     // Respaldo manual de scroll con la rueda del mouse: el navegador
     // embebido de SketchUp (a diferencia de un navegador normal) a veces no
