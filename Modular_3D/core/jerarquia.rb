@@ -411,7 +411,43 @@ module LPenafiel_GeneradorMueblesExacto
       # siempre llevaba zocalo/premeson en estos tipos de modulo).
       lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo) && datos['zocalo_activo'].to_s != 'NO'
       alto_carcasa_offset = lleva_zocalo ? zocalo_alto : 0.mm
-      offset_creacion_base = @offset_creacion || Geom::Vector3d.new(0, 0, 0)
+      # El módulo entero se recorre hacia atrás en Y para que el plano
+      # frontal (puerta solapada + remate, que ya quedan en el mismo Y
+      # entre sí -- ver protrusion_puerta_real más abajo) caiga exacto en
+      # Y=0 de la escena, en vez de sobresalir hacia Y negativo. Por
+      # defecto ese corrimiento es el grosor del propio casco; si hay al
+      # menos una puerta externa solapada (no interna, no embutida), gana
+      # el grosor de la puerta cuando es mayor que el del casco -- pedido
+      # explícito del usuario ("gana el valor puerta").
+      hay_puerta_externa_solapada = false
+      if hierarchy_geometry && (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase != 'EMBUTIDA'
+        hierarchy_geometry['nodes'].each do |nodo_chequeo|
+          next unless nodo_chequeo.is_a?(Hash)
+          frente_chequeo = nodo_chequeo['front'].to_s.upcase
+          frente_chequeo = 'PUERTA_UNICA' if nodo_chequeo['content'].to_s.upcase == 'CAJONES_PUERTA' && frente_chequeo == 'NINGUNO'
+          next if frente_chequeo.empty? || frente_chequeo == 'NINGUNO' || frente_chequeo.include?('INTERNA')
+          hay_puerta_externa_solapada = true
+          break
+        end
+      end
+      grosor_puerta_offset = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
+      offset_y_modulo = hay_puerta_externa_solapada ? [espesor, grosor_puerta_offset].max : espesor
+      # Los módulos Alto (colgantes) van siempre a una altura de piso fija
+      # y con su fondo (cara trasera) a una profundidad fija desde Y=0 --
+      # así el lomo de todos los Altos queda a ras con el de los Bajos de
+      # abajo aunque el Alto sea más angosto de fondo. Reemplaza el
+      # offset_y_modulo de arriba (que referencia el FRENTE) por uno
+      # referenciado al FONDO -- pedido explícito y separado del alineado
+      # puerta/remate, que no se ve afectado porque ese alineado ya queda
+      # resuelto en LOCAL (protrusion_puerta_real) antes de aplicar
+      # cualquier offset de escena.
+      if tipo_modulo == 'ALTO'
+        altura_piso_alto = 1500.mm
+        fondo_fijo_alto = 600.mm
+        offset_y_modulo = fondo_fijo_alto - prof_total
+      end
+      altura_piso_modulo = tipo_modulo == 'ALTO' ? altura_piso_alto : 0.mm
+      offset_creacion_base = (@offset_creacion || Geom::Vector3d.new(0, 0, 0)) + Geom::Vector3d.new(0, offset_y_modulo, altura_piso_modulo)
       @offset_creacion = offset_creacion_base + Geom::Vector3d.new(0, 0, alto_carcasa_offset)
 
       lat_l = 1

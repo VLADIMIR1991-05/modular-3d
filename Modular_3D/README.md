@@ -1,7 +1,19 @@
-# Modular_3D 6.4.39 · Remate reutiliza el valor EXACTO de la puerta real (no lo recalcula)
+# Modular_3D 6.4.40 · Módulo completo posicionado en Y=0 (frente) + Alto a Z=1500/Y=600
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.39  
+**Versión:** 6.4.40  
+
+## Cambios 6.4.40
+
+Dos cambios de posicionamiento en la escena de SketchUp, tal como pediste:
+
+**1) El módulo completo (no solo la puerta) se recorre en Y.** Antes, la puerta y el remate ya coincidían entre sí (v6.4.39), pero el conjunto podía sobresalir hacia Y negativo respecto al resto del casco. Ahora TODO el módulo (casco, interior, puertas, cajones, zócalo, cornisa, premesón, remates -- todo junto, sin perder la alineación entre sí) se recorre hacia atrás en Y por el grosor del casco, o por el grosor de la puerta si es mayor ("gana la puerta"). Resultado: el plano frontal (puerta+remate) cae exacto en Y=0 de la escena, para todos los módulos, tengan puerta o no. Verificado con números exactos: casco 15mm + puerta 18mm -> ambos terminan en Y=0; sin puerta, casco 15mm -> remate en Y=0 igual.
+
+**2) Los módulos Alto se posicionan fijo: Z=1500mm, fondo en Y=600mm.** Pedido nuevo y separado: los módulos tipo Alto (colgantes) ahora se construyen siempre con su base a 1500mm de altura de piso, y con la cara TRASERA fija en Y=600mm (contado desde Y=0) sin importar la profundidad real del módulo -- así el lomo de un Alto queda a ras con el de los Bajos de abajo aunque sea más angosto de fondo. Verificado: Alto de 320mm de profundidad sin puertas -> fondo del casco en Y=600, base del módulo en Z=1500.
+
+Este alineado NO afecta la coincidencia entre puerta y remate (v6.4.39): esa se resuelve en coordenadas LOCALES antes de aplicar cualquier corrimiento de escena, así que siempre van a coincidir entre sí sin importar dónde termine posicionado el conjunto completo.
+
+Cambio hecho solo en `jerarquia.rb` (geometría 3D real en SketchUp) -- ni el plano 2D/inventario ni la vista previa en vivo manejan un concepto de "posición en la escena" (ambos trabajan en coordenadas locales del módulo), así que no aplica ahí.
 
 ## Cambios 6.4.39
 
