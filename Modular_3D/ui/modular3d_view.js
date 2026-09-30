@@ -445,10 +445,14 @@
     if (llevaZocaloCasco) {
       addPiece('Zócalo', width, zocaloAltoCasco, zocaloGrosor, 0, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'zocalo', materialKey:'ZOCALO', role:'zocalo', sourceField:'tipo_modulo'});
       var remateZocaloLado = String(data.remate_zocalo_lado || 'NINGUNO').toUpperCase();
-      var fondoRemateZocalo = depth - zocaloRetranqueo;
+      // Igual que en jerarquia.rb: arranca detrás del propio zócalo (no se
+      // solapa con él -- antes ocupaba exactamente el mismo Y que el Zócalo
+      // en los primeros zocaloGrosor mm).
+      var yRemateZocalo = zocaloRetranqueo + zocaloGrosor;
+      var fondoRemateZocalo = depth - yRemateZocalo;
       if (fondoRemateZocalo > 0) {
-        if (remateZocaloLado === 'IZQ' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo izq.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, 0, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_izq', materialKey:'REMATE_ZOCALO_IZQ', role:'zocalo', sourceField:'remate_zocalo_lado'});
-        if (remateZocaloLado === 'DER' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo der.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, width - zocaloGrosor, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_der', materialKey:'REMATE_ZOCALO_DER', role:'zocalo', sourceField:'remate_zocalo_lado'});
+        if (remateZocaloLado === 'IZQ' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo izq.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, 0, 0, yRemateZocalo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_izq', materialKey:'REMATE_ZOCALO_IZQ', role:'zocalo', sourceField:'remate_zocalo_lado'});
+        if (remateZocaloLado === 'DER' || remateZocaloLado === 'AMBOS') addPiece('Remate de zócalo der.', zocaloGrosor, zocaloAltoCasco, fondoRemateZocalo, width - zocaloGrosor, 0, yRemateZocalo, COLORS.horizontal, 'zocalo', false, {pieceId:'remate_zocalo_der', materialKey:'REMATE_ZOCALO_DER', role:'zocalo', sourceField:'remate_zocalo_lado'});
       }
     }
     if (llevaPremeson) {
@@ -459,10 +463,12 @@
       var zCornisa = height + altoCarcasaOffset;
       addPiece('Cornisa', width, cornisaAltura, cornisaGrosor, 0, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'cornisa', materialKey:'CORNISA', role:'cornisa', sourceField:'cornisa_activa'});
       var remateCornisaLado = String(data.remate_cornisa_lado || 'NINGUNO').toUpperCase();
-      var fondoRemateCornisa = depth - cornisaRetranqueo;
+      // Igual que en jerarquia.rb: arranca detrás de la propia cornisa.
+      var yRemateCornisa = cornisaRetranqueo + cornisaGrosor;
+      var fondoRemateCornisa = depth - yRemateCornisa;
       if (fondoRemateCornisa > 0) {
-        if (remateCornisaLado === 'IZQ' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa izq.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, 0, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_izq', materialKey:'REMATE_CORNISA_IZQ', role:'cornisa', sourceField:'remate_cornisa_lado'});
-        if (remateCornisaLado === 'DER' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa der.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, width - cornisaGrosor, zCornisa, cornisaRetranqueo, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_der', materialKey:'REMATE_CORNISA_DER', role:'cornisa', sourceField:'remate_cornisa_lado'});
+        if (remateCornisaLado === 'IZQ' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa izq.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, 0, zCornisa, yRemateCornisa, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_izq', materialKey:'REMATE_CORNISA_IZQ', role:'cornisa', sourceField:'remate_cornisa_lado'});
+        if (remateCornisaLado === 'DER' || remateCornisaLado === 'AMBOS') addPiece('Remate de cornisa der.', cornisaGrosor, cornisaAltura, fondoRemateCornisa, width - cornisaGrosor, zCornisa, yRemateCornisa, COLORS.horizontal, 'cornisa', false, {pieceId:'remate_cornisa_der', materialKey:'REMATE_CORNISA_DER', role:'cornisa', sourceField:'remate_cornisa_lado'});
       }
     }
     if (llevaRemates) {

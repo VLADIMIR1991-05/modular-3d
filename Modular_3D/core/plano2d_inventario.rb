@@ -243,10 +243,13 @@ module LPenafiel_GeneradorMueblesExacto
       if lleva_zocalo
         agregar.call('ZOCALO', 'ZOCALO', 0.0, zocalo_retranqueo, 0.0, ancho_total, zocalo_grosor, zocalo_alto)
         remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
-        fondo_remate_zocalo = prof_total - zocalo_retranqueo
+        # Igual que en jerarquia.rb: arranca detrás del propio zócalo, no se
+        # solapa con él.
+        y_remate_zocalo = zocalo_retranqueo + zocalo_grosor
+        fondo_remate_zocalo = prof_total - y_remate_zocalo
         if fondo_remate_zocalo > 0
-          agregar.call('REMATE_ZOCALO_IZQ', 'ZOCALO', 0.0, zocalo_retranqueo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[IZQ AMBOS].include?(remate_zocalo_lado)
-          agregar.call('REMATE_ZOCALO_DER', 'ZOCALO', ancho_total - zocalo_grosor, zocalo_retranqueo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[DER AMBOS].include?(remate_zocalo_lado)
+          agregar.call('REMATE_ZOCALO_IZQ', 'ZOCALO', 0.0, y_remate_zocalo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[IZQ AMBOS].include?(remate_zocalo_lado)
+          agregar.call('REMATE_ZOCALO_DER', 'ZOCALO', ancho_total - zocalo_grosor, y_remate_zocalo, 0.0, zocalo_grosor, fondo_remate_zocalo, zocalo_alto) if %w[DER AMBOS].include?(remate_zocalo_lado)
         end
       end
       if lleva_premeson
@@ -257,10 +260,12 @@ module LPenafiel_GeneradorMueblesExacto
         z_cornisa = alto_total + alto_carcasa_offset
         agregar.call('CORNISA', 'CORNISA', 0.0, cornisa_retranqueo, z_cornisa, ancho_total, cornisa_grosor, cornisa_altura)
         remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
-        fondo_remate_cornisa = prof_total - cornisa_retranqueo
+        # Igual que en jerarquia.rb: arranca detrás de la propia cornisa.
+        y_remate_cornisa = cornisa_retranqueo + cornisa_grosor
+        fondo_remate_cornisa = prof_total - y_remate_cornisa
         if fondo_remate_cornisa > 0
-          agregar.call('REMATE_CORNISA_IZQ', 'CORNISA', 0.0, cornisa_retranqueo, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[IZQ AMBOS].include?(remate_cornisa_lado)
-          agregar.call('REMATE_CORNISA_DER', 'CORNISA', ancho_total - cornisa_grosor, cornisa_retranqueo, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[DER AMBOS].include?(remate_cornisa_lado)
+          agregar.call('REMATE_CORNISA_IZQ', 'CORNISA', 0.0, y_remate_cornisa, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[IZQ AMBOS].include?(remate_cornisa_lado)
+          agregar.call('REMATE_CORNISA_DER', 'CORNISA', ancho_total - cornisa_grosor, y_remate_cornisa, z_cornisa, cornisa_grosor, fondo_remate_cornisa, cornisa_altura) if %w[DER AMBOS].include?(remate_cornisa_lado)
         end
       end
       if lleva_remates

@@ -1335,13 +1335,20 @@ module LPenafiel_GeneradorMueblesExacto
         self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 1, 1)
 
         remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
-        fondo_remate_zocalo = prof_total - zocalo_retranqueo
+        # Arranca DETRÁS del propio zócalo (retranqueo + su grosor), no en el
+        # mismo Y -- si no, este remate se solapaba exactamente con el propio
+        # ZOCALO en los primeros zocalo_grosor mm (mismo X, mismo Y, mismo Z),
+        # compitiendo por el mismo espacio en esa esquina. El zócalo (la
+        # pieza vista, "el frente") se queda intacto; el remate solo tapa el
+        # bolsillo que queda DETRÁS de él, hacia la pared trasera.
+        y_remate_zocalo = zocalo_retranqueo + zocalo_grosor
+        fondo_remate_zocalo = prof_total - y_remate_zocalo
         if fondo_remate_zocalo > 0.mm
           if %w[IZQ AMBOS].include?(remate_zocalo_lado)
-            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_IZQ", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 0, 0)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_IZQ", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, 0.mm, y_remate_zocalo, 0.mm, 0, 0)
           end
           if %w[DER AMBOS].include?(remate_zocalo_lado)
-            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_DER", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, ancho_total - zocalo_grosor, zocalo_retranqueo, 0.mm, 0, 0)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_ZOCALO_DER", zocalo_grosor, fondo_remate_zocalo, zocalo_alto, ancho_total - zocalo_grosor, y_remate_zocalo, 0.mm, 0, 0)
           end
         end
       end
@@ -1356,13 +1363,16 @@ module LPenafiel_GeneradorMueblesExacto
         self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_total, cornisa_grosor, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 1, 1)
 
         remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
-        fondo_remate_cornisa = prof_total - cornisa_retranqueo
+        # Mismo criterio que remate de zócalo: arranca DETRÁS de la propia
+        # cornisa (retranqueo + su grosor) para no solaparse con ella.
+        y_remate_cornisa = cornisa_retranqueo + cornisa_grosor
+        fondo_remate_cornisa = prof_total - y_remate_cornisa
         if fondo_remate_cornisa > 0.mm
           if %w[IZQ AMBOS].include?(remate_cornisa_lado)
-            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_IZQ", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 0, 0)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_IZQ", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, 0.mm, y_remate_cornisa, z_cornisa, 0, 0)
           end
           if %w[DER AMBOS].include?(remate_cornisa_lado)
-            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_DER", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, ancho_total - cornisa_grosor, cornisa_retranqueo, z_cornisa, 0, 0)
+            self.crear_pieza(entities, modulo_nombre, "REMATE_CORNISA_DER", cornisa_grosor, fondo_remate_cornisa, cornisa_altura, ancho_total - cornisa_grosor, y_remate_cornisa, z_cornisa, 0, 0)
           end
         end
       end

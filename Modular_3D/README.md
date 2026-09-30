@@ -1,7 +1,17 @@
-# Modular_3D 6.4.36 · Fix: frente de cajón (sistema simple "cajones por nicho") quedaba embutido
+# Modular_3D 6.4.37 · Remate de zócalo/cornisa ya no se solapa con la pieza misma
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.36  
+**Versión:** 6.4.37  
+
+## Cambios 6.4.37
+
+Encontrado el bug detrás de "zócalo y cornisa se están remontando en la esquina": el "Remate de zócalo" y el "Remate de cornisa" (los caps laterales que tapan el bolsillo del retranqueo) arrancaban en la MISMA posición que el propio zócalo/cornisa -- literalmente ocupando el mismo espacio (15×15mm en esa esquina, en los tres ejes) que la pieza de zócalo/cornisa misma, en vez de empezar justo DETRÁS de ella.
+
+Corregido: ahora el remate de zócalo/cornisa arranca justo detrás de su propia pieza (retranqueo + su grosor) y se acorta la misma medida para seguir llegando exacto hasta la pared trasera -- el zócalo/cornisa (la pieza vista, "el frente") se queda intacta, y su remate solo tapa el bolsillo que queda detrás, sin competir por el mismo espacio. Confirmado con números exactos: Closet de 580mm de fondo con remate de zócalo pasa de 510mm a 495mm de profundidad (580-70-15); remate de cornisa pasa a 545mm (580-20-15) -- ambos calzan justo hasta la pared trasera sin invadir la pieza principal.
+
+Corregido en los tres lugares (geometría 3D real, plano 2D/inventario, vista previa en vivo) para que coincidan siempre.
+
+**Por favor confirma si esa "doble línea"/superposición en la esquina ya desapareció.**
 
 ## Cambios 6.4.36
 
