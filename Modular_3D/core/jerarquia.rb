@@ -446,7 +446,21 @@ module LPenafiel_GeneradorMueblesExacto
         offset_y_modulo = hay_puerta_externa_solapada ? [espesor, grosor_puerta_offset].max : espesor
         altura_piso_modulo = 0.mm
       end
-      offset_creacion_base = (@offset_creacion || Geom::Vector3d.new(0, 0, 0)) + Geom::Vector3d.new(0, offset_y_modulo, altura_piso_modulo)
+      # Al EDITAR un módulo existente, @offset_edicion ya viene leído de la
+      # posición REAL actual de ese módulo en la escena (biblioteca.rb lee
+      # el bounding box fresco cada vez) -- esa posición YA incluye
+      # cualquier offset_y_modulo/altura_piso_modulo que se le aplicó la
+      # vez que se construyó o editó. Sumarlo de nuevo acá corría el
+      # módulo un poco más cada vez que se editaba (arrastre acumulado:
+      # "Actualizar módulo" una y otra vez lo iba empujando hacia adelante/
+      # atrás en Y). Encontrado y corregido a partir de un caso real
+      # reportado por el usuario. Al construir uno NUEVO, en cambio, sí
+      # hace falta aplicarlo (offset_siguiente_modulo solo devuelve X).
+      offset_creacion_base = if actualizar_existente
+                               @offset_creacion || Geom::Vector3d.new(0, 0, 0)
+                             else
+                               (@offset_creacion || Geom::Vector3d.new(0, 0, 0)) + Geom::Vector3d.new(0, offset_y_modulo, altura_piso_modulo)
+                             end
       @offset_creacion = offset_creacion_base + Geom::Vector3d.new(0, 0, alto_carcasa_offset)
 
       lat_l = 1

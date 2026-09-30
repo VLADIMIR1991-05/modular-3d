@@ -1,7 +1,15 @@
-# Modular_3D 6.4.45 · Pieza fusionada por continuidad hereda el color real
+# Modular_3D 6.4.46 · "Actualizar módulo" ya no arrastra el módulo en Y cada edición
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.45  
+**Versión:** 6.4.46  
+
+## Cambios 6.4.46
+
+Encontré un bug real, presente desde v6.4.40: cada vez que edicionabas un módulo con "Actualizar módulo", se le sumaba OTRA VEZ el offset de posicionamiento en Y (`offset_y_modulo`, el mismo que ya tenía aplicado de la vez anterior) -- porque `@offset_edicion` ya se lee de la posición REAL actual del módulo en la escena (que ya incluye ese offset desde que se construyó o desde la última edición), y el código se lo volvía a sumar encima. Resultado: cada edición corría el módulo un poco más en Y, acumulándose edición tras edición -- lo que reportaste como "la puerta se crea bien pero jala todo el módulo hacia adelante la misma cantidad del grosor de la puerta" en un Bajo.
+
+**Corregido en `jerarquia.rb`:** al editar un módulo existente, ya no se vuelve a sumar `offset_y_modulo`/`altura_piso_modulo` -- se usa `@offset_edicion` tal cual, exactamente como ya funcionaba antes de que existiera ese offset (v6.4.39 y anteriores). Al construir un módulo NUEVO no cambia nada, sigue aplicándose igual que siempre. Verifiqué por ejecución 2 ediciones seguidas del mismo módulo: antes del fix arrastraba +20mm por edición (acumulativo); con el fix queda estable en la misma posición sin importar cuántas veces lo edites.
+
+**Pendiente de resolver, necesito un dato tuyo:** me confirmaste que en el Closet/Auxiliar de tu segunda captura, "Puerta del espacio" estaba en Externa y "Montaje de puerta" en Solapada (ambos correctos para una puerta que debería sobresalir hacia el frente) -- pero igual nace metida adentro del módulo. Repasé el código y no encontré todavía por qué pasaría eso específicamente en Closet/Auxiliar y no en Bajo. Para encontrar la causa exacta como la vez pasada (cuando me diste "son 15mm, el grosor de la puerta" y eso me permitió dar con el bug real): **¿cuánto mide, en mm, esa puerta metida hacia adentro respecto al canto frente del casco?** Con ese número puedo calcular qué fórmula está dando ese resultado exacto.
 
 ## Cambios 6.4.45
 
