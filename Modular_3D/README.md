@@ -1,8 +1,17 @@
-# Modular_3D 6.4.24 · Sospecha real: caché de interfaz.css/js entre versiones
+# Modular_3D 6.4.25 · Versión de diagnóstico (temporal)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.24  
+**Versión:** 6.4.25  
 
+## Cambios 6.4.25
+
+Confirmaste que 6.4.24 sí se instaló bien (el título mostraba v6.4.24) y el problema de la barra sigue exactamente igual -- eso descarta la teoría de caché. Cuatro implementaciones de scroll distintas, cada una probada y verificada de verdad en este lado, y ninguna aparece del lado del usuario: en vez de seguir probando ideas de CSS a ciegas, esta versión agrega un **diagnóstico temporal** para ver, con datos reales de tu navegador, qué es lo que realmente está pasando.
+
+- Aparece una **franja amarilla debajo del encabezado** con información técnica: qué navegador/motor es exactamente (`navigator.userAgent`), si soporta `ResizeObserver`, si soporta `transform` y `accent-color`, y el estado real de los elementos de la barra (si existen en la página, su tamaño, si están escondidos).
+- **No hace falta que pruebes nada de scroll esta vez** -- solo abrí el plugin y mandame una captura de pantalla donde se vea esa franja amarilla completa (puede que el texto sea largo y se corte en varias líneas, está bien, mandá la franja completa).
+- Con esa información voy a poder saber exactamente qué versión de navegador es y qué es lo que realmente soporta, en vez de seguir adivinando -- esta franja se quita en cuanto se resuelva el problema de la barra.
+
+## Cambios 6.4.24
 ## Cambios 6.4.24
 
 Después de 4 implementaciones distintas de la barra de scroll (6.4.14, 6.4.20, 6.4.22, 6.4.23) -- cada una verificada funcionando en pruebas automatizadas reales, ninguna visible ni funcional para el usuario, ni siquiera el ESPACIO reservado cambiando de comportamiento entre versiones -- este patrón deja de parecer un problema de CSS y empieza a parecer un problema de que el navegador embebido nunca está cargando el `interfaz.css`/`interfaz.js` nuevo.
