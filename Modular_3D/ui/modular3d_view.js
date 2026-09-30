@@ -39,6 +39,13 @@
     if (category === 'back') return 'respaldo';
     if (category === 'adjustment') return 'ajuste';
     if (category === 'handle') return 'herrajes';
+    // zocalo/cornisa incluyen su propio remate lateral (mismo color, igual
+    // criterio que grupo_material_pieza en geometria.rb); 'remate' es solo
+    // REMATE_INICIAL/FINAL, que sí tiene su grupo propio "remates".
+    if (category === 'zocalo') return 'zocalo';
+    if (category === 'cornisa') return 'cornisa';
+    if (category === 'remate') return 'remates';
+    if (category === 'premeson') return 'premeson';
     if (category === 'interior' || String(role || '').indexOf('local-') === 0 || String(role || '').indexOf('separator-') === 0) return 'interior';
     return 'casco';
   }
@@ -56,9 +63,18 @@
     try{textures=JSON.parse(currentData.material_textures_json||'{}')||{};}catch(_t){textures={};}
     try{textureMeta=JSON.parse(currentData.material_texture_meta_json||'{}')||{};}catch(_m){textureMeta={};}
     var override=overrides[materialKey]||overrides[pieceId]||null;
-    var useGlobal=currentData.material_unico==='SI',groupCustom=currentData['material_'+group+'_custom']==='SI';
+    // El premesón queda SIEMPRE fuera del material único del módulo (su
+    // acabado se restringe a Crudo/Blanco en la UI) -- mismo criterio que
+    // grupo_personalizado en geometria.rb.
+    var useGlobal=currentData.material_unico==='SI',groupCustom=currentData['material_'+group+'_custom']==='SI'||group==='premeson';
     var groupColor=useGlobal&&!groupCustom?currentData.material_global_color:currentData['material_'+group+'_color'],groupName=useGlobal&&!groupCustom?currentData.material_global_nombre:currentData['material_'+group+'_nombre'];
-    var resolvedColor=colorNumber(override&&override.color, colorNumber(groupColor,fallback)),edgeMode=String(currentData.edge_mode||'MIXED'),edge=(override&&override.edge&&override.edge!=='INHERIT')?override.edge:(edgeMode==='ALL_HARD'?'HARD':(edgeMode==='ALL_PVC'?'PVC':(group==='frentes'?'HARD':'PVC'))),edgeColor=(override&&override.edgeColor&&override.edgeColor!=='INHERIT')?override.edgeColor:('#'+resolvedColor.toString(16).padStart(6,'0'));
+    var resolvedColor=colorNumber(override&&override.color, colorNumber(groupColor,fallback)),edgeMode=String(currentData.edge_mode||'MIXED'),edge=(override&&override.edge&&override.edge!=='INHERIT')?override.edge:(edgeMode==='ALL_HARD'?'HARD':(edgeMode==='ALL_PVC'?'PVC':(group==='frentes'?'HARD':'PVC')));
+    // El canto del premesón no sigue su propia cara (Crudo/Blanco): siempre
+    // hereda el color de canto/PVC del Casco, igual que en geometria.rb.
+    var cascoUseGlobal=currentData.material_unico==='SI',cascoCustom=currentData.material_casco_custom==='SI';
+    var cascoColorRaw=cascoUseGlobal&&!cascoCustom?currentData.material_global_color:currentData.material_casco_color;
+    var edgeColorDefault=materialKey==='PREMESON'?('#'+colorNumber(cascoColorRaw,fallback).toString(16).padStart(6,'0')):('#'+resolvedColor.toString(16).padStart(6,'0'));
+    var edgeColor=(override&&override.edgeColor&&override.edgeColor!=='INHERIT')?override.edgeColor:edgeColorDefault;
     var textureKey=useGlobal&&!groupCustom?'global':group,meta=textureMeta[textureKey]||{};
     return {group:group,color:resolvedColor,name:(override&&override.name)||groupName||group,custom:!!override,texture:(override&&override.texture)||textures[textureKey]||'',rotation:Number(override&&override.rotation!=='INHERIT'?override.rotation:meta.rotation)||0,scale:Number(meta.scale)||600,edge:edge,edgeColor:edgeColor};
   }

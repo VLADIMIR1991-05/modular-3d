@@ -1,7 +1,25 @@
-# Modular_3D 6.4.41 · Layout de cocina + despiece sin duplicados + color del premesón
+# Modular_3D 6.4.42 · Cantos condicionales + colores heredados (zócalo, cornisa, premesón)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.41  
+**Versión:** 6.4.42  
+
+## Cambios 6.4.42
+
+Convención de 4 lados por pieza confirmada contigo: **1**=canto/borde frente (visible por defecto), **3**=atrás (opuesto, oculto), **2**=extremo derecho (o arriba en un Lateral), **4**=extremo izquierdo (o abajo en un Lateral). Con eso:
+
+**1) Cantos (despiece) corregidos según esa convención:**
+- **Zócalo y Cornisa**: ya NO llevan canto en su lado largo (el frente va laminado como cara, no como canto de borde -- eso ya estaba bien via color). Solo cantean sus dos extremos cortos (lado 2/lado 4), y solo el/los que de verdad queden expuestos: si ese lado tiene remate (Izq=inicial/Der=final) activo, el remate ya tapa el corte y no hace falta cantearlo. Con ambos remates activos: 0 cantos cortos. Con uno solo: 1. Sin ninguno: 2.
+- **Premesón**: sigue con su canto de frente fijo (lado 1, como ya estaba bien), y ahora sus dos extremos (lado 2/lado 4) siguen la MISMA regla condicional que zócalo/cornisa (antes era fijo en 1, sin importar si había remates).
+- **Lateral de un Alto**: además del canto de frente (lado 1, como siempre), ahora también cantea su canto de abajo (lado 4) -- al quedar colgado en alto, su cara inferior queda a la vista para quien mira hacia arriba. El lateral de un Bajo sigue igual que siempre (solo lado 1).
+
+**2) Colores corregidos:**
+- **Premesón**: revierto el cambio de v6.4.41 que lo hacía heredar el color único del módulo -- **no era lo que pediste**. Ahora su acabado se restringe a solo 2 opciones (Crudo/Blanco, nuevo selector en "Opciones avanzadas"), independiente de cualquier otro color configurado. Su **canto**, en cambio, siempre hereda el color de canto/PVC del Casco, sea cual sea el acabado (Crudo o Blanco) que elijas para su cara.
+- **Zócalo, Cornisa y Remates** (incluye remate de zócalo izq/der y remate de cornisa izq/der, que ya compartían color con zócalo/cornisa): ahora heredan en vivo el color de "Frentes y puertas" mientras no marques "Material propio del grupo" para ellos -- antes quedaban en un tono genérico fijo (#d5a66e) que no seguía a nada.
+- **"Usar un solo material para todo el módulo"**: activado por defecto, en Blanco -- antes arrancaba desactivado.
+
+Todo esto también se corrigió en la vista previa en vivo del navegador (`modular3d_view.js`), que antes ni siquiera diferenciaba el color de zócalo/cornisa/premesón/remates del color del casco (bug aparte que encontré al revisar esto). Probé la fórmula de cantos condicionales por ejecución (4 combinaciones de remates) y el flujo completo de colores con un navegador real (cambiar "Frentes y puertas" y verificar que zócalo/cornisa/remates lo siguen, que se congelan al marcar "Material propio", y que el selector Crudo/Blanco del premesón cambia su color correctamente).
+
+**Por favor instala esta versión y revisá el despiece de un Bajo con remate solo de un lado (por ejemplo, remate final activo, inicial no) -- Zócalo/Premesón deberían mostrar 1 canto corto, no 2, y el Zócalo ya no debería tener ningún canto largo.**
 
 ## Cambios 6.4.41
 

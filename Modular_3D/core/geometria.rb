@@ -281,6 +281,7 @@ module LPenafiel_GeneradorMueblesExacto
     return 'zocalo' if clave.include?('ZOCALO')
     return 'cornisa' if clave.include?('CORNISA')
     return 'remates' if clave == 'REMATE_INICIAL' || clave == 'REMATE_FINAL'
+    return 'premeson' if clave == 'PREMESON'
     return 'interior' if clave.include?('DIV') || clave.include?('REP') || clave.start_with?('H_CIERRE') || clave.start_with?('H_BASE') || clave.start_with?('H_TECHO')
     'casco'
   end
@@ -297,7 +298,10 @@ module LPenafiel_GeneradorMueblesExacto
     individual = overrides[nombre.to_s] || overrides[nombre.to_s.upcase] || {}
     grupo = individual['group'].to_s unless individual['group'].to_s.empty?
     material_unico = datos['material_unico'].to_s == 'SI'
-    grupo_personalizado = datos["material_#{grupo}_custom"].to_s == 'SI'
+    # El premesón queda SIEMPRE fuera del material único del módulo -- su
+    # acabado se restringe a Crudo/Blanco (ver UI), nunca al color general
+    # ni al de ningún otro grupo -- pedido explícito del usuario.
+    grupo_personalizado = datos["material_#{grupo}_custom"].to_s == 'SI' || grupo == 'premeson'
     color = individual['color'].to_s
     if color.empty?
       color = material_unico && !grupo_personalizado ? datos['material_global_color'].to_s : datos["material_#{grupo}_color"].to_s
@@ -398,7 +402,12 @@ module LPenafiel_GeneradorMueblesExacto
       instancia.definition.set_attribute('LPenafiel', 'grupo_material', grupo)
       instancia.definition.set_attribute('LPenafiel', 'material_configurado', material_nombre)
       instancia.definition.set_attribute('LPenafiel', 'color_configurado', color)
-      canto_tipo, canto_color = configuracion_canto_pieza(nombre, grupo, color)
+      # El canto del premesón NO sigue su propia cara (Crudo/Blanco): sea
+      # cual sea ese acabado, el canto siempre hereda el color de canto/PVC
+      # del Casco -- pedido explícito del usuario ("el color de laminado
+      # hereda del color de canto o pvc del casco").
+      color_canto_base = nombre.to_s.upcase == 'PREMESON' ? configuracion_material_pieza('LAT_IZQ')[1] : color
+      canto_tipo, canto_color = configuracion_canto_pieza(nombre, grupo, color_canto_base)
       instancia.definition.set_attribute('LPenafiel', 'tipo_canto', canto_tipo)
       instancia.definition.set_attribute('LPenafiel', 'color_canto', canto_color)
       instancia.definition.set_attribute('LPenafiel', 'color_canto_nombre', canto_color == color ? material_nombre : canto_color)

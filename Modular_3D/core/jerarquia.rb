@@ -447,7 +447,11 @@ module LPenafiel_GeneradorMueblesExacto
       @offset_creacion = offset_creacion_base + Geom::Vector3d.new(0, 0, alto_carcasa_offset)
 
       lat_l = 1
-      lat_c = prof_total > 340.mm ? 0 : 1
+      # El lateral del Alto también lleva su canto de abajo (además del de
+      # siempre, el frente): al quedar colgado en alto, su cara inferior
+      # queda a la vista para quien mira hacia arriba, a diferencia del
+      # Bajo (tapado por el zócalo/el piso). Pedido explícito del usuario.
+      lat_c = tipo_modulo == 'ALTO' ? 1 : (prof_total > 340.mm ? 0 : 1)
       if ancho_util_mueble >= prof_total
         hz_l = 1; hz_c = 0
       else
@@ -1371,9 +1375,18 @@ module LPenafiel_GeneradorMueblesExacto
       # el check rápido "Izq"/"Der" del visor 3D para Alto y Bajo aunque la
       # UI ya lo permitía marcar.
       lleva_remates = tipo_modulo != 'PERSONALIZADO'
+      remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
+      remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'
+      # Zócalo/cornisa/premesón nunca cantean su canto largo (el frente va
+      # laminado como cara, no como canto de borde; el de atrás siempre
+      # queda oculto contra la pared) -- solo cantean sus dos extremos
+      # cortos, y solo el/los que de verdad queden expuestos: si ese lado
+      # tiene remate (inicial=izq/final=der), el remate ya tapa el corte y
+      # no hace falta cantearlo. Pedido explícito del usuario.
+      extremos_expuestos = (remate_inicial ? 0 : 1) + (remate_final ? 0 : 1)
 
       if lleva_zocalo
-        self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 1, 1)
+        self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 0, extremos_expuestos)
 
         remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
         # Arranca DETRÁS del propio zócalo (retranqueo + su grosor), no en el
@@ -1395,13 +1408,13 @@ module LPenafiel_GeneradorMueblesExacto
       end
 
       if lleva_premeson
-        self.crear_pieza(entities, modulo_nombre, "PREMESON", ancho_total, prof_total, espesor, 0.mm, 0.mm, alto_total + alto_carcasa_offset, 1, 1)
+        self.crear_pieza(entities, modulo_nombre, "PREMESON", ancho_total, prof_total, espesor, 0.mm, 0.mm, alto_total + alto_carcasa_offset, 1, extremos_expuestos)
       end
 
       if cornisa_activa
         cornisa_altura = [(datos['cornisa_altura'] || 100).to_f, 20.0].max.mm
         z_cornisa = alto_total + alto_carcasa_offset
-        self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_total, cornisa_grosor, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 1, 1)
+        self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_total, cornisa_grosor, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 0, extremos_expuestos)
 
         remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
         # Mismo criterio que remate de zócalo: arranca DETRÁS de la propia
@@ -1453,8 +1466,6 @@ module LPenafiel_GeneradorMueblesExacto
                           else
                             0.mm - (protrusion_puerta_real || grosor_frente_remate)
                           end
-        remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
-        remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'
         if remate_inicial
           self.crear_pieza(entities, modulo_nombre, "REMATE_INICIAL", remate_ancho, grosor_frente_remate, remate_alto_total, 0.mm - remate_ancho, y_frente_remate, 0.mm, 0, 0)
         end

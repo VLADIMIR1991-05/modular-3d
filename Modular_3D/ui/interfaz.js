@@ -942,6 +942,19 @@
         if (el('material_respaldo_custom') && !el('material_respaldo_custom').checked && el('material_respaldo_color')) el('material_respaldo_color').value = event.target.value;
         if (el('material_ajuste_custom') && !el('material_ajuste_custom').checked && el('material_ajuste_color')) el('material_ajuste_color').value = event.target.value;
       }
+      // Zócalo/Cornisa/Remates van por defecto del mismo color que
+      // "Frentes y puertas" (pedido explícito del usuario) -- se
+      // mantienen sincronizados en vivo mientras su propio "Material
+      // propio del grupo" siga sin marcar, igual que Respaldo/Ajuste
+      // heredan de Casco arriba.
+      if (event.target.id === 'material_frentes_color' || event.target.id === 'material_frentes_nombre') {
+        ['zocalo', 'cornisa', 'remates'].forEach(function(grupo) {
+          if (el('material_' + grupo + '_custom') && !el('material_' + grupo + '_custom').checked) {
+            if (el('material_frentes_color') && el('material_' + grupo + '_color')) el('material_' + grupo + '_color').value = el('material_frentes_color').value;
+            if (el('material_frentes_nombre') && el('material_' + grupo + '_nombre')) el('material_' + grupo + '_nombre').value = el('material_frentes_nombre').value;
+          }
+        });
+      }
       markManualThickness(event.target.id || '');
       var category = categoriaPorCampo(event.target.id || '');
       if (category) iluminarCategoria(category, 'Estas modificando: ' + (event.target.labels && event.target.labels[0] ? event.target.labels[0].textContent : event.target.id));
@@ -952,6 +965,16 @@
       if ((event.target.id === 'material_respaldo_custom' || event.target.id === 'material_ajuste_custom') && !event.target.checked) {
         var targetColorId = event.target.id === 'material_respaldo_custom' ? 'material_respaldo_color' : 'material_ajuste_color';
         if (el('material_casco_color') && el(targetColorId)) el(targetColorId).value = el('material_casco_color').value;
+      }
+      if (['material_zocalo_custom', 'material_cornisa_custom', 'material_remates_custom'].indexOf(event.target.id) !== -1 && !event.target.checked) {
+        var grupoDestino = event.target.id.replace('material_', '').replace('_custom', '');
+        if (el('material_frentes_color') && el('material_' + grupoDestino + '_color')) el('material_' + grupoDestino + '_color').value = el('material_frentes_color').value;
+        if (el('material_frentes_nombre') && el('material_' + grupoDestino + '_nombre')) el('material_' + grupoDestino + '_nombre').value = el('material_frentes_nombre').value;
+      }
+      if (event.target.id === 'premeson_color') {
+        var esBlanco = event.target.value === 'BLANCO';
+        if (el('material_premeson_color')) el('material_premeson_color').value = esBlanco ? '#ffffff' : '#e8dcc4';
+        if (el('material_premeson_nombre')) el('material_premeson_nombre').value = esBlanco ? 'Blanco' : 'Crudo';
       }
       if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
       markManualThickness(event.target.id || '');

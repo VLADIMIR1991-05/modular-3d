@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modular_3D</title>
-  <link rel="stylesheet" href="interfaz.css?v=6.4.41">
+  <link rel="stylesheet" href="interfaz.css?v=6.4.42">
 </head>
 <body class="license-locked">
   <div id="license_overlay" class="license-overlay">
@@ -60,7 +60,7 @@
         <div class="license-days-track"><div class="license-days-fill" id="license_days_fill"></div></div>
       </div>
     </div>
-    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.41</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.42</div>
   </header>
 
   <main>
@@ -269,7 +269,7 @@
         <div class="card">
           <h3>Material único para todo el módulo</h3>
           <div class="material-unico-box">
-            <label><input type="checkbox" id="material_unico"> Usar un solo material para todo el módulo</label>
+            <label><input type="checkbox" id="material_unico" checked> Usar un solo material para todo el módulo</label>
             <div class="material-unico-detalle">
               <div class="material-swatch-row"><input type="color" id="material_global_color" value="#ffffff"><input id="material_global_nombre" value="Blanco" placeholder="Nombre del material general"></div>
               <div class="row"><label for="material_global_source">Acabado general</label><select id="material_global_source"><option value="COLOR">Color sólido</option><option value="FILE">Imagen del equipo</option><option value="URL">Imagen desde enlace</option><option value="INCLUDED">Textura incluida</option><option value="LIBRARY">Material guardado</option></select></div>
@@ -300,16 +300,16 @@
             <section class="material-group"><h3>Herrajes (jaladores, gola)</h3><label class="check-line"><input type="checkbox" id="material_herrajes_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_herrajes_swatch_row"><input type="color" id="material_herrajes_color" value="#4d5963"><input id="material_herrajes_nombre" value="Herraje" placeholder="Nombre del material"></div></section>
           </div>
           <details class="materials-advanced">
-            <summary>Opciones avanzadas: ajuste, zócalo, cornisa y remates</summary>
-            <p class="hint-text">Solo aplican a módulos que llevan esas piezas (Bajo/Auxiliar/Closet). Por defecto van del mismo color que el Casco -- abrí esto únicamente si alguna de ellas necesita un color distinto.</p>
+            <summary>Opciones avanzadas: ajuste, zócalo, cornisa, remates y premesón</summary>
+            <p class="hint-text">Solo aplican a módulos que llevan esas piezas (Bajo/Auxiliar/Closet). Zócalo, Cornisa y Remates van por defecto del mismo color que "Frentes y puertas" -- abrí esto únicamente si alguna de ellas necesita un color propio.</p>
             <div class="materials-grid">
               <section class="material-group"><h3>Ajuste posterior/frontal</h3><label class="check-line"><input type="checkbox" id="material_ajuste_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_ajuste_swatch_row"><input type="color" id="material_ajuste_color" value="#d5a66e"><input id="material_ajuste_nombre" value="Ajuste" placeholder="Nombre del material"></div><small>Mismo color que el casco hasta que marques "Material propio".</small></section>
-              <section class="material-group"><h3>Zócalo</h3><label class="check-line"><input type="checkbox" id="material_zocalo_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_zocalo_swatch_row"><input type="color" id="material_zocalo_color" value="#d5a66e"><input id="material_zocalo_nombre" value="Zócalo" placeholder="Nombre del material"></div><small>Incluye el remate de zócalo (van del mismo color).</small></section>
-              <section class="material-group"><h3>Cornisa</h3><label class="check-line"><input type="checkbox" id="material_cornisa_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_cornisa_swatch_row"><input type="color" id="material_cornisa_color" value="#d5a66e"><input id="material_cornisa_nombre" value="Cornisa" placeholder="Nombre del material"></div><small>Incluye el remate de cornisa (van del mismo color).</small></section>
-              <section class="material-group"><h3>Remates (auxiliar/closet)</h3><label class="check-line"><input type="checkbox" id="material_remates_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_remates_swatch_row"><input type="color" id="material_remates_color" value="#f06424"><input id="material_remates_nombre" value="Remate" placeholder="Nombre del material"></div><small>Por defecto, mismo color que "Frentes y puertas" hasta que lo cambies acá.</small></section>
+              <section class="material-group"><h3>Zócalo</h3><label class="check-line"><input type="checkbox" id="material_zocalo_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_zocalo_swatch_row"><input type="color" id="material_zocalo_color" value="#f06424"><input id="material_zocalo_nombre" value="Frente decorativo" placeholder="Nombre del material"></div><small>Incluye el remate de zócalo (van del mismo color). Por defecto, mismo color que "Frentes y puertas" hasta que marques "Material propio".</small></section>
+              <section class="material-group"><h3>Cornisa</h3><label class="check-line"><input type="checkbox" id="material_cornisa_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_cornisa_swatch_row"><input type="color" id="material_cornisa_color" value="#f06424"><input id="material_cornisa_nombre" value="Frente decorativo" placeholder="Nombre del material"></div><small>Incluye el remate de cornisa (van del mismo color). Por defecto, mismo color que "Frentes y puertas" hasta que marques "Material propio".</small></section>
+              <section class="material-group"><h3>Remates (auxiliar/closet)</h3><label class="check-line"><input type="checkbox" id="material_remates_custom"> Material propio del grupo</label><div class="material-swatch-row" id="material_remates_swatch_row"><input type="color" id="material_remates_color" value="#f06424"><input id="material_remates_nombre" value="Frente decorativo" placeholder="Nombre del material"></div><small>Por defecto, mismo color que "Frentes y puertas" hasta que lo cambies acá.</small></section>
+              <section class="material-group"><h3>Premesón (solo Bajo)</h3><div class="row"><label for="premeson_color">Acabado</label><select id="premeson_color"><option value="BLANCO" selected>Blanco</option><option value="CRUDO">Crudo</option></select></div><input type="hidden" id="material_premeson_color" value="#ffffff"><input type="hidden" id="material_premeson_nombre" value="Blanco"><small>Solo admite estos 2 acabados (encima va la cubierta/mesón real). Su canto siempre hereda el color de canto/PVC del Casco, sea cual sea el acabado elegido acá.</small></section>
             </div>
           </details>
-          <p class="hint-text">El premesón (solo en módulos Bajo) siempre queda en material crudo, sin pintar -- encima va la cubierta/mesón real, así que no aparece en esta lista.</p>
         </div>
         <div class="card">
           <div class="material-texture-editor" id="material_library">
@@ -457,11 +457,11 @@
 
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/OrbitControls.js"></script>
-  <script src="modular3d_view.js?v=6.4.41"></script>
-  <script src="reglas_visibilidad.js?v=6.4.41"></script>
-  <script src="interfaz.js?v=6.4.41"></script>
-<script src="hierarchical_config.js?v=6.4.41"></script>
-<script src="material_config.js?v=6.4.41"></script>
-<script src="catalogo.js?v=6.4.41"></script>
+  <script src="modular3d_view.js?v=6.4.42"></script>
+  <script src="reglas_visibilidad.js?v=6.4.42"></script>
+  <script src="interfaz.js?v=6.4.42"></script>
+<script src="hierarchical_config.js?v=6.4.42"></script>
+<script src="material_config.js?v=6.4.42"></script>
+<script src="catalogo.js?v=6.4.42"></script>
 </body>
 </html>
