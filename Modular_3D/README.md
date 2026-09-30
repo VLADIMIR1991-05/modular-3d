@@ -1,7 +1,19 @@
-# Modular_3D 6.4.38 · Remate Izq/Der ahora sigue el montaje de la puerta (Solapada/Embutida)
+# Modular_3D 6.4.39 · Remate reutiliza el valor EXACTO de la puerta real (no lo recalcula)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.38  
+**Versión:** 6.4.39  
+
+## Cambios 6.4.39
+
+v6.4.38 hizo que el remate calculara SU PROPIO saliente según el montaje de puerta (Solapada/Embutida), pero seguía siendo un cálculo aparte del de la puerta real -- y reportaste que seguían sin coincidir. Aunque en todas mis pruebas ambos cálculos daban el mismo número, para eliminar cualquier posibilidad de divergencia (redondeos, sobremedidas de panel, u otro dato tomado de un lugar distinto) se cambió el enfoque:
+
+**El remate ya NO calcula su propio saliente.** Ahora, cuando se construye una puerta externa solapada real, se guarda el valor EXACTO que se usó para esa puerta (`protrusion_puerta_real`), y el remate reutiliza ese mismo número tal cual -- literalmente la misma variable, no una copia recalculada. Es matemáticamente imposible que terminen en planos distintos porque es el mismo valor.
+
+Si no hay ninguna puerta externa solapada en el módulo (por ejemplo, todo Embutida, o sin puertas), el remate usa el mismo cálculo de respaldo de antes.
+
+Esto se aplicó en `jerarquia.rb`, que es la geometría 3D REAL que se construye en SketchUp (la vista previa en vivo y el plano 2D quedan con el cálculo de v6.4.38, que ya coincide en las pruebas -- si después de esto la vista previa y lo construido en SketchUp difieren entre sí, avisame, sería una pista muy valiosa de por dónde seguir).
+
+**Por favor instala esta versión, reconstruye el módulo con "Actualizar módulo", y volvé a medir la distancia entre la puerta y el remate.**
 
 ## Cambios 6.4.38
 

@@ -285,6 +285,11 @@ module LPenafiel_GeneradorMueblesExacto
       rescue JSON::ParserError
         hierarchy_geometry = nil
       end
+      # Capturado más abajo, dentro del bucle que construye las puertas
+      # reales (hierarchy_geometry['nodes']): el remate reutiliza este mismo
+      # valor exacto en vez de recalcular el suyo por separado, para que sea
+      # matemáticamente imposible que queden en planos distintos.
+      protrusion_puerta_real = nil
       # La jerarquía es la única fuente geométrica. Evita fabricar nuevamente
       # las repisas/divisiones del configurador legado (incluida la repisa media).
       if hierarchy_geometry
@@ -1019,6 +1024,10 @@ module LPenafiel_GeneradorMueblesExacto
             # dentro del hueco del espacio seleccionado.
             protrusion_puerta = (puerta_interna || externa_embutida) ? grosor_puerta : calcular_protrusion_puerta.call(cavidad_x_min, cavidad_x_max, cavidad_z_min, cavidad_z_max, node['enclosure'], node['sobremedida'], grosor_puerta)
             y_puerta = puerta_interna ? box['y'].to_f.mm + 2.mm : (externa_embutida ? 0.mm : -protrusion_puerta)
+            # Guarda el valor REAL usado por esta puerta externa solapada --
+            # el remate lo reutiliza tal cual más abajo, así quedan siempre
+            # en el mismo plano exacto (ver "protrusion_puerta_real" arriba).
+            protrusion_puerta_real = protrusion_puerta if !puerta_interna && !externa_embutida
             x_puerta_izq = x_min + margen_lateral + ((pi - 1) * (ancho_puerta + fuga_central))
             # Con una sola puerta se respeta la bisagra elegida en "Apertura"
             # del espacio; con varias, las de los extremos abren hacia afuera
@@ -1395,14 +1404,23 @@ module LPenafiel_GeneradorMueblesExacto
                             end
         grosor_frente_remate = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
         # El remate tiene que quedar en el MISMO plano que la puerta, sea cual
-        # sea su montaje: Solapada (la puerta sobresale -grosor, cubriendo el
-        # hueco por fuera) o Embutida (la puerta queda a ras, Y=0, dentro del
-        # hueco). Antes el remate SIEMPRE sobresalía (-grosor) sin importar
-        # este ajuste, así que con montaje Embutida la puerta y el remate NO
-        # coincidían aunque nada estuviera mal configurado (diferencia de
-        # exactamente 1 grosor de puerta, el síntoma reportado).
+        # sea su montaje: Solapada (la puerta sobresale) o Embutida (la
+        # puerta queda a ras, Y=0). Para Solapada, en vez de recalcular el
+        # saliente por separado (que podía divergir del de la puerta real
+        # por redondeos, sobremedidas de panel, u otro dato tomado de otro
+        # lugar), se REUTILIZA tal cual el mismo valor que ya se usó para
+        # construir la puerta de este módulo (protrusion_puerta_real,
+        # capturado en el bucle de puertas más arriba) -- matemáticamente
+        # imposible que queden en planos distintos porque es literalmente el
+        # mismo número. Si no hay ninguna puerta externa solapada construida
+        # (protrusion_puerta_real sigue nil), se usa grosor_frente_remate
+        # como respaldo, igual que antes.
         montaje_puerta_general = (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase
-        y_frente_remate = montaje_puerta_general == 'EMBUTIDA' ? 0.mm : (0.mm - grosor_frente_remate)
+        y_frente_remate = if montaje_puerta_general == 'EMBUTIDA'
+                            0.mm
+                          else
+                            0.mm - (protrusion_puerta_real || grosor_frente_remate)
+                          end
         remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
         remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'
         if remate_inicial
