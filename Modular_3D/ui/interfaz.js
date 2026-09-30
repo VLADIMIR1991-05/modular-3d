@@ -1062,61 +1062,57 @@
       event.preventDefault();
     }, { passive: false });
 
-    // Deslizador vertical nativo, uno por panel (.config-pane y
-    // aside.m3dv-panel son independientes -- cada uno el suyo).
-    // 6.4.22 probó un <input type="range"> con writing-mode:vertical-lr +
-    // -webkit-appearance:slider-vertical, pero el hueco quedaba vacío: ese
-    // navegador reserva el espacio (la barra sí empuja el contenido) pero
-    // no pinta el control -- esas dos propiedades de orientación vertical
-    // no son universales. Un <input type="range"> HORIZONTAL liso sí se ve
-    // y arrastra ahí (es el mismo tipo que "Explosión"/"Velocidad de
-    // giro"), así que en vez de pedirle al navegador un slider vertical,
-    // se usa uno horizontal normal y se gira visualmente con CSS
-    // (transform:rotate) -- un giro no depende de ninguna API de
-    // orientación de sliders, es sólo dibujo.
-    // Como el input sigue siendo horizontal por dentro, su ancho/alto y su
-    // posición hay que calcularlos a mano para que, ya girado, llene
-    // exactamente el hueco vertical (ver posicionar() más abajo).
-    function inicializarDeslizadorScroll(wrap) {
-      var slider = wrap.querySelector('.scroll-vslider');
-      var contenedor = document.querySelector(wrap.getAttribute('data-scroll-target'));
-      if (!slider || !contenedor) return;
-      var moviendoSlider = false;
-      function posicionar() {
-        var alto = wrap.clientHeight, grosor = wrap.clientWidth;
-        if (alto <= 0 || grosor <= 0) return;
-        slider.style.width = alto + 'px';
-        slider.style.height = grosor + 'px';
-        slider.style.top = ((alto - grosor) / 2) + 'px';
-        slider.style.left = ((grosor - alto) / 2) + 'px';
-      }
+    // Botones de flecha ▲/▼, uno por panel (.config-pane y aside.m3dv-panel
+    // son independientes -- cada uno el suyo). Tres intentos anteriores con
+    // un <input type="range"> (con divs, con writing-mode:vertical-lr, con
+    // transform:rotate) reservaban el espacio correctamente pero ninguno
+    // llegó a pintarse ni a arrastrarse en el navegador real del usuario
+    // (confirmado: SketchUp Pro 2020, Chrome 64 embebido, de 2018). En vez
+    // de seguir con variantes de slider posicionado/girado -- justo el tipo
+    // de técnica más propensa a fallar en un motor tan viejo -- estos son
+    // botones normales, en flujo de documento normal, sin position:absolute
+    // ni transform ni medidas por JavaScript: el mismo tipo de elemento que
+    // "Transparencia"/"Aristas" y el resto de los botones que sí funcionan
+    // en esa misma pantalla.
+    function inicializarFlechasScroll(grupo) {
+      var contenedor = document.querySelector(grupo.getAttribute('data-scroll-target'));
+      var arriba = grupo.querySelector('.scroll-arrow-up');
+      var abajo = grupo.querySelector('.scroll-arrow-down');
+      var relleno = grupo.querySelector('.scroll-progress-fill');
+      if (!contenedor || !arriba || !abajo) return;
+      var PASO = 220;
       function refrescar() {
         var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxScroll <= 1) { wrap.classList.add('hidden-track'); return; }
-        wrap.classList.remove('hidden-track');
-        if (!moviendoSlider) {
-          // Girado -90deg, el extremo "derecho" (valor máximo) del range
-          // horizontal queda apuntando hacia ARRIBA en pantalla -- así que
-          // se invierte para que el sentido sea el de una scrollbar real:
-          // manija arriba = contenido arriba, manija abajo = contenido
-          // abajo.
-          slider.value = Math.round((1 - contenedor.scrollTop / maxScroll) * 1000);
-        }
+        if (maxScroll <= 1) { grupo.classList.add('hidden-track'); return; }
+        grupo.classList.remove('hidden-track');
+        arriba.disabled = contenedor.scrollTop <= 0;
+        abajo.disabled = contenedor.scrollTop >= maxScroll - 1;
+        if (relleno) relleno.style.width = Math.round((contenedor.scrollTop / maxScroll) * 100) + '%';
       }
-      slider.addEventListener('input', function() {
-        moviendoSlider = true;
+      function mover(direccion) {
         var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        contenedor.scrollTop = (1 - slider.value / 1000) * maxScroll;
-      });
-      slider.addEventListener('change', function() { moviendoSlider = false; });
-      contenedor.addEventListener('scroll', refrescar);
-      window.addEventListener('resize', function() { posicionar(); refrescar(); });
-      if (window.ResizeObserver) {
-        new ResizeObserver(posicionar).observe(wrap);
-        new ResizeObserver(refrescar).observe(contenedor);
+        contenedor.scrollTop = Math.max(0, Math.min(maxScroll, contenedor.scrollTop + direccion * PASO));
+        refrescar();
       }
-      posicionar();
+      function repetirMientrasPresionado(boton, direccion) {
+        var intervalo = null;
+        boton.addEventListener('mousedown', function(event) {
+          event.preventDefault();
+          mover(direccion);
+          intervalo = window.setInterval(function() { mover(direccion); }, 220);
+        });
+        function parar() {
+          if (intervalo) { window.clearInterval(intervalo); intervalo = null; }
+        }
+        document.addEventListener('mouseup', parar);
+        boton.addEventListener('mouseleave', parar);
+      }
+      repetirMientrasPresionado(arriba, -1);
+      repetirMientrasPresionado(abajo, 1);
+      contenedor.addEventListener('scroll', refrescar);
+      window.addEventListener('resize', refrescar);
+      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
       refrescar();
       window.setInterval(refrescar, 1000);
     }
-    document.querySelectorAll('.scroll-vslider-wrap').forEach(inicializarDeslizadorScroll);
+    document.querySelectorAll('.scroll-arrows').forEach(inicializarFlechasScroll);

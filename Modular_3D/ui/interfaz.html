@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modular_3D</title>
-  <link rel="stylesheet" href="interfaz.css?v=6.4.25">
+  <link rel="stylesheet" href="interfaz.css?v=6.4.26">
 </head>
 <body class="license-locked">
   <div id="license_overlay" class="license-overlay">
@@ -60,56 +60,8 @@
         <div class="license-days-track"><div class="license-days-fill" id="license_days_fill"></div></div>
       </div>
     </div>
-    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.25</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.26</div>
   </header>
-  <div id="diag_temporal" style="background:#ffe100;color:#000;font:11px/1.5 monospace;padding:6px 10px;word-break:break-all;border-bottom:3px solid #d40000"></div>
-  <script>
-    // Diagnóstico temporal (se quita en cuanto se resuelva lo de la barra
-    // de scroll): script INLINE, aparte de interfaz.js, para que se ejecute
-    // aunque algo en interfaz.js fallara -- así de todas formas queda un
-    // dato real de qué navegador es este y si soporta lo necesario.
-    (function() {
-      function datoUnaVez() {
-        var d = document.getElementById('diag_temporal');
-        if (!d) return;
-        var partes = [];
-        partes.push('UA: ' + navigator.userAgent);
-        partes.push('ResizeObserver: ' + (window.ResizeObserver ? 'SI' : 'NO'));
-        partes.push('CSS.supports transform: ' + (window.CSS && CSS.supports && CSS.supports('transform', 'rotate(-90deg)') ? 'SI' : 'NO'));
-        partes.push('CSS.supports accent-color: ' + (window.CSS && CSS.supports && CSS.supports('accent-color', 'red') ? 'SI' : 'NO'));
-        d.textContent = partes.join(' | ');
-      }
-      datoUnaVez();
-      // Segunda pasada tras cargar todo, agregando info de los elementos
-      // reales de la barra (si existen, su tamaño, si están escondidos).
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          var d = document.getElementById('diag_temporal');
-          if (!d) return;
-          var wrap = document.querySelector('.scroll-vslider-wrap[data-scroll-target=".config-pane"]');
-          var cp = document.querySelector('.config-pane');
-          var extra = [];
-          if (!wrap) {
-            extra.push('BARRA: el elemento .scroll-vslider-wrap NO EXISTE en el DOM');
-          } else {
-            var input = wrap.querySelector('.scroll-vslider');
-            var wr = wrap.getBoundingClientRect();
-            extra.push('BARRA wrap: existe, oculta=' + wrap.classList.contains('hidden-track') + ', rect=' + Math.round(wr.width) + 'x' + Math.round(wr.height) + ' en (' + Math.round(wr.x) + ',' + Math.round(wr.y) + ')');
-            if (input) {
-              var cs = getComputedStyle(input);
-              extra.push('BARRA input: display=' + cs.display + ' visibility=' + cs.visibility + ' transform=' + cs.transform + ' width=' + input.style.width + ' height=' + input.style.height);
-            } else {
-              extra.push('BARRA input: el <input> interno NO EXISTE');
-            }
-          }
-          if (cp) {
-            extra.push('config-pane: scrollHeight=' + cp.scrollHeight + ' clientHeight=' + cp.clientHeight);
-          }
-          d.textContent += ' || ' + extra.join(' | ');
-        }, 800);
-      });
-    })();
-  </script>
 
   <main>
     <div class="scroll-dock">
@@ -122,6 +74,11 @@
           <button class="tab" data-page="diseno" data-help="Asigna materiales por grupo y sobrescribe cualquier pieza individual antes de construir.">4 Materiales</button>
           <button class="tab" data-page="catalogo" data-help="Inserta Tipos de Módulo estándar compartidos por todos los usuarios con licencia, o guarda el módulo actual para el resto del equipo.">5 Catálogo</button>
         </nav>
+        <div class="scroll-arrows" data-scroll-target=".config-pane">
+          <button type="button" class="scroll-arrow-up" title="Subir">▲ Subir</button>
+          <div class="scroll-progress"><div class="scroll-progress-fill"></div></div>
+          <button type="button" class="scroll-arrow-down" title="Bajar">▼ Bajar</button>
+        </div>
       </div>
 
       <div id="inicial" class="page active">
@@ -453,7 +410,6 @@
       </div>
 
     </section>
-    <div class="scroll-vslider-wrap" data-scroll-target=".config-pane"><input type="range" class="scroll-vslider" min="0" max="1000" value="0" title="Desplazar"></div>
     </div>
 
     <div class="scroll-dock">
@@ -461,6 +417,11 @@
       <div class="m3dv-head">
         <div class="m3dv-head-row"><h2>MODULAR-3D VIEW</h2><div class="m3dv-head-actions"><label class="m3dv-doors-toggle cascada-zocalo-check" title="Desmarca para construir este módulo sin zócalo"><input type="checkbox" id="zocalo_activo" checked> Zócalo</label><label class="m3dv-doors-toggle cascada-premeson-check" title="Desmarca para construir este módulo sin premesón (solo módulos Bajo)"><input type="checkbox" id="premeson_activo" checked> Premesón</label><label class="m3dv-doors-toggle" title="Vuelve las puertas invisibles en tiempo real para ver qué hay construido dentro del módulo"><input type="checkbox" id="view_doors_open"> Abierto</label><button type="button" id="view_fullscreen" class="m3dv-fullscreen-btn" title="Ampliar el visualizador 3D a pantalla completa">⛶ Ampliar</button></div></div>
         <button type="button" id="btn_construir_rapido" class="m3dv-create-quick" title="Construye el módulo con la configuración actual, sin bajar hasta el botón de abajo">✓ Crear módulo</button>
+        <div class="scroll-arrows" data-scroll-target="aside.m3dv-panel">
+          <button type="button" class="scroll-arrow-up" title="Subir">▲ Subir</button>
+          <div class="scroll-progress"><div class="scroll-progress-fill"></div></div>
+          <button type="button" class="scroll-arrow-down" title="Bajar">▼ Bajar</button>
+        </div>
       </div>
       <div class="m3dv-stage" id="view_stage">
         <button type="button" class="update-badge" id="btn_actualizar_modulo">Actualizar módulo</button>
@@ -501,17 +462,16 @@
       <div class="m3dv-actions"><button type="button" class="secondary" id="btn_revisar">Validar módulo</button><button id="btn_construir">Construir módulo</button></div>
       <span id="m_ancho" hidden></span><span id="m_alto" hidden></span><span id="m_prof" hidden></span><span id="m_piezas" hidden></span><div id="piece_info" hidden></div>
     </aside>
-    <div class="scroll-vslider-wrap" data-scroll-target="aside.m3dv-panel"><input type="range" class="scroll-vslider" min="0" max="1000" value="0" title="Desplazar"></div>
     </div>
   </main>
 
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/OrbitControls.js"></script>
-  <script src="modular3d_view.js?v=6.4.25"></script>
-  <script src="reglas_visibilidad.js?v=6.4.25"></script>
-  <script src="interfaz.js?v=6.4.25"></script>
-<script src="hierarchical_config.js?v=6.4.25"></script>
-<script src="material_config.js?v=6.4.25"></script>
-<script src="catalogo.js?v=6.4.25"></script>
+  <script src="modular3d_view.js?v=6.4.26"></script>
+  <script src="reglas_visibilidad.js?v=6.4.26"></script>
+  <script src="interfaz.js?v=6.4.26"></script>
+<script src="hierarchical_config.js?v=6.4.26"></script>
+<script src="material_config.js?v=6.4.26"></script>
+<script src="catalogo.js?v=6.4.26"></script>
 </body>
 </html>

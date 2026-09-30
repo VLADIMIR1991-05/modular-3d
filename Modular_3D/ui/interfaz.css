@@ -98,50 +98,42 @@
        que la barra se quede fija en su sitio mientras el panel scrollea
        por dentro, tiene que vivir fuera de esa caja de scroll. */
     .scroll-dock { position:relative; height:100%; min-height:0; }
-    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:20px; padding-bottom:12px; }
-    /* La scrollbar nativa del navegador se oculta a propósito (ver nota
-       junto a .scroll-vslider más abajo sobre por qué). */
+    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:7px; padding-bottom:12px; }
+    /* La scrollbar nativa del navegador se oculta a propósito: se prefiere
+       depender 100% de los botones de flecha de abajo. */
     .config-pane, aside.m3dv-panel { scrollbar-width: none; }
     .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { display: none; }
-    /* 6.4.20 probó una barra propia dibujada con divs (arrastre manual vía
-       mousedown/mousemove/mouseup): nunca quedó confirmado que arrastrara
-       de verdad en el navegador embebido de SketchUp. 6.4.22 volvió a un
-       <input type="range"> nativo usando writing-mode:vertical-lr +
-       -webkit-appearance:slider-vertical para orientarlo vertical -- pero
-       ESO TAMPOCO SE VEÍA: el espacio quedaba reservado (la barra sí
-       empuja el contenido) pero el control mismo no se pintaba, señal de
-       que ese motor no soporta esas dos propiedades de orientación
-       vertical (son APIs mucho menos universales que un <input
-       type="range"> horizontal liso, que sabemos que SÍ se ve y arrastra
-       ahí -- "Explosión"/"Velocidad de giro" son ese mismo tipo).
-       6.4.23 evita depender de NINGUNA API "vertical" del navegador: es un
-       <input type="range"> horizontal COMÚN Y CORRIENTE (garantizado que
-       se ve, es el mismo que ya funciona) al que sólo se le aplica un
-       transform:rotate(-90deg) -- un simple giro visual con CSS estándar,
-       nada especial de orientación de sliders. El navegador sigue
-       pensando que dibuja un slider horizontal normal (por eso funciona);
-       sólo se ve girado. .scroll-vslider-wrap ocupa el hueco vertical de
-       siempre (mismo sitio, mismo ancho); adentro, el <input> se
-       dimensiona con JS (ancho = alto real del panel, alto = grosor fijo)
-       y se centra con top/left calculados a mano antes de girarlo, para
-       que el giro quede perfectamente centrado en el hueco. */
-    .scroll-vslider-wrap { position:absolute; top:8px; right:2px; bottom:8px; width:14px; z-index:4; overflow:hidden; }
-    .scroll-vslider-wrap.hidden-track { display:none; }
-    .scroll-vslider { position:absolute; margin:0; padding:0; transform-origin:center center; transform:rotate(-90deg); accent-color:#4a5660; background:transparent; }
-    .scroll-vslider:hover, .scroll-vslider:active { accent-color:var(--brand); }
-    /* accent-color (arriba) es una propiedad relativamente reciente -- si
-       el navegador embebido tampoco la soporta (como parece no soportar
-       writing-mode:vertical-lr), el thumb/track quedarían en su gris por
-       defecto del sistema operativo, apenas visibles sobre fondo oscuro.
-       Se fuerza también el estilo clásico vía los pseudo-elementos
-       -webkit-slider-thumb/-moz-range-thumb, soportados desde WebKit muy
-       antiguo, para no depender de esa propiedad moderna en absoluto. */
-    .scroll-vslider::-webkit-slider-runnable-track { background:rgba(255,255,255,.12); border-radius:6px; height:100%; }
-    .scroll-vslider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:36px; height:14px; border-radius:6px; background:#5a6772; cursor:pointer; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
-    .scroll-vslider:hover::-webkit-slider-thumb, .scroll-vslider:active::-webkit-slider-thumb { background:var(--brand); }
-    .scroll-vslider::-moz-range-track { background:rgba(255,255,255,.12); border-radius:6px; height:100%; }
-    .scroll-vslider::-moz-range-thumb { width:36px; height:14px; border:0; border-radius:6px; background:#5a6772; cursor:pointer; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
-    .scroll-vslider:hover::-moz-range-thumb, .scroll-vslider:active::-moz-range-thumb { background:var(--brand); }
+    /* 6.4.20 probó una barra propia con divs (arrastre manual); 6.4.22 un
+       <input type="range"> con writing-mode:vertical-lr +
+       -webkit-appearance:slider-vertical; 6.4.23 el mismo range pero
+       horizontal y girado con transform:rotate(-90deg). Las tres
+       reservaban el espacio correctamente (el layout las tenía en cuenta)
+       pero NINGUNA llegó a pintarse ni a moverse en el navegador real del
+       usuario -- confirmado que es SketchUp Pro 2020, con Chrome 64
+       embebido (¡de 2018!). Un diagnóstico en vivo confirmó que sí hay
+       overflow real que scrollear (se probó con contenido cortado a la
+       vista) y aun así ninguna de las tres barras aparecía.
+       En vez de seguir con variantes de slider posicionado/rotado --
+       exactamente el tipo de técnica más propensa a fallar en un motor de
+       7+ años -- se usan botones de flecha (▲/▼) normales, en flujo de
+       documento normal, sin position:absolute ni transform ni medidas por
+       JavaScript: el mismo tipo de elemento que "Transparencia", "Aristas"
+       y el resto de los botones que SÍ funcionan en esa misma pantalla. */
+    .scroll-arrows { display:flex; align-items:center; gap:8px; margin-top:8px; }
+    .scroll-arrows.hidden-track { display:none; }
+    .scroll-arrow-up, .scroll-arrow-down { flex:0 0 auto; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:11px; font-weight:700; cursor:pointer; transition:background .15s, border-color .15s, transform .1s; }
+    .scroll-arrow-up:hover, .scroll-arrow-down:hover { border-color:var(--brand); background:var(--brand); color:#fff; }
+    .scroll-arrow-up:active, .scroll-arrow-down:active { transform:scale(.94); }
+    .scroll-arrow-up:disabled, .scroll-arrow-down:disabled { opacity:.35; cursor:default; }
+    .scroll-arrow-up:disabled:hover, .scroll-arrow-down:disabled:hover { border-color:var(--line); background:var(--surface); color:var(--ink); }
+    /* Barra de progreso: sólo un div normal que crece de ancho con JS según
+       el scroll -- no es un control interactivo (no se arrastra), así que
+       no depende de ninguna API de slider que pueda fallar en un navegador
+       viejo; es puro CSS de toda la vida (position:absolute + background +
+       transition), soportado igual en 2018 que en 2027. Da un aspecto más
+       moderno sin arriesgar la compatibilidad. */
+    .scroll-progress { position:relative; flex:1 1 auto; height:5px; min-width:24px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; }
+    .scroll-progress-fill { position:absolute; top:0; left:0; bottom:0; width:0%; border-radius:3px; background:linear-gradient(90deg, var(--brand-dark), var(--brand)); transition:width .12s ease; }
     /* El visor 3D queda fijo: aside pasa a columna flex donde
        .m3dv-body (árbol de piezas / propiedades) hace scroll interno
        PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
@@ -154,7 +146,7 @@
        respaldo: en una ventana con espacio de sobra no cambia nada (no
        hay overflow, no aparece scrollbar), pero en una ventana chica
        siempre se puede bajar hasta el botón de construir. */
-    aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:20px; }
+    aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
     aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
     .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
     .step-footer { position: relative; bottom:auto; z-index:5; }

@@ -1,8 +1,19 @@
-# Modular_3D 6.4.25 · Versión de diagnóstico (temporal)
+# Modular_3D 6.4.26 · Botones ▲/▼ + barra de progreso (universal, sin sliders)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.25  
+**Versión:** 6.4.26  
 
+## Cambios 6.4.26
+
+El diagnóstico de 6.4.25 identificó la causa exacta: tu SketchUp es **Pro 2020**, con **Chrome 64** embebido (de 2018) -- un motor lo bastante viejo como para que ningún tipo de `<input type="range">` posicionado o girado con CSS (tres intentos distintos: divs, `writing-mode`, `transform:rotate`) llegara a pintarse ni a moverse, aunque el layout SIEMPRE reservaba bien el espacio.
+
+- **Se reemplaza el control por botones ▲ Subir / ▼ Bajar**, elementos HTML básicos (el mismo tipo que "Transparencia", "Aristas" y el resto de los botones que ya funcionan en esa pantalla) -- sin `position:absolute`, sin `transform`, sin medidas por JavaScript. Aguantar presionado el botón repite el desplazamiento cada 220ms.
+- **Barra de progreso** entre los dos botones: un simple `<div>` con degradado naranja que crece según cuánto se scrolleó -- es sólo visual (no se arrastra), así que tampoco depende de ninguna API de slider que pueda fallar.
+- Esto es **universal por construcción**: botones y divs con `background`/`transition` son CSS de toda la vida, soportado igual en Chrome 64 (2018, SketchUp 2020) que en cualquier Chrome moderno (SketchUp 2021 a 2027) -- no hace falta detectar versión ni tener una ruta de código distinta por navegador.
+- Se retira el diagnóstico temporal de 6.4.25 (ya cumplió su función: identificar el navegador real) y el `padding-right` extra que habían dejado los intentos anteriores de slider.
+- Verificado con Playwright: el clic mueve el scroll correctamente (arriba/abajo, con límites), la barra de progreso refleja el avance real, cada panel sigue siendo independiente del otro, y no hay errores de JavaScript.
+
+## Cambios 6.4.25
 ## Cambios 6.4.25
 
 Confirmaste que 6.4.24 sí se instaló bien (el título mostraba v6.4.24) y el problema de la barra sigue exactamente igual -- eso descarta la teoría de caché. Cuatro implementaciones de scroll distintas, cada una probada y verificada de verdad en este lado, y ninguna aparece del lado del usuario: en vez de seguir probando ideas de CSS a ciegas, esta versión agrega un **diagnóstico temporal** para ver, con datos reales de tu navegador, qué es lo que realmente está pasando.
