@@ -1,7 +1,15 @@
-# Modular_3D 6.4.44 · Altura de piso del Alto corregida a Z=1486mm
+# Modular_3D 6.4.45 · Pieza fusionada por continuidad hereda el color real
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.44  
+**Versión:** 6.4.45  
+
+## Cambios 6.4.45
+
+Encontré la causa exacta de lo que reportaste: la pieza que crea "Sincronizar continuidad" al fusionar varios módulos (Zócalo/Cornisa/Premesón) se construye con `@datos_modulo_actual` vacío a propósito -- ese comando mezcla piezas de módulos distintos en una sola pasada, así que no puede recalcular "el color configurado" de ningún módulo en particular. El efecto secundario: la pieza fusionada caía en un color/nombre genérico de respaldo (`Material = "Zocalo"/"Cornisa"/"Premeson"`, un tono anaranjado fijo) en vez de tu Blanco configurado.
+
+**Corregido en `continuidad.rb`:** en vez de recalcular el color desde la configuración (que no está disponible ahí), la pieza fusionada ahora copia tal cual el material/color/canto real que ya tenía la pieza original que reemplaza -- la misma que ya estaba pintada de Blanco (o el color que hayas configurado) antes de fusionarse. Por defecto sale del mismo color; después la podés recolorear a mano como cualquier otra pieza, igual que ya podías hacer con las demás.
+
+**Por favor instala esta versión y volvé a correr "Sincronizar continuidad"** (o deshacé y repetí la sincronización si ya la corriste) -- la pieza fusionada debería salir en Blanco ahora, no con un color/nombre distinto por tipo de pieza.
 
 ## Cambios 6.4.44
 

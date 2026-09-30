@@ -139,10 +139,40 @@ module LPenafiel_GeneradorMueblesExacto
                              else
                                [0, 2]
                              end
-        self.crear_pieza(contenedor.entities, 'CONTINUIDAD', nombre_pieza, ancho, prof, alto, primero['x_min'], primero['y_min'], primero['z_min'], cantos_l, cantos_c)
+        instancia_fusionada = self.crear_pieza(contenedor.entities, 'CONTINUIDAD', nombre_pieza, ancho, prof, alto, primero['x_min'], primero['y_min'], primero['z_min'], cantos_l, cantos_c)
+        self.continuidad_copiar_material(instancia_fusionada, primero['pieza'])
       end
     end
     tramos
+  end
+
+  # crear_pieza (vía aplicar_material_configurado) no puede leer el color
+  # REAL configurado acá -- @datos_modulo_actual está vacío a propósito
+  # durante todo "Sincronizar continuidad" (mezcla piezas de módulos
+  # distintos en una sola pasada, ver sincronizar_continuidad), así que sin
+  # esto la pieza fusionada salía con un color/nombre genérico de respaldo
+  # en vez del color que el usuario ya había configurado (reportado: salía
+  # con Material="Zocalo"/"Cornisa"/"Premeson" en vez de "Blanco"). En vez
+  # de recalcular la configuración, se copia tal cual el material/color/
+  # canto que YA tenía la pieza original que este tramo reemplaza -- por
+  # defecto queda del mismo color, y el usuario lo puede recolorear después
+  # a mano como cualquier otra pieza.
+  def self.continuidad_copiar_material(instancia_nueva, pieza_original)
+    return unless instancia_nueva && pieza_original
+    material = pieza_original.respond_to?(:material) ? pieza_original.material : nil
+    instancia_nueva.material = material if instancia_nueva.respond_to?(:material=)
+    if instancia_nueva.respond_to?(:definition) && instancia_nueva.definition
+      instancia_nueva.definition.entities.grep(Sketchup::Face).each do |cara|
+        cara.material = material
+        cara.back_material = material
+      end
+    end
+    return unless pieza_original.respond_to?(:definition) && pieza_original.definition
+    return unless instancia_nueva.respond_to?(:definition) && instancia_nueva.definition
+    %w[grupo_material material_configurado color_configurado tipo_canto color_canto color_canto_nombre].each do |clave|
+      valor = pieza_original.definition.get_attribute('LPenafiel', clave)
+      instancia_nueva.definition.set_attribute('LPenafiel', clave, valor) unless valor.nil?
+    end
   end
 
   def self.sincronizar_continuidad
