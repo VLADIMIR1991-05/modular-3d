@@ -365,9 +365,15 @@
       { selector: '.cascada-zocalo-check', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['BAJO', 'AUXILIAR', 'CLOSET'] } },
       { selector: '.cascada-premeson-check', cuando: { field: 'tipo_modulo', test: 'equals', value: 'BAJO' } },
       { selector: '.cascada-cornisa', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-cornisa-check', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] } },
       { selector: '.cascada-cornisa-detalle', cuando: { all: [ { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] }, { field: 'cornisa_activa', test: 'equals', value: 'SI' } ] } },
-      { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } },
-      { selector: '.cascada-remates-check', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } }
+      // Remate izq/der: se agrega en TODOS los tipos con casco automático
+      // (mismo alcance que la tarjeta "Zócalo, cornisa y remates" completa,
+      // que ya se oculta para PERSONALIZADO) -- antes solo aplicaba a
+      // Auxiliar/Closet, pero el usuario confirmó que Alto y Bajo también
+      // lo necesitan.
+      { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'notEquals', value: 'PERSONALIZADO' } },
+      { selector: '.cascada-remates-check', cuando: { field: 'tipo_modulo', test: 'notEquals', value: 'PERSONALIZADO' } }
     ]);
     function toggleCascadaCasco() { if (window.Modular3DReglas) window.Modular3DReglas.aplicar(); }
     function setCajonesNichos(valores, tipos) {
@@ -635,13 +641,14 @@
         host.className = 'hint-text';
       }
     }
-    // Mantiene los checks rápidos "Izq"/"Der" del visor 3D reflejando el
-    // valor real de remate_inicial/remate_final (Zócalo, cornisa y remates,
-    // pestaña Casco) -- necesario porque a diferencia de zocalo_activo/
-    // premeson_activo (que SON el dato), remate_izq_activo/remate_der_activo
-    // son solo un atajo visual de un select que ya existe y puede cambiar
-    // por otras vías (cargar un módulo guardado, aplicar un preset).
+    // Mantiene los checks rápidos "Cornisa"/"Izq"/"Der" del visor 3D
+    // reflejando el valor real de cornisa_activa/remate_inicial/remate_final
+    // (Zócalo, cornisa y remates, pestaña Casco) -- necesario porque a
+    // diferencia de zocalo_activo/premeson_activo (que SON el dato), estos
+    // tres son solo un atajo visual de un select que ya existe y puede
+    // cambiar por otras vías (cargar un módulo guardado, aplicar un preset).
     function sincronizarChecksRemate() {
+      if (el('cornisa_activa') && el('cornisa_quick_activo')) el('cornisa_quick_activo').checked = el('cornisa_activa').value === 'SI';
       if (el('remate_inicial') && el('remate_izq_activo')) el('remate_izq_activo').checked = el('remate_inicial').value === 'SI';
       if (el('remate_final') && el('remate_der_activo')) el('remate_der_activo').checked = el('remate_final').value === 'SI';
     }
@@ -950,7 +957,7 @@
       markManualThickness(event.target.id || '');
       if (event.target.id === 'tipo_modulo') aplicarPreset();
       if (event.target.id === 'num_repisas' || event.target.id === 'num_divisiones') { actualizarNichos(); normalizeSpaceState(); }
-      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo' || event.target.id === 'tipo_superior' || event.target.id === 'tipo_modulo' || event.target.id === 'cornisa_activa') sincronizarReglasRespaldo();
+      if (event.target.id === 'grosor_resp' || event.target.id === 'lleva_respaldo' || event.target.id === 'cantidad_ajustes' || event.target.id === 'alto_ajuste' || event.target.id === 'grosor_ajuste' || event.target.id === 'separacion_ajuste_respaldo' || event.target.id === 'distancia_plano_posterior' || event.target.id === 'ajuste_frontal_activo' || event.target.id === 'tipo_superior' || event.target.id === 'tipo_modulo' || event.target.id === 'cornisa_activa' || event.target.id === 'cornisa_quick_activo') sincronizarReglasRespaldo();
       // Laterales (izq/der) y horizontales (superior/inferior) nunca pueden
       // llegar los dos "de punta a punta" a la misma esquina: cada uno es
       // una sola pieza de punta a punta, asi que si uno abraza la esquina por
@@ -966,11 +973,13 @@
       if ((event.target.id === 'montaje_superior' || event.target.id === 'montaje_inferior') && event.target.value === 'EXTERIOR') {
         ['montaje_izq', 'montaje_der'].forEach(function (id) { if (el(id) && el(id).value !== 'INTERIOR') el(id).value = 'INTERIOR'; });
       }
-      // Checks rápidos "Izq"/"Der" del visor 3D: atajo del select real
-      // (remate_inicial/remate_final, en Zócalo, cornisa y remates) -- se
-      // sincronizan en ambos sentidos: tocar el check mueve el select, y
-      // tocar el select (o un preset) actualiza el check via
-      // sincronizarChecksRemate(), llamada desde actualizarVista().
+      // Checks rápidos "Cornisa"/"Izq"/"Der" del visor 3D: atajo de los
+      // selects reales (cornisa_activa, remate_inicial/remate_final, en
+      // Zócalo, cornisa y remates) -- se sincronizan en ambos sentidos:
+      // tocar el check mueve el select, y tocar el select (o un preset)
+      // actualiza el check via sincronizarChecksRemate(), llamada desde
+      // actualizarVista().
+      if (event.target.id === 'cornisa_quick_activo' && el('cornisa_activa')) el('cornisa_activa').value = event.target.checked ? 'SI' : 'NO';
       if (event.target.id === 'remate_izq_activo' && el('remate_inicial')) el('remate_inicial').value = event.target.checked ? 'SI' : 'NO';
       if (event.target.id === 'remate_der_activo' && el('remate_final')) el('remate_final').value = event.target.checked ? 'SI' : 'NO';
       actualizarVista();

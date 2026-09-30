@@ -253,13 +253,13 @@
     .param-result.ok{background:rgba(52,211,153,.14);color:#6ee7b7}.param-result.bad{background:rgba(248,113,113,.14);color:#fca5a5}
     .m3dv-panel{padding:0;overflow:hidden;background:#151a1f;border-color:#333d45;color:#eef2f5}
     .m3dv-head{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-bottom:1px solid #35404a;background:#20272d}
-    .m3dv-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .m3dv-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;row-gap:6px}
     .m3dv-create-quick{width:100%;padding:9px;border:0;border-radius:6px;background:var(--brand);color:#fff;font-weight:800;font-size:12px;cursor:pointer}
     .m3dv-create-quick:hover{background:var(--brand-dark)}
     .m3dv-head h2{margin:0;color:#fff;font-size:14px}
-    .m3dv-head-actions{display:flex;align-items:center;gap:10px}
+    .m3dv-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:6px}
     .m3dv-doors-toggle{display:inline-flex;align-items:center;gap:4px;color:#cbd5db;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap}.m3dv-doors-toggle input{width:auto;accent-color:var(--brand)}
-    .m3dv-fullscreen-btn{padding:4px 9px;border:0;border-radius:999px;background:rgba(240,100,36,.18);color:#ff8a50;font-size:9px;font-weight:800;cursor:pointer}.m3dv-fullscreen-btn:hover{background:rgba(240,100,36,.34)}
+    .m3dv-fullscreen-btn{flex:0 0 auto;width:auto;padding:4px 8px;border:0;border-radius:999px;background:rgba(240,100,36,.18);color:#ff8a50;font-size:11px;font-weight:800;cursor:pointer;line-height:1}.m3dv-fullscreen-btn:hover{background:rgba(240,100,36,.34)}
     .m3dv-panel.is-fullscreen{position:fixed;inset:0;z-index:60;border-radius:0;display:flex;flex-direction:column}
     .m3dv-panel.is-fullscreen>*{display:none}.m3dv-panel.is-fullscreen>.m3dv-head{display:flex}.m3dv-panel.is-fullscreen>.m3dv-stage{display:block;flex:1 1 auto;height:auto}
     .m3dv-stage{position:relative;height:380px;flex:0 0 auto;background:#11161b;overflow:hidden}.m3dv-stage canvas{display:block;width:100%;height:100%;cursor:grab}.m3dv-stage canvas:active{cursor:grabbing}

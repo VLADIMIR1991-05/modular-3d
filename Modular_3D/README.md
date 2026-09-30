@@ -1,7 +1,21 @@
-# Modular_3D 6.4.32 · Atajos rápidos de Remate (Izq/Der) junto a Zócalo/Premesón
+# Modular_3D 6.4.33 · Check rápido de Cornisa + reglas de Remate corregidas por tipo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.32  
+**Versión:** 6.4.33  
+
+## Cambios 6.4.33
+
+Ajuste de qué checks rápidos aparecen según el tipo de módulo, según especificaste:
+
+- **Alto:** Remate Izq/Der + Cornisa (sin Zócalo, sin Premesón).
+- **Bajo:** Remate Izq/Der + Zócalo + Premesón (sin Cornisa).
+- **Closet:** Remate Izq/Der + Zócalo + Cornisa (sin Premesón).
+- **Auxiliar:** Remate Izq/Der + Zócalo + Cornisa (sin Premesón).
+- **Personalizado:** ninguno (igual que antes, esta tarjeta completa no aplica a Personalizado).
+
+Se agrega el check rápido que faltaba, **"Cornisa"**, sincronizado en ambos sentidos con el select real (pestaña Casco). Antes "Remate Izq/Der" solo aparecía en Auxiliar/Closet; ahora aparece en los cuatro tipos, tal como pediste.
+
+También se quitó el texto "Ampliar" del botón de pantalla completa (queda solo el ícono ⛶, con el tooltip explicando qué hace) para que quepan todos los checks en una sola fila sin que se corten ni se amontonen. Probado en ventanas angostas y anchas: todo cabe en una línea.
 
 ## Cambios 6.4.32
 
