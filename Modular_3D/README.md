@@ -1,7 +1,25 @@
-# Modular_3D 6.4.40 · Módulo completo posicionado en Y=0 (frente) + Alto a Z=1500/Y=600
+# Modular_3D 6.4.41 · Layout de cocina + despiece sin duplicados + color del premesón
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.40  
+**Versión:** 6.4.41  
+
+## Cambios 6.4.41
+
+Tres correcciones, tal como las describiste:
+
+**1) Despiece: ya no aparecen las piezas individuales de Zócalo/Cornisa/Premesón cuando "Sincronizar continuidad" las fusionó.** La causa real: "Sincronizar continuidad" oculta (`visible=false`) la pieza individual que un tramo fusionado ya cubre, pero el despiece recorría la escena sin fijarse en esa visibilidad -- contaba la individual oculta Y la fusionada. Ahora `recolectar_piezas_despiece` (en `despiece.rb`, usado también por Presupuesto y Biblioteca) salta cualquier pieza oculta, así que solo queda la fusionada cuando corresponde, y las individuales normales (sin continuidad sincronizada) se siguen viendo igual que siempre.
+
+**2) El Premesón ya hereda el color configurado del módulo.** Antes quedaba siempre en material crudo a propósito (pensado para cuando encima va una cubierta/mesón real aparte). Quitamos esa excepción en `geometria.rb`: ahora, si configuras un solo color para todo el módulo, el Premesón sale con ese mismo color -- igual que ya pasaba con Zócalo, Cornisa y Remates.
+
+**3) Nuevo layout automático tipo cocina, para Bajo/Auxiliar/Closet/Alto.** Antes cada módulo nuevo se colocaba 100mm a la derecha y 20mm retranqueado del último módulo construido (cualquiera fuera su tipo), sin distinguir Bajos de Altos. Ahora:
+- **Bajo, Auxiliar y Closet** forman una sola fila de piso: el primero nace en X=0, y cada uno nuevo se pega EXACTO al que quedó más a la derecha de esa fila (sin ningún espacio entre ellos).
+- **Alto** forma su PROPIA fila, independiente de los Bajos: el primer Alto nace en X=0 (no continúa donde terminaron los Bajos de abajo), y cada Alto nuevo se pega al Alto anterior de esa fila.
+- Los cuatro tipos van siempre con el FONDO de su casco a Y=600mm desde la pared (ya lo hacía Alto desde v6.4.40; ahora también Bajo/Auxiliar/Closet), y los Altos además a Z=1500mm de altura de piso. **Esto reemplaza** el alineado anterior que perseguía dejar la puerta/remate exactos en Y=0 según su grosor -- confirmaste que la regla de pared fija (Y=600) debía ganar. Ese alineado por grosor de puerta sigue existiendo solo para módulos Personalizado, que no forman parte de este sistema de filas.
+- Nada de esto se guarda en memoria: cada módulo nuevo escanea la geometría REAL ya construida en la escena (mismo criterio que ya usa "Actualizar módulo" para saber dónde está un módulo existente), así que el orden en que construís las cosas, un deshacer/rehacer, o cerrar y volver a abrir el archivo nunca desalinean dónde cae el siguiente módulo.
+
+Los tres cambios están solo en Ruby (`despiece.rb`, `geometria.rb`, `jerarquia.rb`) -- geometría 3D real en SketchUp. La vista previa en vivo del navegador sigue mostrando un solo módulo centrado (no tiene concepto de "varios módulos en la misma escena"), así que no aplica ahí.
+
+**Por favor instala esta versión y probá construyendo, en orden: un Bajo, un segundo Bajo, un Alto, y un Auxiliar -- y volvé a generar el despiece de todo seleccionado.** Si el resultado en X/Y/Z de cada uno no es el que esperabas, decime las coordenadas exactas donde SÍ debería haber quedado cada uno para ajustar la regla.
 
 ## Cambios 6.4.40
 

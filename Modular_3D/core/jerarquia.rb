@@ -328,7 +328,7 @@ module LPenafiel_GeneradorMueblesExacto
       @modulo_despiece_actual = nombre_modulo_despiece(modulo_nombre, ancho_total, alto_total, prof_total, num_cajones, tiene_puertas_jerarquia ? 'SI' : 'NO')
       
       actualizar_existente = datos['__edit_mode'].to_s == "SI" && @seleccion_edicion && @offset_edicion
-      @offset_creacion = actualizar_existente ? @offset_edicion : offset_siguiente_modulo
+      @offset_creacion = actualizar_existente ? @offset_edicion : offset_siguiente_modulo((datos['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase)
       @datos_modulo_actual = datos.reject { |clave, _valor| clave.to_s.start_with?("__") || clave.to_s == 'view_snapshot' }
       @modulo_uuid_actual = datos['__manifest_uuid'].to_s unless datos['__manifest_uuid'].to_s.empty?
       @modulo_uuid_actual = @datos_modulo_actual['module_uuid'].to_s if @modulo_uuid_actual.to_s.empty? && !@datos_modulo_actual['module_uuid'].to_s.empty?
@@ -411,42 +411,38 @@ module LPenafiel_GeneradorMueblesExacto
       # siempre llevaba zocalo/premeson en estos tipos de modulo).
       lleva_zocalo = %w[BAJO AUXILIAR CLOSET].include?(tipo_modulo) && datos['zocalo_activo'].to_s != 'NO'
       alto_carcasa_offset = lleva_zocalo ? zocalo_alto : 0.mm
-      # El módulo entero se recorre hacia atrás en Y para que el plano
-      # frontal (puerta solapada + remate, que ya quedan en el mismo Y
-      # entre sí -- ver protrusion_puerta_real más abajo) caiga exacto en
-      # Y=0 de la escena, en vez de sobresalir hacia Y negativo. Por
-      # defecto ese corrimiento es el grosor del propio casco; si hay al
-      # menos una puerta externa solapada (no interna, no embutida), gana
-      # el grosor de la puerta cuando es mayor que el del casco -- pedido
-      # explícito del usuario ("gana el valor puerta").
-      hay_puerta_externa_solapada = false
-      if hierarchy_geometry && (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase != 'EMBUTIDA'
-        hierarchy_geometry['nodes'].each do |nodo_chequeo|
-          next unless nodo_chequeo.is_a?(Hash)
-          frente_chequeo = nodo_chequeo['front'].to_s.upcase
-          frente_chequeo = 'PUERTA_UNICA' if nodo_chequeo['content'].to_s.upcase == 'CAJONES_PUERTA' && frente_chequeo == 'NINGUNO'
-          next if frente_chequeo.empty? || frente_chequeo == 'NINGUNO' || frente_chequeo.include?('INTERNA')
-          hay_puerta_externa_solapada = true
-          break
+      # Los módulos del sistema de cocina (Bajo/Auxiliar/Closet/Alto) van
+      # siempre con su fondo (cara trasera) a una profundidad fija de
+      # Y=600mm desde la pared, sea cual sea su propia profundidad o si
+      # llevan puerta -- así todos los módulos del mismo tipo quedan
+      # alineados contra la misma pared y los Altos quedan a ras con los
+      # Bajos de abajo. Los Altos además van a una altura de piso fija
+      # (Z=1500mm). Pedido explícito del usuario: esta regla REEMPLAZA (no
+      # convive con) el alineado anterior que perseguía dejar la
+      # puerta/remate exactos en Y=0 según su grosor -- ese alineado por
+      # grosor sigue vigente solo para módulos fuera de este sistema
+      # (Personalizado), que no tienen posición de pared fija.
+      tipos_layout_cocina = CAPA_PISO_COCINA + ['ALTO']
+      if tipos_layout_cocina.include?(tipo_modulo)
+        fondo_fijo_modulo = 600.mm
+        offset_y_modulo = fondo_fijo_modulo - prof_total
+        altura_piso_modulo = tipo_modulo == 'ALTO' ? 1500.mm : 0.mm
+      else
+        hay_puerta_externa_solapada = false
+        if hierarchy_geometry && (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase != 'EMBUTIDA'
+          hierarchy_geometry['nodes'].each do |nodo_chequeo|
+            next unless nodo_chequeo.is_a?(Hash)
+            frente_chequeo = nodo_chequeo['front'].to_s.upcase
+            frente_chequeo = 'PUERTA_UNICA' if nodo_chequeo['content'].to_s.upcase == 'CAJONES_PUERTA' && frente_chequeo == 'NINGUNO'
+            next if frente_chequeo.empty? || frente_chequeo == 'NINGUNO' || frente_chequeo.include?('INTERNA')
+            hay_puerta_externa_solapada = true
+            break
+          end
         end
+        grosor_puerta_offset = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
+        offset_y_modulo = hay_puerta_externa_solapada ? [espesor, grosor_puerta_offset].max : espesor
+        altura_piso_modulo = 0.mm
       end
-      grosor_puerta_offset = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
-      offset_y_modulo = hay_puerta_externa_solapada ? [espesor, grosor_puerta_offset].max : espesor
-      # Los módulos Alto (colgantes) van siempre a una altura de piso fija
-      # y con su fondo (cara trasera) a una profundidad fija desde Y=0 --
-      # así el lomo de todos los Altos queda a ras con el de los Bajos de
-      # abajo aunque el Alto sea más angosto de fondo. Reemplaza el
-      # offset_y_modulo de arriba (que referencia el FRENTE) por uno
-      # referenciado al FONDO -- pedido explícito y separado del alineado
-      # puerta/remate, que no se ve afectado porque ese alineado ya queda
-      # resuelto en LOCAL (protrusion_puerta_real) antes de aplicar
-      # cualquier offset de escena.
-      if tipo_modulo == 'ALTO'
-        altura_piso_alto = 1500.mm
-        fondo_fijo_alto = 600.mm
-        offset_y_modulo = fondo_fijo_alto - prof_total
-      end
-      altura_piso_modulo = tipo_modulo == 'ALTO' ? altura_piso_alto : 0.mm
       offset_creacion_base = (@offset_creacion || Geom::Vector3d.new(0, 0, 0)) + Geom::Vector3d.new(0, offset_y_modulo, altura_piso_modulo)
       @offset_creacion = offset_creacion_base + Geom::Vector3d.new(0, 0, alto_carcasa_offset)
 

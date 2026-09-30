@@ -127,6 +127,12 @@ module LPenafiel_GeneradorMueblesExacto
   end
 
   def self.recolectar_piezas_despiece(entity, piezas)
+    # "Sincronizar continuidad" oculta (visible=false) la pieza individual de
+    # zócalo/premesón/cornisa que un tramo fusionado ya cubre, en vez de
+    # borrarla (ver continuidad.rb). Si el despiece la contara igual,
+    # aparecería dos veces: la individual oculta + la fusionada. Respetar la
+    # visibilidad real de la pieza es lo que evita ese duplicado.
+    return if entity.respond_to?(:visible?) && !entity.visible?
     datos = datos_pieza_para_despiece(entity)
     if datos
       piezas << datos

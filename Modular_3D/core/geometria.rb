@@ -182,7 +182,46 @@ module LPenafiel_GeneradorMueblesExacto
     instancia
   end
 
-  def self.offset_siguiente_modulo
+  # Capas de layout de cocina (v6.4.41, pedido explícito del usuario):
+  # Bajo/Auxiliar/Closet forman una sola fila de piso, pegados unos a otros
+  # en X sin ningún espacio, empezando en X=0; Alto forma su PROPIA fila
+  # independiente, también empezando en X=0 (no continúa donde quedaron los
+  # Bajos), apilada encima vía Z=1500/Y=600 fijos (ver jerarquia.rb). No se
+  # guarda ningún estado en memoria entre construcciones -- cada módulo
+  # nuevo escanea la geometría REAL ya construida en la escena (mismo
+  # criterio que @offset_edicion), así que el orden de creación, un
+  # deshacer/rehacer, o cerrar y volver a abrir el archivo nunca desalinean
+  # dónde cae el siguiente módulo.
+  CAPA_PISO_COCINA = %w[BAJO AUXILIAR CLOSET].freeze
+
+  def self.modulos_construidos_de_tipo(tipos)
+    model = Sketchup.active_model
+    return [] unless model
+    model.active_entities.grep(Sketchup::Group).each_with_object([]) do |grupo, memo|
+      next unless grupo.respond_to?(:valid?) && grupo.valid?
+      manifiesto = manifiesto_de_entidad(grupo)
+      next unless manifiesto && manifiesto['data'].is_a?(Hash)
+      tipo = (manifiesto['data']['tipo_modulo'] || 'PERSONALIZADO').to_s.upcase
+      memo << grupo if tipos.include?(tipo)
+    end
+  end
+
+  def self.offset_siguiente_modulo_cocina(tipo_modulo)
+    tipos_capa = tipo_modulo == 'ALTO' ? ['ALTO'] : CAPA_PISO_COCINA
+    existentes = modulos_construidos_de_tipo(tipos_capa)
+    return Geom::Vector3d.new(0, 0, 0) if existentes.empty?
+    # bounds.max.x incluye cualquier remate final ya construido en el
+    # módulo anterior: si ese remate existe, es porque ahí termina el
+    # tramo, así que pegar el siguiente módulo justo después de esa
+    # medida real (y no de ancho_total a secas) evita que lo atraviese.
+    x_max = existentes.map { |grupo| grupo.bounds.max.x }.max
+    Geom::Vector3d.new(x_max, 0, 0)
+  end
+
+  def self.offset_siguiente_modulo(tipo_modulo = nil)
+    tipo_modulo = tipo_modulo.to_s.upcase
+    return offset_siguiente_modulo_cocina(tipo_modulo) if tipo_modulo == 'ALTO' || CAPA_PISO_COCINA.include?(tipo_modulo)
+
     caja_ultimo = bounds_de_piezas(@ultimo_modulo_piezas)
     return Geom::Vector3d.new(0, 0, 0) if caja_ultimo.empty?
     separacion = 100.mm
@@ -601,10 +640,10 @@ module LPenafiel_GeneradorMueblesExacto
     punto = punto + @offset_creacion if @offset_creacion
     transformacion = Geom::Transformation.new(punto)
     instancia.transformation = transformacion
-    # El premesón siempre queda en material crudo (encima va la cubierta/
-    # mesón real) -- no tiene rol de color, a diferencia de zócalo/cornisa/
-    # remates, que sí se pintan como cualquier otra pieza.
-    self.aplicar_material_configurado(instancia, nombre) unless nombre.to_s == 'PREMESON'
+    # El premesón es parte del módulo como cualquier zócalo/cornisa/remate:
+    # hereda el mismo color configurado (único o de su grupo), no queda en
+    # material crudo.
+    self.aplicar_material_configurado(instancia, nombre)
     @piezas_modulo_actual << instancia if @piezas_modulo_actual
     return instancia
   end
