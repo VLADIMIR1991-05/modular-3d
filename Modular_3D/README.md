@@ -1,8 +1,22 @@
-# Modular_3D 6.4.23 · Barra de scroll: slider horizontal girado con CSS, no vertical nativo
+# Modular_3D 6.4.24 · Sospecha real: caché de interfaz.css/js entre versiones
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.23  
+**Versión:** 6.4.24  
 
+## Cambios 6.4.24
+
+Después de 4 implementaciones distintas de la barra de scroll (6.4.14, 6.4.20, 6.4.22, 6.4.23) -- cada una verificada funcionando en pruebas automatizadas reales, ninguna visible ni funcional para el usuario, ni siquiera el ESPACIO reservado cambiando de comportamiento entre versiones -- este patrón deja de parecer un problema de CSS y empieza a parecer un problema de que el navegador embebido nunca está cargando el `interfaz.css`/`interfaz.js` nuevo.
+
+**El razonamiento:** `interfaz.html` se carga con `dialogo.set_file(...)`, y el pie de página (que vive en ese mismo archivo) SÍ muestra el número de versión correcto cada vez -- eso confirma que `interfaz.html` se recarga fresco en cada apertura. Pero `interfaz.css`/`interfaz.js` se referencian como archivos SEPARADOS con `?v=X.X.X` para "romper" el caché entre versiones. Si el motor de ese navegador embebido cachea archivos locales (`file://`) sin respetar bien el query string -- un comportamiento real y documentado en algunos motores basados en Chromium Embebido (CEF) más antiguos o restringidos -- entonces `interfaz.html` se actualiza solo, pero el CSS/JS que hace todo lo demás (incluida cada versión de la barra de scroll) se sigue sirviendo desde una copia vieja, por más que el número en la URL cambie de versión en versión.
+
+**Corrección:** en vez de abrir `interfaz.html` directamente, ahora se genera una copia temporal (`.interfaz_runtime.html`, en la misma carpeta `ui/` para que las rutas relativas sigan funcionando igual) donde el `?v=X.X.X` se reemplaza por un valor ÚNICO cada vez que se abre el diálogo (no solo distinto por versión) -- así ninguna entrada de caché anterior puede coincidir jamás, sin importar qué tan mal ese motor decida invalidar caché por query string.
+
+**Si después de instalar esto SIGUE sin verse la barra**, eso apuntaría a una causa distinta que ya no puedo diagnosticar solo con código: probablemente que la instalación del `.rbz` no está reemplazando `interfaz.css`/`interfaz.js` en el disco (por ejemplo, si SketchUp seguía abierto con el diálogo abierto durante la instalación y Windows bloqueó esos archivos). En ese caso, por favor:
+1. Cerrá SketchUp por completo (no solo el diálogo del plugin).
+2. Buscá la carpeta `Modular_3D` dentro de la carpeta de Plugins de SketchUp y borrala a mano.
+3. Volvé a abrir SketchUp e instalá este `.rbz` de nuevo.
+
+## Cambios 6.4.23
 ## Cambios 6.4.23
 
 Confirmaste el diagnóstico más preciso hasta ahora: "ya se logra ver que hay un espacio para la barra de desplazamiento pero no se lo ve ni funcionar". Eso es oro -- dice exactamente dónde estaba el problema.

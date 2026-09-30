@@ -1,10 +1,46 @@
 # frozen_string_literal: true
 
 module LPenafiel_GeneradorMueblesExacto
+  # Varias versiones seguidas (6.4.20 a 6.4.23) implementaron formas distintas
+  # de barra de scroll, cada una verificada funcionando en pruebas
+  # automatizadas reales, y ninguna llegó a aparecer ni funcionar del lado
+  # del usuario -- ni siquiera el espacio vacío que sí quedaba reservado
+  # cambiaba de comportamiento entre versiones. Eso, más que cualquier CSS
+  # puntual, es la firma clásica de un navegador embebido sirviendo
+  # interfaz.css/interfaz.js DESDE CACHÉ pese al "?v=X.X.X" en la URL --
+  # el propio interfaz.html sí se recarga fresco en cada versión (el pie de
+  # página muestra el número correcto cada vez), pero sus archivos
+  # referenciados por separado pueden quedar servidos desde una copia vieja
+  # si ese motor no invalida caché de archivos locales (file://) por query
+  # string de forma confiable. Esta función reescribe esos "?v=X.X.X" con un
+  # valor ÚNICO en cada apertura del diálogo (no solo distinto por versión),
+  # así que ninguna entrada de caché previa puede coincidir jamás, sea cual
+  # sea el criterio real que use ese caché para decidir si algo sigue
+  # vigente. Se guarda como un archivo temporal DENTRO de la misma carpeta
+  # ui/ (no en otro lado) para que las rutas relativas a interfaz.css/js seguir
+  # resolviendo exactamente igual que si fuera el interfaz.html original.
+  def self.ruta_interfaz_sin_cache
+    ruta_original = File.expand_path('../ui/interfaz.html', __dir__)
+    return ruta_original unless File.exist?(ruta_original)
+
+    contenido = File.read(ruta_original, encoding: 'UTF-8')
+    buster = "#{Time.now.to_i}#{format('%03d', Time.now.usec / 1000)}"
+    contenido = contenido.gsub(/\?v=[\d.]+/, "?v=#{buster}")
+
+    ruta_temp = File.join(File.dirname(ruta_original), '.interfaz_runtime.html')
+    File.write(ruta_temp, contenido, encoding: 'UTF-8')
+    ruta_temp
+  rescue StandardError
+    # Si algo falla al reescribir (permisos de solo lectura, disco lleno,
+    # etc.), mejor mostrar el diálogo con el archivo original que no
+    # mostrar nada.
+    ruta_original
+  end
+
   def self.mostrar_interfaz_moderna(datos_iniciales = nil)
     return unless acceso_autorizado?
     model = Sketchup.active_model
-    
+
     dialogo = UI::HtmlDialog.new({
       :dialog_title => "#{Modular3D::PRODUCT_NAME} v#{Modular3D::VERSION} | Configurador",
       :preferences_key => Modular3D::PREFERENCES_KEY,
@@ -15,10 +51,10 @@ module LPenafiel_GeneradorMueblesExacto
       :style => UI::HtmlDialog::STYLE_WINDOW
     })
 
-    ruta_html = File.expand_path('../ui/interfaz.html', __dir__)
-    
-    if File.exist?(ruta_html)
-      dialogo.set_file(ruta_html)
+    ruta_html_original = File.expand_path('../ui/interfaz.html', __dir__)
+
+    if File.exist?(ruta_html_original)
+      dialogo.set_file(ruta_interfaz_sin_cache)
     else
       UI.messagebox("Error crítico: no se encontró el archivo 'interfaz.html'.")
       return
