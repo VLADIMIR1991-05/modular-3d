@@ -1062,66 +1062,46 @@
       event.preventDefault();
     }, { passive: false });
 
-    // Barra de scroll propia, una por panel (.config-pane y aside.m3dv-panel
-    // son independientes -- cada una la suya). Se construye con divs (no con
-    // el pseudo-elemento ::-webkit-scrollbar, que ya está apagado en CSS)
-    // para no depender en absoluto de cómo el navegador embebido de
-    // SketchUp decida pintar (o no) su propia scrollbar.
-    // NOTA sobre el bug de 6.4.14: aquella barra usaba un MutationObserver
-    // que se disparaba a sí mismo en un ciclo infinito (colgó el diálogo
-    // entero) porque observaba TODO el panel mientras su propio refresco
-    // escribía dentro de ese mismo panel. Esta versión usa ResizeObserver
-    // sobre el CONTENEDOR SCROLLEABLE en vez de sobre el panel completo:
-    // sólo se dispara si el tamaño de caja del contenedor cambia, y nuestro
-    // refresco jamás toca esa caja (sólo escribe en la barra, que vive
-    // afuera, como hermana) -- no hay forma de que se retroalimente solo.
-    function inicializarScrollbarPropia(track) {
-      var contenedor = document.querySelector(track.getAttribute('data-scroll-target'));
-      var thumb = track.querySelector('.scroll-thumb');
-      if (!contenedor || !thumb) return;
-      var arrastrando = false, y0 = 0, scrollTop0 = 0;
+    // Deslizador vertical nativo, uno por panel (.config-pane y
+    // aside.m3dv-panel son independientes -- cada uno el suyo). 6.4.20
+    // probó una barra propia con divs (arrastre manual por mousedown/
+    // mousemove/mouseup): pasó todas las pruebas automatizadas pero, igual
+    // que la de 6.4.14 antes, nunca quedó confirmado que arrastrara de
+    // verdad en el navegador embebido de SketchUp. Se vuelve a un
+    // <input type="range"> nativo (como en 6.4.17, pero ahora vertical y
+    // con el bug real de fondo -- el corte de ancho de 6.4.18 -- ya
+    // corregido): el arrastre lo maneja el motor del navegador por dentro,
+    // sin depender de que mousemove/mouseup lleguen bien a JavaScript
+    // mientras el mouse sale del control, y es el ÚNICO tipo de control
+    // con evidencia real de funcionar ahí (mismo tipo que "Explosión"/
+    // "Velocidad de giro", que sí se ven y arrastran en tus capturas).
+    function inicializarDeslizadorScroll(slider) {
+      var contenedor = document.querySelector(slider.getAttribute('data-scroll-target'));
+      if (!contenedor) return;
+      var moviendoSlider = false;
       function refrescar() {
         var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxScroll <= 1) { track.classList.add('hidden-track'); return; }
-        track.classList.remove('hidden-track');
-        var altoTrack = track.clientHeight;
-        var ratio = contenedor.clientHeight / contenedor.scrollHeight;
-        var altoThumb = Math.max(34, altoTrack * ratio);
-        var maxTopThumb = altoTrack - altoThumb;
-        var topThumb = maxTopThumb > 0 ? (contenedor.scrollTop / maxScroll) * maxTopThumb : 0;
-        thumb.style.height = altoThumb + 'px';
-        thumb.style.top = topThumb + 'px';
+        if (maxScroll <= 1) { slider.classList.add('hidden-track'); return; }
+        slider.classList.remove('hidden-track');
+        if (!moviendoSlider) {
+          // El range vertical nace con el mínimo (0) abajo y el máximo
+          // (1000) arriba -- como un control de volumen -- así que se
+          // invierte para que el sentido sea el de una scrollbar real:
+          // manija arriba = contenido arriba, manija abajo = contenido
+          // abajo.
+          slider.value = Math.round((1 - contenedor.scrollTop / maxScroll) * 1000);
+        }
       }
+      slider.addEventListener('input', function() {
+        moviendoSlider = true;
+        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
+        contenedor.scrollTop = (1 - slider.value / 1000) * maxScroll;
+      });
+      slider.addEventListener('change', function() { moviendoSlider = false; });
       contenedor.addEventListener('scroll', refrescar);
       window.addEventListener('resize', refrescar);
       if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
-      thumb.addEventListener('mousedown', function(event) {
-        arrastrando = true;
-        thumb.classList.add('dragging');
-        y0 = event.clientY;
-        scrollTop0 = contenedor.scrollTop;
-        event.preventDefault();
-      });
-      document.addEventListener('mousemove', function(event) {
-        if (!arrastrando) return;
-        var altoTrack = track.clientHeight, altoThumb = thumb.offsetHeight;
-        var maxTopThumb = altoTrack - altoThumb;
-        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxTopThumb <= 0 || maxScroll <= 0) return;
-        var deltaScroll = ((event.clientY - y0) / maxTopThumb) * maxScroll;
-        contenedor.scrollTop = Math.max(0, Math.min(maxScroll, scrollTop0 + deltaScroll));
-      });
-      document.addEventListener('mouseup', function() {
-        if (!arrastrando) return;
-        arrastrando = false;
-        thumb.classList.remove('dragging');
-      });
-      track.addEventListener('click', function(event) {
-        if (event.target !== track) return;
-        var direccion = (event.clientY - track.getBoundingClientRect().top) < thumb.offsetTop ? -1 : 1;
-        contenedor.scrollTop += direccion * contenedor.clientHeight * 0.85;
-      });
       refrescar();
       window.setInterval(refrescar, 1000);
     }
-    document.querySelectorAll('.scroll-thumb-track').forEach(inicializarScrollbarPropia);
+    document.querySelectorAll('.scroll-vslider').forEach(inicializarDeslizadorScroll);

@@ -1,8 +1,18 @@
-# Modular_3D 6.4.21 · Botón "Ocultar/mostrar" ya no se corta
+# Modular_3D 6.4.22 · Deslizador vertical nativo + letra más chica en árbol/medidas
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.21  
+**Versión:** 6.4.22  
 
+## Cambios 6.4.22
+
+Pediste arreglar también el árbol de piezas y las medidas (letra más chica), y dijiste que lo de arrastrar la barra para ver lo de abajo TODAVÍA no se arreglaba -- con la sugerencia de revisar versiones anteriores donde sí funcionaba y tomar de ahí lo necesario, sin tocar nada más.
+
+- **Árbol de piezas y medidas con letra más chica**: `.m3dv-tree-item` de 10px a 8px, los valores de "Propiedades técnicas" (Largo/Ancho/Espesor/etc.) de 8px a 7px y el nombre de la pieza seleccionada de 10px a 8px.
+- **La barra de cada panel vuelve a ser un `<input type="range">` nativo, ahora vertical** (en 6.4.17 fue horizontal y se descartó "esas barras horizontales no me sirven de nada"; en 6.4.20 se probó una barra propia dibujada con divs con arrastre manual, que pasó todas las pruebas automatizadas pero, igual que la de 6.4.14, nunca llegó a confirmarse que arrastrara de verdad en tu navegador. Motivo técnico real: un range nativo arrastra con el manejo interno del propio navegador, sin depender de que los eventos de mouse lleguen bien a JavaScript mientras el cursor sale del control fuera del elemento -- justo el tipo de cosa que un navegador embebido puede manejar distinto a uno de escritorio. Es también el único tipo de control con evidencia real de funcionar en tu SketchUp: "Explosión"/"Velocidad de giro" son del mismo tipo. A diferencia de 6.4.17, esta vez el bug real de fondo (el corte de ancho de 6.4.18) ya está corregido, así que el arrastre sí debería mover el panel.
+- Se posiciona vertical, pegado al borde derecho de cada panel, ocupando todo su alto -- mismo lugar donde iba la barra de divs. Verificado con una prueba real: la manija arriba dejó el panel scrolleado hasta arriba, la manija abajo lo dejó scrolleado hasta abajo, y mover la del configurador no afecta al visor (ni viceversa).
+- Todo lo demás (tema oscuro, layout, checks de Zócalo/Premesón, botón "Crear módulo", etc.) queda exactamente igual, sin tocar.
+
+## Cambios 6.4.21
 ## Cambios 6.4.21
 
 Pediste reducir el tamaño de letra un par de puntos "para que se pueda leer" -- el botón "Ocultar/mostrar" (en Propiedades técnicas, al seleccionar una pieza) se veía cortado como "Ocultar/mos".

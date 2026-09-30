@@ -98,22 +98,32 @@
        que la barra se quede fija en su sitio mientras el panel scrollea
        por dentro, tiene que vivir fuera de esa caja de scroll. */
     .scroll-dock { position:relative; height:100%; min-height:0; }
-    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:14px; padding-bottom:12px; }
-    /* La scrollbar nativa del navegador se oculta a propósito: 6.4.14-6.4.19
-       dependieron en algún punto de que el navegador embebido de SketchUp
-       pintara SU PROPIA barra (nativa o vía ::-webkit-scrollbar), y aunque
-       el bug real resultó ser el corte de ancho de 6.4.18 (ya corregido),
-       seguía sin quedar 100% claro si ese navegador respeta el estilo de
-       scrollbar o usa una superpuesta del sistema operativo (autoocultable
-       en Windows/Mac). La barra de abajo es 100% propia -- CSS + JS bajo
-       nuestro control total, cero dependencia de cómo el motor decida
-       pintar su scrollbar -- así que la nativa se apaga para no duplicar. */
+    .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:20px; padding-bottom:12px; }
+    /* La scrollbar nativa del navegador se oculta a propósito (ver nota
+       junto a .scroll-vslider más abajo sobre por qué). */
     .config-pane, aside.m3dv-panel { scrollbar-width: none; }
     .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { display: none; }
-    .scroll-thumb-track { position:absolute; top:0; right:2px; bottom:0; width:9px; z-index:4; border-radius:5px; background:rgba(255,255,255,.05); pointer-events:none; }
-    .scroll-thumb-track.hidden-track { display:none; }
-    .scroll-thumb { position:absolute; left:0; right:0; min-height:34px; border-radius:5px; background:#4a5660; cursor:pointer; pointer-events:auto; }
-    .scroll-thumb:hover, .scroll-thumb.dragging { background:var(--brand); }
+    /* 6.4.20 probó una barra propia dibujada con divs (arrastre manual vía
+       mousedown/mousemove/mouseup) -- funcionó en todas las pruebas
+       automatizadas, pero como la de 6.4.14 antes, nunca quedó confirmado
+       que funcionara de verdad en el navegador embebido de SketchUp. Se
+       vuelve a un <input type="range"> nativo (como en 6.4.17) porque es
+       el ÚNICO tipo de control con evidencia real de funcionar ahí: los
+       controles "Explosión"/"Velocidad de giro" son del mismo tipo y SÍ se
+       ven y arrastran en tus propias capturas. La razón técnica es que un
+       range nativo arrastra con el manejo interno del propio motor del
+       navegador -- no depende de que los eventos mousemove/mouseup lleguen
+       bien a JavaScript mientras se arrastra fuera del control, que es
+       justo el tipo de cosa que un navegador embebido puede manejar
+       distinto a uno de escritorio normal. A diferencia del intento de
+       6.4.17 (que no llegó a moverse en la práctica), esta vez el bug real
+       de fondo (el corte de ancho de 6.4.18) ya está corregido, así que el
+       range sí debería mover el panel de verdad. Se posiciona vertical,
+       pegado al borde derecho de cada panel, ocupando todo su alto -- en
+       el mismo lugar donde iba la barra propia de divs. */
+    .scroll-vslider { position:absolute; top:8px; right:2px; bottom:8px; width:14px; z-index:4; margin:0; padding:0; writing-mode:vertical-lr; direction:rtl; -webkit-appearance:slider-vertical; accent-color:#4a5660; }
+    .scroll-vslider:hover, .scroll-vslider:active { accent-color:var(--brand); }
+    .scroll-vslider.hidden-track { display:none; }
     /* El visor 3D queda fijo: aside pasa a columna flex donde
        .m3dv-body (árbol de piezas / propiedades) hace scroll interno
        PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
@@ -126,7 +136,7 @@
        respaldo: en una ventana con espacio de sobra no cambia nada (no
        hay overflow, no aparece scrollbar), pero en una ventana chica
        siempre se puede bajar hasta el botón de construir. */
-    aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
+    aside.m3dv-panel { position:relative; top:auto; height:100%; min-height:0; display:flex; flex-direction:column; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:20px; }
     aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
     .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
     .step-footer { position: relative; bottom:auto; z-index:5; }
@@ -271,11 +281,11 @@
     .m3dv-autorotate-row{grid-template-columns:auto 1fr auto;border-top:1px solid #2c343b}.m3dv-autorotate-row button{width:auto;padding:5px 9px;border:1px solid #45515b;border-radius:5px;background:#303942;color:#f3f5f6;font-size:9px;font-weight:700;cursor:pointer}.m3dv-autorotate-row button.active{background:var(--brand);color:#161a1d;border-color:var(--brand)}
     .m3dv-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:9px;background:#181e23}.m3dv-card{min-width:0;overflow:hidden;padding:8px;border:1px solid #35404a;border-radius:7px;background:#20272d}.m3dv-card h3{margin:0 0 6px;color:#ff854c;font-size:9px}
     .m3dv-search{margin:0 0 6px;padding:6px!important;border-color:#46525c!important;background:#11161b!important;color:#fff!important;text-align:left!important;font-size:9px}
-    .m3dv-tree{display:grid;gap:3px;max-height:150px;overflow:auto}.m3dv-tree-item{padding:6px 7px;text-align:left;border:0;background:#303941;color:#dbe1e5;font-size:10px}.m3dv-tree-item.active{background:#237fc0;color:#fff}
+    .m3dv-tree{display:grid;gap:3px;max-height:150px;overflow:auto}.m3dv-tree-item{padding:6px 7px;text-align:left;border:0;background:#303941;color:#dbe1e5;font-size:8px}.m3dv-tree-item.active{background:#237fc0;color:#fff}
     .m3dv-select-mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px;background:#1e272e}.m3dv-select-mode button{padding:7px;font-size:10px;background:#35414a}.m3dv-select-mode button.active{background:var(--brand);color:#fff}
     .m3dv-piece-actions{display:grid;grid-template-columns:1fr;gap:4px;margin-top:8px}.m3dv-piece-actions button{padding:6px 5px;font-size:7px;text-align:left;white-space:normal;line-height:1.3}
     .piece-selection-note{color:#7fc8f4;font-size:9px;display:block;margin-top:5px}
-    .m3dv-piece{display:grid;gap:7px;font-size:8px;min-width:0}.m3dv-piece>strong{display:block;color:#fff;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m3dv-piece div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#9eabb5;min-width:0}.m3dv-piece div span{flex:0 0 auto}.m3dv-piece b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;text-align:right}.m3dv-health{padding:4px 10px 8px;background:#20272d;color:#72d492;font-size:8px;text-align:center}
+    .m3dv-piece{display:grid;gap:7px;font-size:7px;min-width:0}.m3dv-piece>strong{display:block;color:#fff;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m3dv-piece div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#9eabb5;min-width:0}.m3dv-piece div span{flex:0 0 auto}.m3dv-piece b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;text-align:right}.m3dv-health{padding:4px 10px 8px;background:#20272d;color:#72d492;font-size:8px;text-align:center}
     .m3dv-actions{padding:0 9px 9px;background:#181e23}.m3dv-actions button{margin-top:6px}.m3dv-actions .secondary{background:#20272d;color:#ff854c}
     .hierarchy-card{border:2px solid var(--brand);background:linear-gradient(135deg,#20272d,#241d18)}
     .hierarchy-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hierarchy-title .compact{width:auto;padding:7px 10px}.hierarchy-title-actions{display:flex;gap:5px}.hierarchy-title-actions button{white-space:nowrap}
