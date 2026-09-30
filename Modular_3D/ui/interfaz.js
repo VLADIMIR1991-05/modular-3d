@@ -1023,6 +1023,26 @@
     });
     updateParametricFeedback();
 
+    // Alto real del header, medido de verdad (no un número fijo adivinado):
+    // interfaz.css usa este valor (--header-h) para calcular cuánto le
+    // queda a `main` (calc(100vh - var(--header-h))) -- la técnica exacta
+    // de la versión original del plugin, que el usuario confirma que
+    // scrolleaba bien, sólo que ahora el número se actualiza solo cada vez
+    // que el header cambia de alto (1 o 2 filas según el estado de la
+    // sesión de licencia) en vez de quedar fijo y desincronizarse (ese fue
+    // el bug de 6.4.6).
+    function actualizarAltoHeader() {
+      var header = document.querySelector('header');
+      if (!header) return;
+      document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    }
+    actualizarAltoHeader();
+    window.addEventListener('resize', actualizarAltoHeader);
+    if (window.ResizeObserver) {
+      new ResizeObserver(actualizarAltoHeader).observe(document.querySelector('header'));
+    }
+    window.setInterval(actualizarAltoHeader, 500);
+
     // Respaldo manual de scroll con la rueda del mouse: el navegador
     // embebido de SketchUp (a diferencia de un navegador normal) a veces no
     // entrega el wheel al contenedor overflow:auto correcto cuando está

@@ -73,22 +73,34 @@
        comportamiento cambie de modo. */
     body { display:flex; flex-direction:column; overflow:hidden; }
     header { flex:0 0 auto; }
-    /* Alto real sin numeros magicos: main es flex:1 1 auto dentro de un
-       body flex-column de altura 100vh, asi que su alto real ya es
-       exactamente "lo que queda debajo del header", sea el header alto
-       o bajo (cambia segun el estado de la sesion de licencia: 1 o 2
-       filas). Poner aqui un height:calc(100vh - Npx) con un numero fijo
-       se desincroniza en cuanto el header cambia de alto (paso exactamente
-       eso en 6.4.6, cortando la parte de abajo del visor 3D) -- min-height:0
-       sigue siendo necesario para que el scroll interno de abajo funcione.
-       grid-template-rows:minmax(0,1fr) es la parte que faltaba en 6.4.8:
-       sin esto, la unica fila implicita del grid no tenia una altura
-       DEFINIDA (quedaba "auto", del tamaño de su contenido), asi que el
-       height:100% de .config-pane/aside.m3dv-panel de abajo no tenia
-       nada real de que ser el 100% -- crecian a su alto de contenido
-       completo y, como body tiene overflow:hidden, todo lo que sobraba
-       se recortaba sin scrollbar (ni a la izquierda ni a la derecha). */
-    main { flex:1 1 auto; width:100%; min-height:0; overflow:hidden; align-items:stretch; grid-template-rows:minmax(0,1fr); }
+    /* HISTORIAL DE ESTE ALTO (importante, se peleó mucho con esto):
+       - La versión ORIGINAL del plugin (la que el usuario confirma que
+         scrolleaba perfecto) usaba un número fijo: height:calc(100vh -
+         54px). Funcionaba porque en esa versión el header SIEMPRE medía
+         lo mismo (una sola fila, sin sesión de licencia con barra de
+         días).
+       - En 6.4.6 se agregó la píldora de sesión con barra de días (1 o 2
+         filas según el estado), lo que rompió ese número fijo -- el
+         header ahora podía medir más, y el cálculo viejo dejaba a
+         .config-pane/aside.m3dv-panel más altos que el espacio real
+         (6.4.6: "visor 3D cortado").
+       - En 6.4.8/6.4.10 se reemplazó el número fijo por
+         grid-template-rows:minmax(0,1fr) (para que main, ya con
+         flex:1 1 auto, le pasara una altura de fila DEFINIDA a sus hijos
+         del grid sin depender de ningún número). Esto se veía bien en
+         Chromium moderno -- pero el usuario reporta que el scroll dejó de
+         funcionar justo desde por ahí en adelante, y su navegador real es
+         Chrome 64 (2018): la combinación flex+grid con minmax(0,1fr) para
+         pasar una altura "definida" entre ambos módulos es exactamente el
+         tipo de interacción entre specs que aún no estaba bien resuelta
+         en motores de esa época.
+       - Ahora se vuelve al número fijo de la versión original QUE SÍ
+         FUNCIONABA, pero el número ya no es fijo de verdad: se recalcula
+         con JavaScript (interfaz.js mide header.offsetHeight de verdad, en
+         vivo) y se guarda en --header-h, así que se ajusta solo sin
+         importar cuántas filas tenga el header en cada momento -- se evita
+         el bug de 6.4.6 sin depender de grid-template-rows para nada. */
+    main { flex:1 1 auto; width:100%; height:calc(100vh - var(--header-h, 60px)); min-height:0; overflow:hidden; align-items:stretch; }
     /* .scroll-dock envuelve cada panel (.config-pane y aside.m3dv-panel por
        separado) y es lo que en realidad mide main como columna -- adentro
        va el panel scrolleable Y, como HERMANO suyo (no como hijo), la

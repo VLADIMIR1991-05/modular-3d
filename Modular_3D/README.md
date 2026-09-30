@@ -1,8 +1,21 @@
-# Modular_3D 6.4.26 · Botones ▲/▼ + barra de progreso (universal, sin sliders)
+# Modular_3D 6.4.27 · Causa raíz real: se vuelve a la técnica de altura de la versión original
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.26  
+**Versión:** 6.4.27  
 
+## Cambios 6.4.27
+
+Insististe en que "antes funcionaba perfectamente bien" y pediste revisar desde la versión 4 -- tenías razón en insistir. Encontré la diferencia real comparando el código contra el archivo original que diste al empezar (antes de que yo tocara nada, v4.6.0-beta.1).
+
+**La versión original calculaba la altura así:** `main { height: calc(100vh - 54px); }` y `.config-pane { height: calc(100vh - 74px); }` -- números fijos, y funcionaba porque en esa versión el encabezado SIEMPRE medía lo mismo (sin la píldora de sesión con barra de días que se agregó después).
+
+**Lo que yo cambié después (6.4.8/6.4.10), sin darme cuenta de la consecuencia:** cuando la píldora de sesión (6.4.6) hizo que el encabezado pudiera medir 1 o 2 filas según el estado, esos números fijos se desincronizaron (el visor 3D quedaba cortado). En vez de volver a la técnica original con un número que se ajustara solo, cambié a `grid-template-rows:minmax(0,1fr)` -- una técnica de CSS Grid más moderna, que se ve perfecta en un Chromium actual, pero que depende de una interacción entre Flexbox y Grid (cómo un contenedor flexible le pasa una altura "definida" a las filas de su propio grid) que en navegadores de la época de tu SketchUp 2020 (Chrome 64, 2018) no estaba completamente resuelta -- justo cuando ambas especificaciones todavía estaban madurando de forma independiente.
+
+**Corregido:** se vuelve exactamente a la técnica de la versión original (`height: calc(100vh - Npx)`, sin ningún truco de Grid para el alto), pero el número ya no es fijo: `interfaz.js` mide el alto real del encabezado con JavaScript (`header.offsetHeight`) y lo guarda en una variable de CSS (`--header-h`) que se recalcula sola al cargar, al cambiar el tamaño de ventana, y cada medio segundo como respaldo -- así nunca se desincroniza sin importar cuántas filas tenga el encabezado, evitando el bug de 6.4.6 sin necesitar la técnica de Grid que sospecho que no funciona en tu navegador real.
+
+Verificado con una prueba real: el alto de `main` coincide exactamente con "ventana menos encabezado" (900 - 66 = 834px), el desbordamiento se detecta correctamente, y los botones ▲/▼ mueven el contenido con normalidad.
+
+## Cambios 6.4.26
 ## Cambios 6.4.26
 
 El diagnóstico de 6.4.25 identificó la causa exacta: tu SketchUp es **Pro 2020**, con **Chrome 64** embebido (de 2018) -- un motor lo bastante viejo como para que ningún tipo de `<input type="range">` posicionado o girado con CSS (tres intentos distintos: divs, `writing-mode`, `transform:rotate`) llegara a pintarse ni a moverse, aunque el layout SIEMPRE reservaba bien el espacio.
