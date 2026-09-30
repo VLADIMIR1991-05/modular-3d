@@ -438,7 +438,9 @@
     var llevaPremeson = tipoModuloCasco === 'BAJO' && String(data.premeson_activo || 'SI') !== 'NO';
     var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
     var cornisaActiva = cornisaDisponible && String(data.cornisa_activa || 'NO') === 'SI';
-    var llevaRemates = ['AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
+    // Igual que en jerarquia.rb: disponible en los 4 tipos con casco
+    // automático, no solo Auxiliar/Closet.
+    var llevaRemates = tipoModuloCasco !== 'PERSONALIZADO';
 
     if (llevaZocaloCasco) {
       addPiece('Zócalo', width, zocaloAltoCasco, zocaloGrosor, 0, 0, zocaloRetranqueo, COLORS.horizontal, 'zocalo', false, {pieceId:'zocalo', materialKey:'ZOCALO', role:'zocalo', sourceField:'tipo_modulo'});

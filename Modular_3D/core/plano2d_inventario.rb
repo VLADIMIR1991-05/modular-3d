@@ -237,7 +237,9 @@ module LPenafiel_GeneradorMueblesExacto
       lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
       cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
-      lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)
+      # Igual que en jerarquia.rb: disponible en los 4 tipos con casco
+      # automático, no solo Auxiliar/Closet.
+      lleva_remates = tipo_modulo != 'PERSONALIZADO'
 
       if lleva_zocalo
         agregar.call('ZOCALO', 'ZOCALO', 0.0, zocalo_retranqueo, 0.0, ancho_total, zocalo_grosor, zocalo_alto)

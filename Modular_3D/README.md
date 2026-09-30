@@ -1,7 +1,18 @@
-# Modular_3D 6.4.33 · Check rápido de Cornisa + reglas de Remate corregidas por tipo
+# Modular_3D 6.4.34 · Bug real: Remate Izq/Der no construía la pieza en Alto/Bajo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.33  
+**Versión:** 6.4.34  
+
+## Cambios 6.4.34
+
+Encontrado el bug que reportaste ("los remates de activación rápida no está activando los remates"): en 6.4.33 solo actualicé la regla de **visibilidad** de los checks Izq/Der en la interfaz (para que aparecieran en los 4 tipos), pero el código que realmente **construye la pieza** -- en la geometría 3D real (`jerarquia.rb`), en la vista previa en vivo (`modular3d_view.js`) y en el plano 2D/inventario (`plano2d_inventario.rb`) -- seguía restringido a Auxiliar/Closet únicamente. El checkbox se marcaba pero la pieza nunca se creaba en Alto/Bajo. Corregido en los tres lugares: ahora Remate Izq/Der construye la pieza en los 4 tipos, tal como ya lo mostraba la interfaz. Confirmado visualmente en Alto: los dos paneles laterales (100×2420mm) aparecen correctamente a los costados del módulo.
+
+Sobre lo demás que comentaste:
+
+- **"Remate de zócalo" y "Remate de cornisa"** (los selects Izquierdo/Derecho/Ambos/Ninguno de esa misma tarjeta) son piezas MÁS PEQUEÑAS y en una posición distinta a "Remate inicial/final" (esas van pegadas al plano de la puerta, hacia afuera del módulo; las de zócalo/cornisa van hacia adentro, tapando el bolsillo del retranqueo). No se entrelazan entre sí -- confirmado revisando la geometría, ocupan espacios distintos.
+- **"Remate de cornisa" ya está en cascada con "Cornisa"**: solo aparece cuando Cornisa está activa, y ya usa la misma altura configurada en "Altura de cornisa" (no hay un campo de altura separado para el remate de cornisa) -- eso que proponías ya estaba así implementado.
+
+Antes de tocar algo más, te pregunto una cosa puntual sobre el diseño (para no adivinar y tener que rehacer otra ronda).
 
 ## Cambios 6.4.33
 

@@ -1317,7 +1317,11 @@ module LPenafiel_GeneradorMueblesExacto
       lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
       cornisa_activa = cornisa_disponible && (datos['cornisa_activa'] || 'NO').to_s == 'SI'
-      lleva_remates = %w[AUXILIAR CLOSET].include?(tipo_modulo)
+      # Disponible en los 4 tipos con casco automático (Alto/Bajo/Closet/
+      # Auxiliar) -- antes solo Auxiliar/Closet, pero eso dejó desactivado
+      # el check rápido "Izq"/"Der" del visor 3D para Alto y Bajo aunque la
+      # UI ya lo permitía marcar.
+      lleva_remates = tipo_modulo != 'PERSONALIZADO'
 
       if lleva_zocalo
         self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 1, 1)
