@@ -1,20 +1,32 @@
-    // MARCA DE CARGA TEMPORAL (para descartar de una vez caché de
-    // interfaz.js): un id al azar generado cada vez que este archivo se
-    // interpreta de cero. Si al cerrar y volver a abrir el diálogo el
-    // número mostrado en el pie de página SIGUE SIENDO EL MISMO, es prueba
-    // directa de que interfaz.js no se está recargando de disco -- si
-    // CAMBIA mientras la barra de scroll sigue sin aparecer, el archivo sí
-    // se recarga y el problema es otra cosa. Se quita en cuanto se
-    // resuelva esto.
+    // MARCA DE CARGA TEMPORAL: confirmado que interfaz.js SÍ se recarga
+    // fresco en cada apertura (el código [JS:XXXXXX] cambió entre dos
+    // aperturas seguidas) -- se descarta caché por completo. Ahora se
+    // agrega el número real detrás de esa confirmación: el alto medido del
+    // header, el valor que --header-h quedó usando, y scrollHeight/
+    // clientHeight de .config-pane -- para confirmar o descartar que la
+    // medición dinámica del header (agregada en 6.4.27) esté fallando en
+    // este navegador. Se quita en cuanto se resuelva esto.
     window.__cargaJsId = Math.random().toString(36).slice(2, 8).toUpperCase();
-    document.addEventListener('DOMContentLoaded', function() {
+    function actualizarMarcaDiagnostico() {
       var marca = document.getElementById('marca_carga_js');
-      if (marca) marca.textContent = ' [JS:' + window.__cargaJsId + ']';
-    });
-    if (document.readyState !== 'loading') {
-      var marcaYa = document.getElementById('marca_carga_js');
-      if (marcaYa) marcaYa.textContent = ' [JS:' + window.__cargaJsId + ']';
+      if (!marca) return;
+      var header = document.querySelector('header');
+      var cp = document.querySelector('.config-pane');
+      var headerH = getComputedStyle(document.documentElement).getPropertyValue('--header-h');
+      var partes = [
+        'JS:' + window.__cargaJsId,
+        'headerOffsetH=' + (header ? header.offsetHeight : '?'),
+        '--header-h=' + headerH.trim(),
+        'cpScrollH=' + (cp ? cp.scrollHeight : '?'),
+        'cpClientH=' + (cp ? cp.clientHeight : '?'),
+        'winH=' + window.innerHeight
+      ];
+      marca.textContent = ' [' + partes.join(' ') + ']';
     }
+    actualizarMarcaDiagnostico();
+    document.addEventListener('DOMContentLoaded', actualizarMarcaDiagnostico);
+    window.addEventListener('load', function() { window.setTimeout(actualizarMarcaDiagnostico, 500); });
+    window.setInterval(actualizarMarcaDiagnostico, 1000);
 
     // Barra de "dias restantes" de la licencia: 100% (azul) al activarse,
     // bajando de color hacia verde-amarillo-naranja-rojo (mezclando, no un

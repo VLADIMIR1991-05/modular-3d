@@ -1,8 +1,24 @@
-# Modular_3D 6.4.28 · Prueba definitiva: ¿se está actualizando interfaz.js/css?
+# Modular_3D 6.4.29 · Diagnóstico ampliado: números reales del alto del panel
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.28  
+**Versión:** 6.4.29  
 
+## Cambios 6.4.29
+
+6.4.28 dio la respuesta que hacía falta: el código `[JS:...]` cambió entre dos aperturas (`VWISAQ` → `0UHSC5`) -- confirmado que `interfaz.js`/`interfaz.css` sí se actualizan frescos, caché descartado del todo. El problema es un bug real de comportamiento en tu navegador específico, no una copia vieja de archivos.
+
+La sospecha ahora: la medición dinámica del alto del encabezado (`--header-h`, agregada en 6.4.27) podría no estar funcionando en tu navegador, dejando el panel calculado más alto de lo real -- lo que lo recortaría por fuera sin que el scroll interno detecte nada raro (ningún desborde "hacia adentro" que activar).
+
+Se amplía la misma marca del pie de página (ya confirmada que llega) con los números exactos:
+
+- `headerOffsetH=` el alto real medido del encabezado.
+- `--header-h=` el valor que la variable de CSS quedó usando (deberían ser iguales).
+- `cpScrollH=` / `cpClientH=` el alto de contenido vs. el alto visible del panel de configuración (si son iguales, ahí no hay overflow detectado -- si `cpScrollH` es mayor, sí debería haber flechas).
+- `winH=` el alto de la ventana.
+
+**Por favor mandame una captura del pie de página con estos números.** Con eso puedo confirmar exactamente en qué paso se rompe el cálculo, en vez de seguir probando a ciegas.
+
+## Cambios 6.4.28
 ## Cambios 6.4.28
 
 6.4.27 corrigió (con buena evidencia) la causa real del alto del panel, y aun así seguiste sin ver las flechas. Eso, sumado a que en TODA esta sesión ninguna solución relacionada con `interfaz.js`/`interfaz.css` se ha visto nunca -- mientras que los cambios que viven en `interfaz.html` (checks de Zócalo/Premesón, botón "Crear módulo", etc.) sí aparecen siempre -- apunta otra vez a que esos dos archivos específicos podrían estar sirviéndose desde una copia vieja, pese al intento de 6.4.24.
