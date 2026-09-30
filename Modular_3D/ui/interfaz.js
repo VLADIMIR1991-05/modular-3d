@@ -366,7 +366,8 @@
       { selector: '.cascada-premeson-check', cuando: { field: 'tipo_modulo', test: 'equals', value: 'BAJO' } },
       { selector: '.cascada-cornisa', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] } },
       { selector: '.cascada-cornisa-detalle', cuando: { all: [ { field: 'tipo_modulo', test: 'oneOf', value: ['ALTO', 'AUXILIAR', 'CLOSET'] }, { field: 'cornisa_activa', test: 'equals', value: 'SI' } ] } },
-      { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } }
+      { selector: '.cascada-remates', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } },
+      { selector: '.cascada-remates-check', cuando: { field: 'tipo_modulo', test: 'oneOf', value: ['AUXILIAR', 'CLOSET'] } }
     ]);
     function toggleCascadaCasco() { if (window.Modular3DReglas) window.Modular3DReglas.aplicar(); }
     function setCajonesNichos(valores, tipos) {
@@ -634,7 +635,18 @@
         host.className = 'hint-text';
       }
     }
+    // Mantiene los checks rápidos "Izq"/"Der" del visor 3D reflejando el
+    // valor real de remate_inicial/remate_final (Zócalo, cornisa y remates,
+    // pestaña Casco) -- necesario porque a diferencia de zocalo_activo/
+    // premeson_activo (que SON el dato), remate_izq_activo/remate_der_activo
+    // son solo un atajo visual de un select que ya existe y puede cambiar
+    // por otras vías (cargar un módulo guardado, aplicar un preset).
+    function sincronizarChecksRemate() {
+      if (el('remate_inicial') && el('remate_izq_activo')) el('remate_izq_activo').checked = el('remate_inicial').value === 'SI';
+      if (el('remate_final') && el('remate_der_activo')) el('remate_der_activo').checked = el('remate_final').value === 'SI';
+    }
     function actualizarVista() {
+      sincronizarChecksRemate();
       var d = datosFormulario();
       actualizarResultadoRetranqueos(d);
       actualizarAvisoProtrusionPuerta(d);
@@ -954,6 +966,13 @@
       if ((event.target.id === 'montaje_superior' || event.target.id === 'montaje_inferior') && event.target.value === 'EXTERIOR') {
         ['montaje_izq', 'montaje_der'].forEach(function (id) { if (el(id) && el(id).value !== 'INTERIOR') el(id).value = 'INTERIOR'; });
       }
+      // Checks rápidos "Izq"/"Der" del visor 3D: atajo del select real
+      // (remate_inicial/remate_final, en Zócalo, cornisa y remates) -- se
+      // sincronizan en ambos sentidos: tocar el check mueve el select, y
+      // tocar el select (o un preset) actualiza el check via
+      // sincronizarChecksRemate(), llamada desde actualizarVista().
+      if (event.target.id === 'remate_izq_activo' && el('remate_inicial')) el('remate_inicial').value = event.target.checked ? 'SI' : 'NO';
+      if (event.target.id === 'remate_der_activo' && el('remate_final')) el('remate_final').value = event.target.checked ? 'SI' : 'NO';
       actualizarVista();
     });
     document.addEventListener('click', function(event) {

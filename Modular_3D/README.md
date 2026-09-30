@@ -1,7 +1,15 @@
-# Modular_3D 6.4.31 · Vuelta a la scrollbar nativa (ya probada, funciona en tu equipo)
+# Modular_3D 6.4.32 · Atajos rápidos de Remate (Izq/Der) junto a Zócalo/Premesón
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.31  
+**Versión:** 6.4.32  
+
+## Cambios 6.4.32
+
+Junto a los checks rápidos "Zócalo" y "Premesón" (arriba del visor 3D) se agregan dos nuevos: **"Izq"** y **"Der"**.
+
+- Son un atajo directo de "Remate inicial (izq.)" y "Remate final (der.)" -- los mismos campos que ya existían en la pestaña "2 Casco" → "Zócalo, cornisa y remates".
+- Solo aparecen cuando el tipo de módulo los admite (Auxiliar/Closet), igual que la fila completa en la pestaña.
+- Quedan sincronizados en ambos sentidos: marcarlos/desmarcarlos aquí cambia el select de la pestaña Casco, y cambiar el select allá actualiza el check aquí -- nunca se desincronizan.
 
 ## Cambios 6.4.31
 
