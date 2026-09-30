@@ -232,7 +232,6 @@ module LPenafiel_GeneradorMueblesExacto
       cornisa_grosor = 15.0
       cornisa_retranqueo = 20.0
       remate_ancho = 100.0
-      remate_alto_total = 2420.0
 
       lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
@@ -265,6 +264,16 @@ module LPenafiel_GeneradorMueblesExacto
         end
       end
       if lleva_remates
+        # Igual que en jerarquia.rb: alto adaptado al tope real (cornisa,
+        # premesón o casco), ya no un fijo de 2420mm.
+        tope_casco = alto_total + alto_carcasa_offset
+        remate_alto_total = if cornisa_activa
+                              z_cornisa + cornisa_altura
+                            elsif lleva_premeson
+                              tope_casco + espesor
+                            else
+                              tope_casco
+                            end
         grosor_frente_remate = [f(datos['puerta_grosor'], espesor), 3.0].max
         agregar.call('REMATE_INICIAL', 'REMATE', 0.0 - remate_ancho, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_inicial'] || 'NO').to_s == 'SI'
         agregar.call('REMATE_FINAL', 'REMATE', ancho_total, 0.0 - grosor_frente_remate, 0.0, remate_ancho, grosor_frente_remate, remate_alto_total) if (datos['remate_final'] || 'NO').to_s == 'SI'

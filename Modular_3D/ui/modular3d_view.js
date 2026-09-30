@@ -434,7 +434,7 @@
     zOffsetCarcasa = 0;
     var zocaloGrosor = 15, zocaloRetranqueo = 70;
     var cornisaGrosor = 15, cornisaRetranqueo = 20;
-    var remateAncho = 100, remateAltoTotal = 2420;
+    var remateAncho = 100;
     var llevaPremeson = tipoModuloCasco === 'BAJO' && String(data.premeson_activo || 'SI') !== 'NO';
     var cornisaDisponible = ['ALTO', 'AUXILIAR', 'CLOSET'].indexOf(tipoModuloCasco) >= 0;
     var cornisaActiva = cornisaDisponible && String(data.cornisa_activa || 'NO') === 'SI';
@@ -466,6 +466,10 @@
       }
     }
     if (llevaRemates) {
+      // Igual que en jerarquia.rb: alto adaptado al tope real (cornisa,
+      // premesón o casco), ya no un fijo de 2420mm.
+      var topeCasco = height + altoCarcasaOffset;
+      var remateAltoTotal = cornisaActiva ? (zCornisa + cornisaAltura) : (llevaPremeson ? (topeCasco + general) : topeCasco);
       var grosorFrenteRemate = Math.max(3, number(data, 'puerta_grosor', general));
       if (String(data.remate_inicial || 'NO') === 'SI') addPiece('Remate inicial', remateAncho, remateAltoTotal, grosorFrenteRemate, -remateAncho, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_inicial', materialKey:'REMATE_INICIAL', role:'remate', sourceField:'remate_inicial'});
       if (String(data.remate_final || 'NO') === 'SI') addPiece('Remate final', remateAncho, remateAltoTotal, grosorFrenteRemate, width, 0, -grosorFrenteRemate, COLORS.front, 'remate', false, {pieceId:'remate_final', materialKey:'REMATE_FINAL', role:'remate', sourceField:'remate_final'});

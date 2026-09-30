@@ -1312,7 +1312,6 @@ module LPenafiel_GeneradorMueblesExacto
       cornisa_grosor = 15.mm
       cornisa_retranqueo = 20.mm
       remate_ancho = 100.mm
-      remate_alto_total = 2420.mm
 
       lleva_premeson = tipo_modulo == 'BAJO' && datos['premeson_activo'].to_s != 'NO'
       cornisa_disponible = %w[ALTO AUXILIAR CLOSET].include?(tipo_modulo)
@@ -1360,6 +1359,21 @@ module LPenafiel_GeneradorMueblesExacto
       end
 
       if lleva_remates
+        # Antes era un fijo de 2420mm "se corta a medida en obra" -- ahora se
+        # adapta al tope REAL de este módulo: hasta el tope de la cornisa si
+        # está activa (Alto/Auxiliar/Closet), hasta el tope del premesón si
+        # está activo (Bajo), o si no hay ninguno de los dos, hasta el tope
+        # del propio casco. El fijo de obra causaba que el remate quedara
+        # más corto o más largo que el casco+cornisa/premesón real, viéndose
+        # entrelazado con esas piezas en vez de alinearse con su borde.
+        tope_casco = alto_total + alto_carcasa_offset
+        remate_alto_total = if cornisa_activa
+                              z_cornisa + cornisa_altura
+                            elsif lleva_premeson
+                              tope_casco + espesor
+                            else
+                              tope_casco
+                            end
         grosor_frente_remate = [(datos['puerta_grosor'] || espesor.to_mm).to_f, 3.0].max.mm
         remate_inicial = (datos['remate_inicial'] || 'NO').to_s == 'SI'
         remate_final = (datos['remate_final'] || 'NO').to_s == 'SI'

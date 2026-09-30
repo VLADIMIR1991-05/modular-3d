@@ -1,7 +1,21 @@
-# Modular_3D 6.4.34 · Bug real: Remate Izq/Der no construía la pieza en Alto/Bajo
+# Modular_3D 6.4.35 · Alto del remate ya no es fijo: se adapta a cornisa/premesón/casco
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.34  
+**Versión:** 6.4.35  
+
+## Cambios 6.4.35
+
+El "Remate inicial (izq.)"/"Remate final (der.)" usaba un alto FIJO de 2420mm ("se corta a medida en obra"), sin importar el alto real del módulo, si tenía cornisa o premesón. Eso hacía que el panel quedara más corto o más largo que el casco+cornisa/premesón real, viéndose entrelazado o cruzado con esas piezas en vez de alinearse limpio con su borde -- justo lo que mostraban tus capturas.
+
+Ahora el alto se calcula según el tope REAL de cada módulo, tal como pediste:
+
+- **Con cornisa activa** (Alto/Auxiliar/Closet): sube hasta el tope de la cornisa (tope del casco + altura de cornisa configurada).
+- **Sin cornisa pero con premesón activo** (Bajo): sube hasta el tope del premesón (tope del casco + espesor).
+- **Sin cornisa ni premesón**: sube hasta el tope del propio casco.
+
+Corregido en los tres lugares que construyen esta pieza (geometría 3D real, vista previa en vivo, plano 2D/inventario) para que los tres coincidan siempre. Verificado con números exactos: Closet con cornisa de 300mm da 2546mm (2120 alto + 126 zócalo + 300 cornisa); Bajo con premesón da 901mm (760 alto + 126 zócalo + 15 premesón); Auxiliar sin cornisa da 2246mm (2120 alto + 126 zócalo) -- los tres coinciden exactos con la cuenta a mano.
+
+**Por favor revisa si ahora el remate queda alineado con el borde de la cornisa/premesón/casco, sin cruzarse con ellos.**
 
 ## Cambios 6.4.34
 
