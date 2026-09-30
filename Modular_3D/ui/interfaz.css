@@ -9,12 +9,6 @@
       --ok: #34d399;
       --danger: #f87171;
     }
-    /* MARCA DE CARGA TEMPORAL: si interfaz.css se recarga de disco, esta
-       regla oculta el texto "CSS-OK" del pie de página. Si se sigue viendo
-       ese texto literal ahí, es prueba directa de que interfaz.css se está
-       sirviendo desde una copia vieja (de antes de esta regla) y no de la
-       recién instalada -- se quita en cuanto se resuelva esto. */
-    #marca_carga_css { display: none; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body { margin: 0; color: var(--ink); background: var(--canvas); font: 12px/1.3 "Segoe UI", sans-serif; }
@@ -108,50 +102,21 @@
          el bug de 6.4.6 sin depender de grid-template-rows para nada. */
     main { flex:1 1 auto; width:100%; height:calc(100vh - var(--header-h, 60px)); min-height:0; overflow:hidden; align-items:stretch; }
     /* .scroll-dock envuelve cada panel (.config-pane y aside.m3dv-panel por
-       separado) y es lo que en realidad mide main como columna -- adentro
-       va el panel scrolleable Y, como HERMANO suyo (no como hijo), la
-       barra propia (.scroll-thumb-track). Tiene que ser hermano y no hijo
-       del panel: un hijo absolute-positioned DENTRO de un contenedor con
-       overflow:auto se mueve junto con su contenido al scrollear -- para
-       que la barra se quede fija en su sitio mientras el panel scrollea
-       por dentro, tiene que vivir fuera de esa caja de scroll. */
+       separado) y es lo que en realidad mide main como columna. */
     .scroll-dock { position:relative; height:100%; min-height:0; }
     .config-pane { height:100%; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding-right:7px; padding-bottom:12px; }
-    /* La scrollbar nativa del navegador se oculta a propósito: se prefiere
-       depender 100% de los botones de flecha de abajo. */
-    .config-pane, aside.m3dv-panel { scrollbar-width: none; }
-    .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { display: none; }
-    /* 6.4.20 probó una barra propia con divs (arrastre manual); 6.4.22 un
-       <input type="range"> con writing-mode:vertical-lr +
-       -webkit-appearance:slider-vertical; 6.4.23 el mismo range pero
-       horizontal y girado con transform:rotate(-90deg). Las tres
-       reservaban el espacio correctamente (el layout las tenía en cuenta)
-       pero NINGUNA llegó a pintarse ni a moverse en el navegador real del
-       usuario -- confirmado que es SketchUp Pro 2020, con Chrome 64
-       embebido (¡de 2018!). Un diagnóstico en vivo confirmó que sí hay
-       overflow real que scrollear (se probó con contenido cortado a la
-       vista) y aun así ninguna de las tres barras aparecía.
-       En vez de seguir con variantes de slider posicionado/rotado --
-       exactamente el tipo de técnica más propensa a fallar en un motor de
-       7+ años -- se usan botones de flecha (▲/▼) normales, en flujo de
-       documento normal, sin position:absolute ni transform ni medidas por
-       JavaScript: el mismo tipo de elemento que "Transparencia", "Aristas"
-       y el resto de los botones que SÍ funcionan en esa misma pantalla. */
-    .scroll-arrows { display:flex; align-items:center; gap:8px; margin-top:8px; }
-    .scroll-arrows.hidden-track { display:none; }
-    .scroll-arrow-up, .scroll-arrow-down { flex:0 0 auto; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:11px; font-weight:700; cursor:pointer; transition:background .15s, border-color .15s, transform .1s; }
-    .scroll-arrow-up:hover, .scroll-arrow-down:hover { border-color:var(--brand); background:var(--brand); color:#fff; }
-    .scroll-arrow-up:active, .scroll-arrow-down:active { transform:scale(.94); }
-    .scroll-arrow-up:disabled, .scroll-arrow-down:disabled { opacity:.35; cursor:default; }
-    .scroll-arrow-up:disabled:hover, .scroll-arrow-down:disabled:hover { border-color:var(--line); background:var(--surface); color:var(--ink); }
-    /* Barra de progreso: sólo un div normal que crece de ancho con JS según
-       el scroll -- no es un control interactivo (no se arrastra), así que
-       no depende de ninguna API de slider que pueda fallar en un navegador
-       viejo; es puro CSS de toda la vida (position:absolute + background +
-       transition), soportado igual en 2018 que en 2027. Da un aspecto más
-       moderno sin arriesgar la compatibilidad. */
-    .scroll-progress { position:relative; flex:1 1 auto; height:5px; min-width:24px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; }
-    .scroll-progress-fill { position:absolute; top:0; left:0; bottom:0; width:0%; border-radius:3px; background:linear-gradient(90deg, var(--brand-dark), var(--brand)); transition:width .12s ease; }
+    /* 6.4.20-6.4.29 probaron varios reemplazos de la scrollbar nativa
+       (barra propia con divs, <input type="range"> vertical/rotado,
+       botones de flecha + barra de progreso) porque se la ocultaba a
+       propósito -- ninguno se veía en el navegador real del usuario
+       (SketchUp Pro 2020, Chrome 64 embebido). La captura del árbol de
+       piezas (.m3dv-tree, más abajo) mostró que la scrollbar NATIVA sí se
+       pinta y funciona perfecto en ese mismo navegador -- el problema
+       nunca fue la scrollbar nativa, fue haberla ocultado. 6.4.31 deja de
+       ocultarla en .config-pane/aside.m3dv-panel y le aplica el mismo
+       estilo ya probado que usa .m3dv-tree (ver la regla compartida más
+       abajo). El bug real de altura (.config-pane sin límite definido) se
+       arregló aparte en 6.4.30, fijando el alto en píxeles por JS. */
     /* El visor 3D queda fijo: aside pasa a columna flex donde
        .m3dv-body (árbol de piezas / propiedades) hace scroll interno
        PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan
@@ -168,11 +133,11 @@
     aside.m3dv-panel > *:not(.m3dv-body) { flex:0 0 auto; }
     .m3dv-body { flex:1 1 auto; min-height:120px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
     .step-footer { position: relative; bottom:auto; z-index:5; }
-    .m3dv-body, .m3dv-tree { scrollbar-width: auto; }
-    .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar { width: 14px; }
-    .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-    .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-    .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
+    .m3dv-body, .m3dv-tree, .config-pane, aside.m3dv-panel { scrollbar-width: auto; }
+    .m3dv-body::-webkit-scrollbar, .m3dv-tree::-webkit-scrollbar, .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { width: 14px; }
+    .m3dv-body::-webkit-scrollbar-track, .m3dv-tree::-webkit-scrollbar-track, .config-pane::-webkit-scrollbar-track, aside.m3dv-panel::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+    .m3dv-body::-webkit-scrollbar-thumb, .m3dv-tree::-webkit-scrollbar-thumb, .config-pane::-webkit-scrollbar-thumb, aside.m3dv-panel::-webkit-scrollbar-thumb { background: #4a5660; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+    .m3dv-body::-webkit-scrollbar-thumb:hover, .m3dv-tree::-webkit-scrollbar-thumb:hover, .config-pane::-webkit-scrollbar-thumb:hover, aside.m3dv-panel::-webkit-scrollbar-thumb:hover { background: var(--brand); background-clip: padding-box; }
     /* 6.4.14 probó una barra propia con divs, 6.4.17 un deslizador
        horizontal -- ninguna de las dos era el problema real: el bug de
        verdad era el corte de 981px/992px de arriba, que dejaba

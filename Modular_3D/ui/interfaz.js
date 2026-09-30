@@ -1,34 +1,3 @@
-    // MARCA DE CARGA TEMPORAL: el diagnóstico de 6.4.29 (cpScrollH=cpClientH
-    // idénticos, 1025=1025) confirmó la causa real: en el navegador embebido
-    // del usuario, `.config-pane` no recibía un alto definido a través de la
-    // cadena main(grid) -> .scroll-dock(100%) -> .config-pane(100%) y crecía
-    // libre al tamaño de su contenido, ocultando el scroll por fuera en vez
-    // de mostrarlo. 6.4.30 fija el alto en píxeles directo sobre el elemento
-    // (actualizarAlturaPaneles) en vez de depender de %/calc() heredado. Esta
-    // marca se deja para confirmar visualmente el arreglo (cpScrollH debe
-    // quedar MAYOR que cpClientH cuando hay contenido de sobra) y se quita
-    // en la próxima versión si el usuario confirma que ya funciona.
-    window.__cargaJsId = Math.random().toString(36).slice(2, 8).toUpperCase();
-    function actualizarMarcaDiagnostico() {
-      var marca = document.getElementById('marca_carga_js');
-      if (!marca) return;
-      var header = document.querySelector('header');
-      var cp = document.querySelector('.config-pane');
-      var partes = [
-        'JS:' + window.__cargaJsId,
-        'headerOffsetH=' + (header ? header.offsetHeight : '?'),
-        'cpEstiloAlto=' + (cp ? cp.style.height : '?'),
-        'cpScrollH=' + (cp ? cp.scrollHeight : '?'),
-        'cpClientH=' + (cp ? cp.clientHeight : '?'),
-        'winH=' + window.innerHeight
-      ];
-      marca.textContent = ' [' + partes.join(' ') + ']';
-    }
-    actualizarMarcaDiagnostico();
-    document.addEventListener('DOMContentLoaded', actualizarMarcaDiagnostico);
-    window.addEventListener('load', function() { window.setTimeout(actualizarMarcaDiagnostico, 500); });
-    window.setInterval(actualizarMarcaDiagnostico, 1000);
-
     // Barra de "dias restantes" de la licencia: 100% (azul) al activarse,
     // bajando de color hacia verde-amarillo-naranja-rojo (mezclando, no un
     // salto brusco) a medida que se acerca el vencimiento. Depende de que
@@ -1143,57 +1112,8 @@
       event.preventDefault();
     }, { passive: false });
 
-    // Botones de flecha ▲/▼, uno por panel (.config-pane y aside.m3dv-panel
-    // son independientes -- cada uno el suyo). Tres intentos anteriores con
-    // un <input type="range"> (con divs, con writing-mode:vertical-lr, con
-    // transform:rotate) reservaban el espacio correctamente pero ninguno
-    // llegó a pintarse ni a arrastrarse en el navegador real del usuario
-    // (confirmado: SketchUp Pro 2020, Chrome 64 embebido, de 2018). En vez
-    // de seguir con variantes de slider posicionado/girado -- justo el tipo
-    // de técnica más propensa a fallar en un motor tan viejo -- estos son
-    // botones normales, en flujo de documento normal, sin position:absolute
-    // ni transform ni medidas por JavaScript: el mismo tipo de elemento que
-    // "Transparencia"/"Aristas" y el resto de los botones que sí funcionan
-    // en esa misma pantalla.
-    function inicializarFlechasScroll(grupo) {
-      var contenedor = document.querySelector(grupo.getAttribute('data-scroll-target'));
-      var arriba = grupo.querySelector('.scroll-arrow-up');
-      var abajo = grupo.querySelector('.scroll-arrow-down');
-      var relleno = grupo.querySelector('.scroll-progress-fill');
-      if (!contenedor || !arriba || !abajo) return;
-      var PASO = 220;
-      function refrescar() {
-        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxScroll <= 1) { grupo.classList.add('hidden-track'); return; }
-        grupo.classList.remove('hidden-track');
-        arriba.disabled = contenedor.scrollTop <= 0;
-        abajo.disabled = contenedor.scrollTop >= maxScroll - 1;
-        if (relleno) relleno.style.width = Math.round((contenedor.scrollTop / maxScroll) * 100) + '%';
-      }
-      function mover(direccion) {
-        var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        contenedor.scrollTop = Math.max(0, Math.min(maxScroll, contenedor.scrollTop + direccion * PASO));
-        refrescar();
-      }
-      function repetirMientrasPresionado(boton, direccion) {
-        var intervalo = null;
-        boton.addEventListener('mousedown', function(event) {
-          event.preventDefault();
-          mover(direccion);
-          intervalo = window.setInterval(function() { mover(direccion); }, 220);
-        });
-        function parar() {
-          if (intervalo) { window.clearInterval(intervalo); intervalo = null; }
-        }
-        document.addEventListener('mouseup', parar);
-        boton.addEventListener('mouseleave', parar);
-      }
-      repetirMientrasPresionado(arriba, -1);
-      repetirMientrasPresionado(abajo, 1);
-      contenedor.addEventListener('scroll', refrescar);
-      window.addEventListener('resize', refrescar);
-      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
-      refrescar();
-      window.setInterval(refrescar, 1000);
-    }
-    document.querySelectorAll('.scroll-arrows').forEach(inicializarFlechasScroll);
+    // Botones de flecha ▲/▼ (6.4.26-6.4.30) quedaron descartados: la
+    // captura del árbol de piezas mostró que la scrollbar NATIVA del
+    // navegador sí se pinta y arrastra bien en el equipo real del usuario,
+    // así que 6.4.31 vuelve a la scrollbar nativa (estilizada, ver
+    // interfaz.css) en vez de un control propio.

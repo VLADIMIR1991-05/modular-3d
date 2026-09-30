@@ -1,7 +1,23 @@
-# Modular_3D 6.4.30 · Causa real encontrada: alto del panel fijado en píxeles
+# Modular_3D 6.4.31 · Vuelta a la scrollbar nativa (ya probada, funciona en tu equipo)
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.30  
+**Versión:** 6.4.31  
+
+## Cambios 6.4.31
+
+Tu captura del árbol de piezas ("MODULAR-3D VIEW") mostró algo clave: esa lista SÍ tiene una barra de scroll clásica del navegador (delgada, gris, arrastrable) y se ve y funciona perfecto en tu equipo. Esa barra nunca fue un control personalizado -- es la barra nativa del navegador, sin más.
+
+El problema de todo este historial fue que, desde el principio, se ocultó a propósito la barra nativa en el panel de configuración (izquierda) y en el visor 3D (derecha), para reemplazarla por controles hechos a mano (barra propia, deslizador vertical, deslizador rotado, botones de flecha) -- y NINGUNO de esos reemplazos se vio nunca en tu navegador real, aunque todos probaban perfecto en las pruebas automatizadas de este lado.
+
+Esta versión:
+
+- **Deja de ocultar la barra nativa** en el panel de configuración y en el visor 3D.
+- Le aplica el mismo estilo (delgada, gris oscuro, con acento naranja al pasar el mouse) que ya usa la lista de piezas que confirmaste que funciona -- para que se vea igual en toda la pantalla.
+- **Quita por completo** los botones de flecha ▲/▼ y la barra de progreso de las versiones anteriores (6.4.26-6.4.30): ya no hacen falta.
+- Se mantiene el arreglo de 6.4.30 (el alto del panel se sigue fijando en píxeles por código) -- eso fue lo que hizo que el navegador por fin supiera cuánto contenido sobra y cuándo mostrar la barra.
+- Se quitan los mensajes de diagnóstico `[JS:...]` del pie de página -- ya cumplieron su función.
+
+**Por favor probá esta versión** y confirmame si ahora ves una barra de scroll normal (como la de la lista de piezas) tanto en el panel de configuración como en el visor 3D, y que se puede arrastrar con el mouse para subir y bajar.
 
 ## Cambios 6.4.30
 
