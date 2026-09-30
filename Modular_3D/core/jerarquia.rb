@@ -1380,13 +1380,22 @@ module LPenafiel_GeneradorMueblesExacto
       # Zócalo/cornisa/premesón nunca cantean su canto largo (el frente va
       # laminado como cara, no como canto de borde; el de atrás siempre
       # queda oculto contra la pared) -- solo cantean sus dos extremos
-      # cortos, y solo el/los que de verdad queden expuestos: si ese lado
-      # tiene remate (inicial=izq/final=der), el remate ya tapa el corte y
-      # no hace falta cantearlo. Pedido explícito del usuario.
-      extremos_expuestos = (remate_inicial ? 0 : 1) + (remate_final ? 0 : 1)
+      # cortos (lado 2 y lado 4).
+      #
+      # Zócalo y Cornisa cantean SIEMPRE los dos extremos, tengan remate o
+      # módulo vecino de ese lado o no -- corregido en v6.4.43, pedido
+      # explícito del usuario ("zocalos siempre iran laminados lado 2 y 4
+      # ... si se juntan sí van laminados").
+      #
+      # Premesón es la única excepción: su extremo NO cantea cuando ese
+      # lado tiene remate (lo tapa) -- si además hay un módulo vecino
+      # pegado de ese lado (join premesón-con-premesón, no visible), eso lo
+      # corrige "Sincronizar continuidad" al fusionar ambos tramos en una
+      # sola pieza con sus propios 2 extremos reales (ver continuidad.rb).
+      extremos_expuestos_premeson = (remate_inicial ? 0 : 1) + (remate_final ? 0 : 1)
 
       if lleva_zocalo
-        self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 0, extremos_expuestos)
+        self.crear_pieza(entities, modulo_nombre, "ZOCALO", ancho_total, zocalo_grosor, zocalo_alto, 0.mm, zocalo_retranqueo, 0.mm, 0, 2)
 
         remate_zocalo_lado = (datos['remate_zocalo_lado'] || 'NINGUNO').to_s.upcase
         # Arranca DETRÁS del propio zócalo (retranqueo + su grosor), no en el
@@ -1408,13 +1417,13 @@ module LPenafiel_GeneradorMueblesExacto
       end
 
       if lleva_premeson
-        self.crear_pieza(entities, modulo_nombre, "PREMESON", ancho_total, prof_total, espesor, 0.mm, 0.mm, alto_total + alto_carcasa_offset, 1, extremos_expuestos)
+        self.crear_pieza(entities, modulo_nombre, "PREMESON", ancho_total, prof_total, espesor, 0.mm, 0.mm, alto_total + alto_carcasa_offset, 1, extremos_expuestos_premeson)
       end
 
       if cornisa_activa
         cornisa_altura = [(datos['cornisa_altura'] || 100).to_f, 20.0].max.mm
         z_cornisa = alto_total + alto_carcasa_offset
-        self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_total, cornisa_grosor, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 0, extremos_expuestos)
+        self.crear_pieza(entities, modulo_nombre, "CORNISA", ancho_total, cornisa_grosor, cornisa_altura, 0.mm, cornisa_retranqueo, z_cornisa, 0, 2)
 
         remate_cornisa_lado = (datos['remate_cornisa_lado'] || 'NINGUNO').to_s.upcase
         # Mismo criterio que remate de zócalo: arranca DETRÁS de la propia

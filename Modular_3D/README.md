@@ -1,7 +1,23 @@
-# Modular_3D 6.4.42 · Cantos condicionales + colores heredados (zócalo, cornisa, premesón)
+# Modular_3D 6.4.43 · Zócalo/Cornisa cantean siempre · Premesón condicional
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.42  
+**Versión:** 6.4.43  
+
+## Cambios 6.4.43
+
+Corrección sobre v6.4.42: había hecho el canto de Zócalo y Cornisa condicional a los remates, cuando en realidad **siempre** cantean sus 2 extremos (lado 2 y lado 4) -- con remate, sin remate, o aunque se junten con otro módulo. Solo el Premesón es la excepción condicional.
+
+**1) Zócalo y Cornisa: cantos_c=2 fijo, siempre** (`jerarquia.rb`). Ya no dependen de `remate_inicial`/`remate_final`.
+
+**2) Premesón: sigue siendo condicional** (sin cambios respecto a v6.4.42) -- su extremo no cantea si ese lado tiene remate. La diferencia real es que, cuando dos Premesón de módulos vecinos quedan pegados (una junta que no se ve una vez unida), esa junta tampoco debe cantear, a diferencia de Zócalo/Cornisa que sí cantean aunque se junten.
+
+**3) `continuidad.rb` corregido para que esta regla sobreviva a "Sincronizar continuidad".** Antes, el tramo fusionado (la pieza única que reemplaza a varias piezas individuales pegadas, hasta 2420mm) llevaba SIEMPRE `1L-1C` sin importar si era Zócalo, Cornisa o Premesón -- un hardcodeo que no tenía nada que ver con esta regla. Ahora:
+   - Zócalo/Cornisa fusionados: `0L-2C` siempre, igual que los individuales.
+   - Premesón fusionado: `1L` + cantos cortos según si el extremo REAL del tramo (el lado izquierdo del primer módulo que lo compone, el lado derecho del último) tiene remate de ese lado -- las juntas internas entre los módulos que el tramo fusiona ya no cuentan como extremos, porque ahora son una sola pieza.
+
+Verifiqué las 3 combinaciones (individual, fusionado con remate en un extremo, fusionado sin remates) por ejecución.
+
+**Por favor instala esta versión y revisá el mismo despiece de antes** (el de la captura que mandaste) -- Zócalo y Cornisa deberían mostrar `0L-2C` siempre, sin importar remates; Premesón debería seguir siendo condicional como ya estaba.
 
 ## Cambios 6.4.42
 

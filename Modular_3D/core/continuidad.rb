@@ -61,7 +61,14 @@ module LPenafiel_GeneradorMueblesExacto
       next unless filtro.call(manifiesto['data'])
       next unless entity.respond_to?(:transformation) && continuidad_traslacion_pura?(entity.transformation)
       info = continuidad_pieza_y_bounds(entity, nombre_pieza)
-      candidatos << info if info
+      next unless info
+      # Del módulo DUEÑO de esta pieza (no de la pieza en sí): hace falta
+      # para decidir, al fusionar el tramo, si el extremo real (izq del
+      # primero / der del último del segmento) tiene remate -- ver canto
+      # del Premesón fusionado en continuidad_procesar_familia.
+      info['remate_inicial'] = (manifiesto['data']['remate_inicial'] || 'NO').to_s == 'SI'
+      info['remate_final'] = (manifiesto['data']['remate_final'] || 'NO').to_s == 'SI'
+      candidatos << info
     end
     candidatos
   end
@@ -120,7 +127,19 @@ module LPenafiel_GeneradorMueblesExacto
         ancho = ultimo['x_max'] - primero['x_min']
         prof = primero['y_max'] - primero['y_min']
         alto = primero['z_max'] - primero['z_min']
-        self.crear_pieza(contenedor.entities, 'CONTINUIDAD', nombre_pieza, ancho, prof, alto, primero['x_min'], primero['y_min'], primero['z_min'], 1, 1)
+        # Zócalo y Cornisa cantean SIEMPRE sus 2 extremos, tengan remate o
+        # no (pedido explícito del usuario); las juntas internas entre los
+        # módulos que este tramo fusiona ya no existen como extremos una
+        # vez fusionadas, así que no hace falta distinguirlas aparte. El
+        # Premesón es la única excepción: su extremo real (izquierdo del
+        # primer módulo del tramo / derecho del último) solo cantea si ese
+        # módulo no tiene remate de ese lado.
+        cantos_l, cantos_c = if nombre_pieza == 'PREMESON'
+                               [1, (primero['remate_inicial'] ? 0 : 1) + (ultimo['remate_final'] ? 0 : 1)]
+                             else
+                               [0, 2]
+                             end
+        self.crear_pieza(contenedor.entities, 'CONTINUIDAD', nombre_pieza, ancho, prof, alto, primero['x_min'], primero['y_min'], primero['z_min'], cantos_l, cantos_c)
       end
     end
     tramos
