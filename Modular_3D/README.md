@@ -1,7 +1,17 @@
-# Modular_3D 6.4.35 · Alto del remate ya no es fijo: se adapta a cornisa/premesón/casco
+# Modular_3D 6.4.36 · Fix: frente de cajón (sistema simple "cajones por nicho") quedaba embutido
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.35  
+**Versión:** 6.4.36  
+
+## Cambios 6.4.36
+
+Encontrado el bug detrás de "la puerta/frente se ve embutida aunque no está en Embutida": en el sistema simple de cajones (los campos numéricos "Cajones por nicho" de la pestaña 3, sin usar el diseñador de espacios), el frente del cajón (`CJ_n_FRENTE`) arrancaba exactamente en el mismo plano que la propia caja del cajón (Y=0, a ras del plano del casco) -- **sin sobresalir hacia adelante** como sí lo hacen una puerta solapada o un remate (que arrancan en `-grosor`). El resultado: el frente del cajón quedaba a ras/hundido frente al remate y a cualquier puerta vecina, aunque nada esté configurado como "Embutida".
+
+Corregido: el frente ahora se pega por delante de su propia caja (que se queda igual) y sobresale exactamente lo mismo que una puerta o un remate en su configuración por defecto -- mismo plano visual para frentes de cajón, puertas y remates.
+
+**Si el elemento de tu captura era en realidad una puerta (no un frente de cajón)**, avísame -- esa parte usa otra lógica de posición (`puerta_interna`/`montaje_puerta`) que reviso aparte.
+
+Sobre el segundo problema (zócalo/cornisa "remontándose" en la esquina): antes de tocar esa geometría necesito confirmar algo puntual (te pregunto en el chat) para no arriesgar otro intento a ciegas.
 
 ## Cambios 6.4.35
 

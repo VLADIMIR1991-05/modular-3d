@@ -1154,7 +1154,16 @@ module LPenafiel_GeneradorMueblesExacto
             x_cj_lat_der = x_cj_lat_izq + ancho_caja_cajon - espesor
             self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_LAT_DER", ancho_lat_cajon, prof_lat_cajon, alto_lat_cajon, x_cj_lat_der, retiro_cajones, z_inicio_cajon, 1, 0)
             x_cj_frente = x_cj_lat_izq + espesor
-            self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_FRENTE", ancho_frente_cajon, prof_frente_cajon, alto_frente_cajon, x_cj_frente, retiro_cajones, z_inicio_cajon, 1, 0)
+            # El frente va PEGADO por delante de la caja del cajón (que se
+            # queda tal cual, en retiro_cajones) -- no a ras del mismo plano
+            # que sus costados/fondo. Antes el frente arrancaba en
+            # retiro_cajones igual que la caja, quedando a ras del plano del
+            # casco (Y=0) en vez de sobresalir como una puerta o un remate
+            # (que sí arrancan en -grosor), por lo que se veía embutido/
+            # hundido frente a ellos aunque el frente use el mismo material y
+            # plano visual que una puerta solapada.
+            y_cj_frente = retiro_cajones - prof_frente_cajon
+            self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_FRENTE", ancho_frente_cajon, prof_frente_cajon, alto_frente_cajon, x_cj_frente, y_cj_frente, z_inicio_cajon, 1, 0)
             y_cj_post = retiro_cajones + prof_caja_cajon - espesor
             self.crear_pieza(entities, modulo_nombre, "CJ_#{contador_cajon}_POSTERIOR", ancho_frente_cajon, prof_frente_cajon, alto_frente_cajon, x_cj_frente, y_cj_post, z_inicio_cajon, 1, 0)
             y_cj_fondo = retiro_cajones + espesor; z_cj_fondo = z_inicio_cajon
