@@ -104,26 +104,44 @@
     .config-pane, aside.m3dv-panel { scrollbar-width: none; }
     .config-pane::-webkit-scrollbar, aside.m3dv-panel::-webkit-scrollbar { display: none; }
     /* 6.4.20 probó una barra propia dibujada con divs (arrastre manual vía
-       mousedown/mousemove/mouseup) -- funcionó en todas las pruebas
-       automatizadas, pero como la de 6.4.14 antes, nunca quedó confirmado
-       que funcionara de verdad en el navegador embebido de SketchUp. Se
-       vuelve a un <input type="range"> nativo (como en 6.4.17) porque es
-       el ÚNICO tipo de control con evidencia real de funcionar ahí: los
-       controles "Explosión"/"Velocidad de giro" son del mismo tipo y SÍ se
-       ven y arrastran en tus propias capturas. La razón técnica es que un
-       range nativo arrastra con el manejo interno del propio motor del
-       navegador -- no depende de que los eventos mousemove/mouseup lleguen
-       bien a JavaScript mientras se arrastra fuera del control, que es
-       justo el tipo de cosa que un navegador embebido puede manejar
-       distinto a uno de escritorio normal. A diferencia del intento de
-       6.4.17 (que no llegó a moverse en la práctica), esta vez el bug real
-       de fondo (el corte de ancho de 6.4.18) ya está corregido, así que el
-       range sí debería mover el panel de verdad. Se posiciona vertical,
-       pegado al borde derecho de cada panel, ocupando todo su alto -- en
-       el mismo lugar donde iba la barra propia de divs. */
-    .scroll-vslider { position:absolute; top:8px; right:2px; bottom:8px; width:14px; z-index:4; margin:0; padding:0; writing-mode:vertical-lr; direction:rtl; -webkit-appearance:slider-vertical; accent-color:#4a5660; }
+       mousedown/mousemove/mouseup): nunca quedó confirmado que arrastrara
+       de verdad en el navegador embebido de SketchUp. 6.4.22 volvió a un
+       <input type="range"> nativo usando writing-mode:vertical-lr +
+       -webkit-appearance:slider-vertical para orientarlo vertical -- pero
+       ESO TAMPOCO SE VEÍA: el espacio quedaba reservado (la barra sí
+       empuja el contenido) pero el control mismo no se pintaba, señal de
+       que ese motor no soporta esas dos propiedades de orientación
+       vertical (son APIs mucho menos universales que un <input
+       type="range"> horizontal liso, que sabemos que SÍ se ve y arrastra
+       ahí -- "Explosión"/"Velocidad de giro" son ese mismo tipo).
+       6.4.23 evita depender de NINGUNA API "vertical" del navegador: es un
+       <input type="range"> horizontal COMÚN Y CORRIENTE (garantizado que
+       se ve, es el mismo que ya funciona) al que sólo se le aplica un
+       transform:rotate(-90deg) -- un simple giro visual con CSS estándar,
+       nada especial de orientación de sliders. El navegador sigue
+       pensando que dibuja un slider horizontal normal (por eso funciona);
+       sólo se ve girado. .scroll-vslider-wrap ocupa el hueco vertical de
+       siempre (mismo sitio, mismo ancho); adentro, el <input> se
+       dimensiona con JS (ancho = alto real del panel, alto = grosor fijo)
+       y se centra con top/left calculados a mano antes de girarlo, para
+       que el giro quede perfectamente centrado en el hueco. */
+    .scroll-vslider-wrap { position:absolute; top:8px; right:2px; bottom:8px; width:14px; z-index:4; overflow:hidden; }
+    .scroll-vslider-wrap.hidden-track { display:none; }
+    .scroll-vslider { position:absolute; margin:0; padding:0; transform-origin:center center; transform:rotate(-90deg); accent-color:#4a5660; background:transparent; }
     .scroll-vslider:hover, .scroll-vslider:active { accent-color:var(--brand); }
-    .scroll-vslider.hidden-track { display:none; }
+    /* accent-color (arriba) es una propiedad relativamente reciente -- si
+       el navegador embebido tampoco la soporta (como parece no soportar
+       writing-mode:vertical-lr), el thumb/track quedarían en su gris por
+       defecto del sistema operativo, apenas visibles sobre fondo oscuro.
+       Se fuerza también el estilo clásico vía los pseudo-elementos
+       -webkit-slider-thumb/-moz-range-thumb, soportados desde WebKit muy
+       antiguo, para no depender de esa propiedad moderna en absoluto. */
+    .scroll-vslider::-webkit-slider-runnable-track { background:rgba(255,255,255,.12); border-radius:6px; height:100%; }
+    .scroll-vslider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:36px; height:14px; border-radius:6px; background:#5a6772; cursor:pointer; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
+    .scroll-vslider:hover::-webkit-slider-thumb, .scroll-vslider:active::-webkit-slider-thumb { background:var(--brand); }
+    .scroll-vslider::-moz-range-track { background:rgba(255,255,255,.12); border-radius:6px; height:100%; }
+    .scroll-vslider::-moz-range-thumb { width:36px; height:14px; border:0; border-radius:6px; background:#5a6772; cursor:pointer; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
+    .scroll-vslider:hover::-moz-range-thumb, .scroll-vslider:active::-moz-range-thumb { background:var(--brand); }
     /* El visor 3D queda fijo: aside pasa a columna flex donde
        .m3dv-body (árbol de piezas / propiedades) hace scroll interno
        PRIMERO, mientras haya espacio de sobra. Pero si la ventana es tan

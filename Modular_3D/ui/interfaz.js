@@ -1063,30 +1063,41 @@
     }, { passive: false });
 
     // Deslizador vertical nativo, uno por panel (.config-pane y
-    // aside.m3dv-panel son independientes -- cada uno el suyo). 6.4.20
-    // probó una barra propia con divs (arrastre manual por mousedown/
-    // mousemove/mouseup): pasó todas las pruebas automatizadas pero, igual
-    // que la de 6.4.14 antes, nunca quedó confirmado que arrastrara de
-    // verdad en el navegador embebido de SketchUp. Se vuelve a un
-    // <input type="range"> nativo (como en 6.4.17, pero ahora vertical y
-    // con el bug real de fondo -- el corte de ancho de 6.4.18 -- ya
-    // corregido): el arrastre lo maneja el motor del navegador por dentro,
-    // sin depender de que mousemove/mouseup lleguen bien a JavaScript
-    // mientras el mouse sale del control, y es el ÚNICO tipo de control
-    // con evidencia real de funcionar ahí (mismo tipo que "Explosión"/
-    // "Velocidad de giro", que sí se ven y arrastran en tus capturas).
-    function inicializarDeslizadorScroll(slider) {
-      var contenedor = document.querySelector(slider.getAttribute('data-scroll-target'));
-      if (!contenedor) return;
+    // aside.m3dv-panel son independientes -- cada uno el suyo).
+    // 6.4.22 probó un <input type="range"> con writing-mode:vertical-lr +
+    // -webkit-appearance:slider-vertical, pero el hueco quedaba vacío: ese
+    // navegador reserva el espacio (la barra sí empuja el contenido) pero
+    // no pinta el control -- esas dos propiedades de orientación vertical
+    // no son universales. Un <input type="range"> HORIZONTAL liso sí se ve
+    // y arrastra ahí (es el mismo tipo que "Explosión"/"Velocidad de
+    // giro"), así que en vez de pedirle al navegador un slider vertical,
+    // se usa uno horizontal normal y se gira visualmente con CSS
+    // (transform:rotate) -- un giro no depende de ninguna API de
+    // orientación de sliders, es sólo dibujo.
+    // Como el input sigue siendo horizontal por dentro, su ancho/alto y su
+    // posición hay que calcularlos a mano para que, ya girado, llene
+    // exactamente el hueco vertical (ver posicionar() más abajo).
+    function inicializarDeslizadorScroll(wrap) {
+      var slider = wrap.querySelector('.scroll-vslider');
+      var contenedor = document.querySelector(wrap.getAttribute('data-scroll-target'));
+      if (!slider || !contenedor) return;
       var moviendoSlider = false;
+      function posicionar() {
+        var alto = wrap.clientHeight, grosor = wrap.clientWidth;
+        if (alto <= 0 || grosor <= 0) return;
+        slider.style.width = alto + 'px';
+        slider.style.height = grosor + 'px';
+        slider.style.top = ((alto - grosor) / 2) + 'px';
+        slider.style.left = ((grosor - alto) / 2) + 'px';
+      }
       function refrescar() {
         var maxScroll = contenedor.scrollHeight - contenedor.clientHeight;
-        if (maxScroll <= 1) { slider.classList.add('hidden-track'); return; }
-        slider.classList.remove('hidden-track');
+        if (maxScroll <= 1) { wrap.classList.add('hidden-track'); return; }
+        wrap.classList.remove('hidden-track');
         if (!moviendoSlider) {
-          // El range vertical nace con el mínimo (0) abajo y el máximo
-          // (1000) arriba -- como un control de volumen -- así que se
-          // invierte para que el sentido sea el de una scrollbar real:
+          // Girado -90deg, el extremo "derecho" (valor máximo) del range
+          // horizontal queda apuntando hacia ARRIBA en pantalla -- así que
+          // se invierte para que el sentido sea el de una scrollbar real:
           // manija arriba = contenido arriba, manija abajo = contenido
           // abajo.
           slider.value = Math.round((1 - contenedor.scrollTop / maxScroll) * 1000);
@@ -1099,9 +1110,13 @@
       });
       slider.addEventListener('change', function() { moviendoSlider = false; });
       contenedor.addEventListener('scroll', refrescar);
-      window.addEventListener('resize', refrescar);
-      if (window.ResizeObserver) new ResizeObserver(refrescar).observe(contenedor);
+      window.addEventListener('resize', function() { posicionar(); refrescar(); });
+      if (window.ResizeObserver) {
+        new ResizeObserver(posicionar).observe(wrap);
+        new ResizeObserver(refrescar).observe(contenedor);
+      }
+      posicionar();
       refrescar();
       window.setInterval(refrescar, 1000);
     }
-    document.querySelectorAll('.scroll-vslider').forEach(inicializarDeslizadorScroll);
+    document.querySelectorAll('.scroll-vslider-wrap').forEach(inicializarDeslizadorScroll);

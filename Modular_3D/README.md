@@ -1,8 +1,19 @@
-# Modular_3D 6.4.22 · Deslizador vertical nativo + letra más chica en árbol/medidas
+# Modular_3D 6.4.23 · Barra de scroll: slider horizontal girado con CSS, no vertical nativo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.22  
+**Versión:** 6.4.23  
 
+## Cambios 6.4.23
+
+Confirmaste el diagnóstico más preciso hasta ahora: "ya se logra ver que hay un espacio para la barra de desplazamiento pero no se lo ve ni funcionar". Eso es oro -- dice exactamente dónde estaba el problema.
+
+- **Causa encontrada**: el espacio SÍ se reservaba (la barra empujaba el contenido correctamente), pero el `<input type="range">` con `writing-mode:vertical-lr` + `-webkit-appearance:slider-vertical` de 6.4.22 no se pintaba. Esas dos propiedades sirven para darle orientación VERTICAL a un slider nativo, pero no son universales -- el navegador embebido de SketchUp reserva el layout (por eso el hueco aparecía) pero no sabe dibujar esa variante concreta del control.
+- **Corregido de raíz, sin depender de NINGUNA API "vertical"**: ahora es un `<input type="range">` HORIZONTAL común y corriente -- el mismo tipo exacto que "Explosión"/"Velocidad de giro", que sabemos que se ve y arrastra ahí -- al que sólo se le aplica un `transform:rotate(-90deg)`. Es un simple giro visual con CSS estándar (soportado desde WebKit muy antiguo): el navegador sigue creyendo que dibuja un slider horizontal normal, sólo que rotado.
+- El tamaño y la posición del control (para que el giro quede perfectamente centrado en el hueco vertical) se calculan con JavaScript a partir del alto real del panel, no con CSS fijo.
+- También se dejó de depender de `accent-color` (otra propiedad relativamente reciente) para el color del thumb/track: ahora se fuerza el estilo vía `::-webkit-slider-thumb`/`::-moz-range-thumb`, soportado desde mucho antes, así el control se ve claramente incluso si ese navegador tampoco soporta `accent-color`.
+- Verificado con una prueba real: el thumb aparece como una manija clara y visible en la parte superior de la barra (capturado con screenshot), y arrastrarlo de arriba a abajo mueve el panel correctamente en el sentido esperado (arriba = contenido arriba, abajo = contenido abajo), sin errores de JavaScript.
+
+## Cambios 6.4.22
 ## Cambios 6.4.22
 
 Pediste arreglar también el árbol de piezas y las medidas (letra más chica), y dijiste que lo de arrastrar la barra para ver lo de abajo TODAVÍA no se arreglaba -- con la sugerencia de revisar versiones anteriores donde sí funcionaba y tomar de ahí lo necesario, sin tocar nada más.
