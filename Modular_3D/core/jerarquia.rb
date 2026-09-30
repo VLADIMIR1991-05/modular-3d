@@ -417,16 +417,19 @@ module LPenafiel_GeneradorMueblesExacto
       # llevan puerta -- así todos los módulos del mismo tipo quedan
       # alineados contra la misma pared y los Altos quedan a ras con los
       # Bajos de abajo. Los Altos además van a una altura de piso fija
-      # (Z=1500mm). Pedido explícito del usuario: esta regla REEMPLAZA (no
-      # convive con) el alineado anterior que perseguía dejar la
-      # puerta/remate exactos en Y=0 según su grosor -- ese alineado por
-      # grosor sigue vigente solo para módulos fuera de este sistema
-      # (Personalizado), que no tienen posición de pared fija.
+      # (Z=1486mm -- corregido en v6.4.44, 14mm más abajo que el valor
+      # original de 1500mm). Un Alto más alto sigue creciendo hacia
+      # arriba desde ese mismo piso, nunca hacia abajo. Pedido explícito
+      # del usuario: esta regla REEMPLAZA (no convive con) el alineado
+      # anterior que perseguía dejar la puerta/remate exactos en Y=0 según
+      # su grosor -- ese alineado por grosor sigue vigente solo para
+      # módulos fuera de este sistema (Personalizado), que no tienen
+      # posición de pared fija.
       tipos_layout_cocina = CAPA_PISO_COCINA + ['ALTO']
       if tipos_layout_cocina.include?(tipo_modulo)
         fondo_fijo_modulo = 600.mm
         offset_y_modulo = fondo_fijo_modulo - prof_total
-        altura_piso_modulo = tipo_modulo == 'ALTO' ? 1500.mm : 0.mm
+        altura_piso_modulo = tipo_modulo == 'ALTO' ? 1486.mm : 0.mm
       else
         hay_puerta_externa_solapada = false
         if hierarchy_geometry && (datos['montaje_puerta'] || 'SOLAPADA').to_s.upcase != 'EMBUTIDA'

@@ -186,7 +186,7 @@ module LPenafiel_GeneradorMueblesExacto
   # Bajo/Auxiliar/Closet forman una sola fila de piso, pegados unos a otros
   # en X sin ningún espacio, empezando en X=0; Alto forma su PROPIA fila
   # independiente, también empezando en X=0 (no continúa donde quedaron los
-  # Bajos), apilada encima vía Z=1500/Y=600 fijos (ver jerarquia.rb). No se
+  # Bajos), apilada encima vía Z=1486/Y=600 fijos (ver jerarquia.rb). No se
   # guarda ningún estado en memoria entre construcciones -- cada módulo
   # nuevo escanea la geometría REAL ya construida en la escena (mismo
   # criterio que @offset_edicion), así que el orden de creación, un

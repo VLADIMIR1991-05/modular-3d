@@ -1,7 +1,11 @@
-# Modular_3D 6.4.43 · Zócalo/Cornisa cantean siempre · Premesón condicional
+# Modular_3D 6.4.44 · Altura de piso del Alto corregida a Z=1486mm
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.43  
+**Versión:** 6.4.44  
+
+## Cambios 6.4.44
+
+Ajuste puntual sobre v6.4.40/41: la altura de piso fija de los módulos Alto era 1500mm y debía ser **1486mm** (14mm más abajo). Cambiado en `jerarquia.rb`. Un Alto más alto (por ejemplo 950mm en vez del alto por defecto) sigue creciendo hacia ARRIBA desde ese mismo piso -- nunca hacia abajo -- porque la base del módulo (Z local = 0) es justo lo que se posiciona en Z=1486mm; todo lo demás (zócalo/premesón no aplican a Alto, pero cornisa y remates si están activos) sigue relativo a esa misma base, así que no se desalinea nada más.
 
 ## Cambios 6.4.43
 
