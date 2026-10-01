@@ -412,9 +412,22 @@
     // construccion real en SketchUp ya protruyera correctamente. Replica
     // EXACTA de esa función, misma tolerancia de 0.5mm para detectar que
     // panel realmente toca la cavidad de esa puerta.
-    var puertaProtrusionModo = String(data.puerta_protrusion_modo || 'AUTOMATICO').toUpperCase();
     var puertaProtrusionOverrideRaw = String(data.puerta_protrusion_override_mm == null ? '' : data.puerta_protrusion_override_mm).trim();
-    var puertaProtrusionOverride = (puertaProtrusionModo === 'MANUAL' && puertaProtrusionOverrideRaw !== '') ? Math.max(0, Number(puertaProtrusionOverrideRaw) || 0) : null;
+    // v6.4.47 -- bug real encontrado: este "if" exigia puertaProtrusionModo
+    // === 'MANUAL', un valor que el desplegable "Modo" (puerta_protrusion_modo)
+    // NUNCA tiene (sus unicas 2 opciones son AUTOMATICO/AVISAR, que solo
+    // deciden si avisar o no -- ver mas abajo) -- esa condicion era
+    // literalmente imposible, asi que el campo "Forzar salida de puerta"
+    // NUNCA se aplicaba aca, aunque en jerarquia.rb (geometria 3D real) se
+    // aplica apenas el campo no esta vacio, sin mirar el modo. Resultado:
+    // si quedaba un valor cargado en ese campo (por ejemplo 0, de una
+    // prueba anterior), el visor en vivo lo ignoraba por completo (se veia
+    // bien) pero la construccion real en SketchUp si lo aplicaba (la
+    // puerta nacia embutida exactamente ese valor) -- reportado por el
+    // usuario como "en el visualizador se ve bien, el problema es cuando
+    // construyo". Ahora el visor respeta el campo igual que jerarquia.rb:
+    // alcanza con que no este vacio, sin exigir un "modo" que no existe.
+    var puertaProtrusionOverride = puertaProtrusionOverrideRaw !== '' ? Math.max(0, Number(puertaProtrusionOverrideRaw) || 0) : null;
     var sobFrontIzqGeneral = number(data, 'sobremedida_frontal_izq', 0);
     var sobFrontDerGeneral = number(data, 'sobremedida_frontal_der', 0);
     var sobFrontInferiorGeneral = number(data, 'sobremedida_frontal_inferior', 0);

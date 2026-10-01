@@ -1,7 +1,19 @@
-# Modular_3D 6.4.46 · "Actualizar módulo" ya no arrastra el módulo en Y cada edición
+# Modular_3D 6.4.47 · Visor en vivo ya refleja "Forzar salida de puerta"
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.46  
+**Versión:** 6.4.47  
+
+## Cambios 6.4.47
+
+Encontré la causa real del Closet/Auxiliar con la puerta metida adentro -- reproduje tu escenario exacto (Closet 600×2120×580, Zócalo activo, Externa·una puerta, Solapada) en el visor en vivo y, con esos datos, el cálculo da el resultado correcto. La diferencia tenía que estar en algo que el visor en vivo NO está mirando pero la construcción real en SketchUp sí.
+
+**La encontré:** en "2 Casco" hay un campo "Forzar salida de puerta (mm)" (bajo "Puertas frente a sobremedida") cuya propia etiqueta dice "escribir 0 fuerza todas las puertas a quedar a ras (sin sobresalir nada)". En `jerarquia.rb` (la construcción real) ese campo se aplica apenas no está vacío. Pero en `modular3d_view.js` (el visor en vivo) había una condición que exigía además que un desplegable "Modo" estuviera en 'MANUAL' -- un valor que ese desplegable **nunca puede tener** (sus únicas 2 opciones reales son "Automático (silencioso)" y "Automático y avisar...", ninguna es "Manual"). Esa condición imposible hacía que el visor en vivo **ignorara por completo** ese campo, mientras que la construcción real sí lo aplicaba.
+
+Si en algún momento quedó algo cargado en "Forzar salida de puerta" para ese Closet/Auxiliar (por ejemplo un "0", quizás de una prueba anterior) -- el visor seguía mostrando la puerta bien (porque la ignoraba), pero al construir de verdad en SketchUp, la puerta nacía exactamente a ras (embutida por su propio grosor, sea cual sea), coincidiendo con lo que describiste.
+
+**Corregido en `modular3d_view.js`:** ahora respeta ese campo con el mismo criterio que `jerarquia.rb` (alcanza con que no esté vacío, sin exigir el "modo" inexistente). De ahora en más, si queda algo cargado ahí, el visor en vivo también lo va a mostrar -- no va a volver a pasar que "se vea bien en el visor pero mal al construir" por este campo en particular.
+
+**Por favor revisá ese Closet/Auxiliar:** andá a "2 Casco" → "Puertas frente a sobremedida" → "Forzar salida de puerta (mm)" y fijate si tiene algo cargado. Si es así, borralo (dejalo vacío) y actualizá el módulo -- la puerta debería salir protruyendo normal. Avisame si después de instalar esta versión el visor en vivo ya muestra la puerta mal ahí mismo (eso confirmaría del todo el diagnóstico, ya con el visor y la construcción real coincidiendo).
 
 ## Cambios 6.4.46
 
