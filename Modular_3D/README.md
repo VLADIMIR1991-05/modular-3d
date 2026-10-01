@@ -1,7 +1,17 @@
-# Modular_3D 6.4.47 · Visor en vivo ya refleja "Forzar salida de puerta"
+# Modular_3D 6.4.48 · Secciones de puertas abiertas por defecto
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.47  
+**Versión:** 6.4.48  
+
+## Cambios 6.4.48
+
+Confirmaste que el bug de v6.4.47 (puerta embutida en Closet/Auxiliar) era exactamente el campo "Forzar salida de puerta (mm)" con un valor cargado. Para que algo así sea mucho más difícil de pasar por alto, las dos secciones plegables relacionadas con puertas que estaban cerradas por defecto ahora empiezan abiertas:
+- "Ajustes de puertas y cajones" (2 Casco) -- incluye "Grosor de puerta" y las luces/fugas entre frentes.
+- "Puerta de este espacio" (3 Configuración, por espacio) -- incluye "Puerta del espacio" y "Ajuste de puerta externa".
+
+Ningún otro comportamiento cambia -- es puramente que ahora se ven sin tener que hacer clic para desplegarlas.
+
+**Sobre el Catálogo con permisos por usuario (dueño/compartir/administrador):** el Catálogo Global vive enteramente en el servidor (`api.modular-3d.com`, fuera de este repositorio -- `catalogo.rb` solo hace llamadas HTTP a él). Implementar dueño/compartir/admin requiere cambios en ESE servidor (modelo de datos de usuarios/roles, endpoints nuevos para visibilidad y permisos) antes de que el plugin pueda mostrarlos o usarlos. Te escribo aparte para coordinar cómo seguir con eso.
 
 ## Cambios 6.4.47
 
