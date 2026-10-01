@@ -176,6 +176,14 @@
     var spaceState = {};
     var editMode = false;
     var syncingFields = false;
+    // "Forzar salida de puerta": mientras esté en true, el campo se
+    // mantiene escrito de verdad (no solo sugerido en el placeholder) con
+    // el grosor de puerta actual, en tiempo real -- pedido explícito del
+    // usuario ("que aplique realmente ese número, no solo como
+    // sugerencia"). Pasa a false apenas el usuario escribe un valor propio
+    // a mano (deja de autocompletarse); volver a dejar el campo vacío
+    // reactiva el autosincronizado.
+    var puertaProtrusionSincronizado = true;
     var linkedThickness = {
       grosor_superior: true,
       grosor_inferior: true,
@@ -448,6 +456,12 @@
           else el(id).value = datos[id];
         }
       });
+      // Si el módulo cargado trae guardado un valor propio de "Forzar
+      // salida de puerta" (distinto de vacío, p.ej. 0 para que queden a
+      // ras), se respeta tal cual -- no se auto-sincroniza con el grosor de
+      // puerta encima. Si vino vacío (o el módulo no trae este campo), se
+      // retoma el autosincronizado normal.
+      puertaProtrusionSincronizado = String(datos.puerta_protrusion_override_mm == null ? '' : datos.puerta_protrusion_override_mm).trim() === '';
       el('btn_actualizar_modulo').classList.toggle('show', editMode);
       // El módulo cargado ya trae su propio parametro_diseno_id (o
       // "ESTANDAR" si es viejo, vía migrar_manifiesto): re-aplica sus
@@ -618,14 +632,12 @@
       var host = el('puerta_protrusion_aviso');
       var campoOverride = el('puerta_protrusion_override_mm');
       if (!host && !campoOverride) return;
+      // Piso = grosor de la propia puerta, SIN competir con el espesor del
+      // casco (corrección explícita del usuario: siempre toma el grosor de
+      // puerta, no "el mayor entre puerta y casco") -- mismos candidatos
+      // base que calcular_protrusion_puerta en jerarquia.rb/modular3d_view.js.
       var grosorPuerta = Math.max(3, Number(d.puerta_grosor) || 15);
-      var grosorCasco = Number(d.espesor) || 15;
-      // El piso de la salida automática es el mayor entre el grosor de la
-      // puerta y el del propio casco (pedido explícito del usuario: una
-      // puerta nunca debería sobresalir menos que el espesor del casco) --
-      // mismos candidatos base que calcular_protrusion_puerta en
-      // jerarquia.rb/modular3d_view.js.
-      var candidatos = [grosorPuerta, grosorCasco];
+      var candidatos = [grosorPuerta];
       if (d.lleva_lateral_izq !== 'NO') candidatos.push(Number(d.sobremedida_frontal_izq) || 0);
       if (d.lleva_lateral_der !== 'NO') candidatos.push(Number(d.sobremedida_frontal_der) || 0);
       if (d.lleva_base !== 'NO') candidatos.push(Number(d.sobremedida_frontal_inferior) || 0);
@@ -634,29 +646,34 @@
       if (d.h_right === 'SI') candidatos.push(Number(d.h_sob_frontal_der) || 0);
       if (d.h_bottom === 'SI') candidatos.push(Number(d.h_sob_frontal_inferior) || 0);
       if (d.h_top === 'SI' && d.h_top_mode !== 'TRAVESANOS') candidatos.push(Number(d.h_sob_frontal_superior) || 0);
+      // Mientras el campo esté "sincronizado" (no tocado a mano, o vaciado
+      // de nuevo por el usuario), se escribe de verdad el grosor de puerta
+      // como valor REAL del campo -- no un placeholder sugerido -- para que
+      // quede realmente aplicado como salida forzada, tal cual se pidió.
+      // "override" se toma directo del valor recién escrito (no del "d" ya
+      // leído antes de escribirlo) para que el aviso de abajo coincida con
+      // lo que el campo muestra ahora mismo, sin esperar al próximo cambio.
+      // No se reescribe mientras el usuario tiene el foco puesto ahí mismo
+      // (está borrando/escribiendo): eso lo pisaría a mitad de tecleo.
       var override = isFinite(d.puerta_protrusion_override_mm) ? Math.max(0, d.puerta_protrusion_override_mm) : null;
-      var pisoAutomatico = Math.max(grosorPuerta, grosorCasco);
+      if (campoOverride && puertaProtrusionSincronizado && document.activeElement !== campoOverride) {
+        campoOverride.value = String(Math.round(grosorPuerta));
+        override = grosorPuerta;
+      }
       var efectivo = override != null ? override : Math.max.apply(Math, candidatos);
       var modo = d.puerta_protrusion_modo || 'AUTOMATICO';
-      // El placeholder del campo refleja en tiempo real el valor que se usará
-      // si se lo deja vacío (grosor de puerta/casco, el que sea mayor) --
-      // pedido explícito del usuario para ver sincronizado ahí mismo el
-      // "15" que ya se ve en "Grosor de puerta (mm)", sin tener que adivinar.
-      if (campoOverride) {
-        campoOverride.placeholder = 'Automático (' + Math.round(pisoAutomatico) + ' mm si se deja vacío)';
-      }
       if (!host) return;
       if (override != null) {
         host.textContent = 'Salida forzada: todas las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm.';
         host.className = 'hint-text';
-      } else if (modo === 'AVISAR' && efectivo > pisoAutomatico + 0.5) {
-        host.textContent = 'Aviso: hay un panel con sobremedida mayor que el grosor de puerta/casco (' + Math.round(pisoAutomatico) + ' mm). Las puertas solapadas que lo toquen saldrán ' + Math.round(efectivo) + ' mm para quedar al ras. Podés forzar otro valor arriba si no es lo que querés.';
+      } else if (modo === 'AVISAR' && efectivo > grosorPuerta + 0.5) {
+        host.textContent = 'Aviso: hay un panel con sobremedida mayor que el grosor de puerta (' + Math.round(grosorPuerta) + ' mm). Las puertas solapadas que lo toquen saldrán ' + Math.round(efectivo) + ' mm para quedar al ras. Podés forzar otro valor arriba si no es lo que querés.';
         host.className = 'hint-text warn';
       } else {
         // Siempre visible (no solo en modo AVISAR con diferencia notable):
         // para que se vea sin adivinar qué va a salir "Automático" antes de
         // construir, sin necesidad de forzar nada en el campo de arriba.
-        host.textContent = 'Automático: las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm (el mayor entre el grosor de la puerta y el del casco, o la sobremedida de algún panel si sobresale más).';
+        host.textContent = 'Automático: las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm (el grosor de la puerta, o la sobremedida de algún panel si sobresale más).';
         host.className = 'hint-text';
       }
     }
@@ -956,6 +973,14 @@
     actualizarNichos();
     sincronizarReglasRespaldo();
     document.addEventListener('input', function(event) {
+      // Escribir algo a mano en "Forzar salida de puerta" corta el
+      // autosincronizado (pasa a ser un valor manual propio); volver a
+      // dejarlo vacío (borrar todo) lo retoma -- actualizarAvisoProtrusionPuerta
+      // se encarga de reescribirlo con el grosor de puerta actual una vez
+      // que el usuario sale del campo (no mientras sigue con el foco ahí).
+      if (event.target.id === 'puerta_protrusion_override_mm') {
+        puertaProtrusionSincronizado = event.target.value.trim() === '';
+      }
       if (event.target.id === 'espesor') {linkedThickness.grosor_ajuste=!!el('sincronizar_ajuste').checked;syncThicknessFromGeneral(false);}
       if (event.target.id === 'material_casco_color') {
         if (el('material_respaldo_custom') && !el('material_respaldo_custom').checked && el('material_respaldo_color')) el('material_respaldo_color').value = event.target.value;
@@ -1026,6 +1051,11 @@
       if (event.target.id === 'remate_der_activo' && el('remate_final')) el('remate_final').value = event.target.checked ? 'SI' : 'NO';
       actualizarVista();
     });
+    // 'blur' (no 'change'/'input', que pueden disparar con el foco todavía
+    // puesto ahí) -- para cuando el usuario deja el campo vacío y sale: recién
+    // ahí, con el foco ya afuera de verdad, se vuelve a escribir el grosor de
+    // puerta actual como salida forzada real.
+    if (el('puerta_protrusion_override_mm')) el('puerta_protrusion_override_mm').addEventListener('blur', actualizarVista);
     document.addEventListener('click', function(event) {
       var panelCard = event.target.closest && event.target.closest('[data-editor-card]');
       if (panelCard && !event.target.matches('input,select,option')) {

@@ -435,7 +435,10 @@
     function calcularProtrusionPuerta(cavXMin, cavXMax, cavZMin, cavZMax, enclosureNode, sobNodo, grosorPuertaLocal) {
       if (puertaProtrusionOverride !== null) return puertaProtrusionOverride;
       var eps = 0.5;
-      var candidatos = [grosorPuertaLocal, general];
+      // Piso = grosor de la propia puerta, sin competir con el espesor del
+      // casco (pedido explícito: siempre toma el grosor de puerta) -- la
+      // sobremedida de un panel vecino sigue ganando si sobresale más.
+      var candidatos = [grosorPuertaLocal];
       if (hasLeft && Math.abs(cavXMin - leftT) <= eps) candidatos.push(sobFrontIzqGeneral);
       if (hasRight && Math.abs(cavXMax - (width - rightT)) <= eps) candidatos.push(sobFrontDerGeneral);
       // La base del casco general nunca es travesaños en este visor (esa

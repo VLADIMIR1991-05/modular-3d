@@ -584,7 +584,11 @@ module LPenafiel_GeneradorMueblesExacto
       calcular_protrusion_puerta = lambda do |cav_x_min, cav_x_max, cav_z_min, cav_z_max, enc_nodo, sob_nodo, grosor_puerta_local|
         next puerta_protrusion_override if puerta_protrusion_override
         eps = 0.5.mm
-        candidatos = [grosor_puerta_local, espesor]
+        # El piso es el grosor de la propia puerta, SIN competir con el
+        # espesor del casco (pedido explícito del usuario: siempre toma el
+        # grosor de puerta, no el mayor entre ambos) -- sigue ganando la
+        # sobremedida de un panel vecino si sobresale más que la puerta.
+        candidatos = [grosor_puerta_local]
         candidatos << sobremedida_frontal_izq if existe_lat_izq && (cav_x_min - grosor_lat_izq).abs <= eps
         candidatos << sobremedida_frontal_der if existe_lat_der && (cav_x_max - (ancho_total - grosor_lat_der)).abs <= eps
         candidatos << sobremedida_frontal_inferior if existe_base && base_modo_general != 'TRAVESANOS' && (cav_z_min - grosor_inferior).abs <= eps

@@ -1,19 +1,23 @@
-# Modular_3D 6.4.51 · Miniatura real en el Catálogo + "Forzar salida de puerta" sincronizado en vivo
+# Modular_3D 6.4.52 · "Forzar salida de puerta" aplicado de verdad (no una sugerencia) + Miniatura real en el Catálogo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.51  
+**Versión:** 6.4.52  
+
+## Cambios 6.4.52
+
+Corrección pedida sobre la 6.4.51: "Forzar salida de puerta (mm)" ya **no** es un placeholder sugerido -- ahora se escribe de verdad el número (el campo queda realmente aplicado como salida forzada), y **ya no compite con el espesor del casco**: siempre toma el grosor de puerta tal cual (antes ganaba el mayor entre puerta y casco; eso quedó revertido en `jerarquia.rb`, `modular3d_view.js` e `interfaz.js`). La sobremedida de un panel vecino que sobresalga más sigue ganando, como siempre.
+
+Mientras no toques el campo a mano (o lo dejes vacío y salgas de él), se mantiene sincronizado en tiempo real con "Grosor de puerta": cambiás el grosor, el campo se actualiza solo con ese mismo número, de verdad aplicado (el aviso de abajo pasa a decir "Salida forzada", no "Automático"). Si escribís ahí un valor distinto a mano, se respeta ese valor tal cual (deja de autosincronizarse) hasta que vuelvas a dejarlo vacío. Un módulo cargado con un valor propio guardado (por ejemplo 0, para que las puertas queden a ras) también se respeta tal cual, sin auto-sincronizarlo.
+
+Probado con navegador real: valor inicial ya aplicado (15mm) sin tocar nada; sincroniza en vivo al cambiar grosor de puerta; subir el espesor del casco ya NO lo mueve; escribir un valor a mano no se pisa mientras se sigue escribiendo; al vaciar el campo y salir de él, retoma el sincronizado automático.
 
 ## Cambios 6.4.51
 
-Dos pedidos de esta ronda:
-
-**1. "Forzar salida de puerta (mm)" ahora muestra en tiempo real, en el propio campo (como texto de fondo / placeholder, no como valor forzado), el número que "Automático" va a usar si lo dejás vacío** -- el mismo que ya se calculaba (mayor entre grosor de puerta y espesor de casco, o la sobremedida de un panel si sobresale más). Antes ese campo solo tenía un texto fijo genérico ("Automático (vacío = calculado solo)") y había que leer el aviso de más abajo para saber el número real; ahora se actualiza solo, al toque, si cambiás el grosor de puerta o el espesor del casco. Escribir un valor ahí adentro sigue forzando ESE valor exacto, igual que antes -- esto es puramente que el "automático" ya no es una sorpresa.
-
-**2. Miniatura real en el Catálogo Global** (pedido explícito: "debe mostrarse la foto en miniatura real"). Al guardar un módulo en "5 Catálogo", ahora se sube automáticamente, como foto real, la misma vista 3D que se está viendo en ese momento en el configurador (reusando la captura que ya usa el despiece, no una renderización nueva) -- el servidor ya aceptaba esto del propio dueño del módulo, no hizo falta ningún permiso nuevo. Cada módulo de la lista que todavía no tiene foto muestra un botón "Agregar miniatura" (o "Actualizar miniatura" si ya tiene una) para sacarla de la vista actual sin tener que volver a guardar todo el módulo.
+**Miniatura real en el Catálogo Global** (pedido explícito: "debe mostrarse la foto en miniatura real"). Al guardar un módulo en "5 Catálogo", ahora se sube automáticamente, como foto real, la misma vista 3D que se está viendo en ese momento en el configurador (reusando la captura que ya usa el despiece, no una renderización nueva) -- el servidor ya aceptaba esto del propio dueño del módulo, no hizo falta ningún permiso nuevo. Cada módulo de la lista que todavía no tiene foto muestra un botón "Agregar miniatura" (o "Actualizar miniatura" si ya tiene una) para sacarla de la vista actual sin tener que volver a guardar todo el módulo.
 
 Probé el flujo completo con un navegador real (guardar → subir miniatura automática con el id real devuelto por el servidor; botón "Agregar miniatura" sobre un módulo ya guardado) -- sin errores de JavaScript.
 
-**Pendiente, para la próxima ronda:** el árbol de categorías desplegable (elegiste esta opción junto con la miniatura) -- el servidor ya tiene toda la estructura lista (`catalog_taxonomy`, con crear/renombrar/borrar y permisos por dueño-o-admin), solo falta construir la interfaz en el plugin. Lo sigo en cuanto confirmes que esta parte (miniatura + sincronización del campo) quedó bien.
+**Pendiente, para la próxima ronda:** el árbol de categorías desplegable (elegiste esta opción junto con la miniatura) -- el servidor ya tiene toda la estructura lista (`catalog_taxonomy`, con crear/renombrar/borrar y permisos por dueño-o-admin), solo falta construir la interfaz en el plugin.
 
 ## Cambios 6.4.50
 
