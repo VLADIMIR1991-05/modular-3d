@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modular_3D</title>
-  <link rel="stylesheet" href="interfaz.css?v=6.4.48">
+  <link rel="stylesheet" href="interfaz.css?v=6.4.49">
 </head>
 <body class="license-locked">
   <div id="license_overlay" class="license-overlay">
@@ -60,7 +60,7 @@
         <div class="license-days-track"><div class="license-days-fill" id="license_days_fill"></div></div>
       </div>
     </div>
-    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.48</div>
+    <div class="version">Soporte Técnico y Licencias <a class="header-whatsapp" href="https://wa.me/593984604086" target="_blank" rel="noopener noreferrer" title="Soporte por WhatsApp">WhatsApp</a> · v6.4.49</div>
   </header>
 
   <main>
@@ -388,13 +388,23 @@
           <button type="button" id="catalogo_actualizar">Actualizar catálogo</button>
           <div id="catalogo_lista" class="catalogo-grid"></div>
         </div>
+        <div class="card" id="catalogo_compartir_card" style="display:none">
+          <h3>Compartir «<span id="catalogo_compartir_nombre"></span>»</h3>
+          <p class="hint-text">Privado: solo vos lo ves (y quien agregues abajo). Global: todos los usuarios con licencia activa lo ven. Un administrador siempre tiene acceso total, sea cual sea la visibilidad.</p>
+          <div id="catalogo_compartir_message" class="message warn"></div>
+          <div class="row"><label for="catalogo_compartir_visibilidad">Visibilidad</label><select id="catalogo_compartir_visibilidad"><option value="private">Privado</option><option value="global">Global (todos con licencia)</option></select></div>
+          <div class="row"><label for="catalogo_compartir_agregar">Compartir con un usuario</label><select id="catalogo_compartir_agregar"><option value="">Elegí un usuario...</option></select></div>
+          <div id="catalogo_compartir_lista_actual" class="catalogo-compartidos-lista"></div>
+          <button type="button" class="secondary" id="catalogo_compartir_cerrar">Cerrar</button>
+        </div>
         <div class="card">
           <h3>Guardar el módulo actual en el Catálogo</h3>
-          <p class="hint-text">Guarda la configuración actual (medidas, casco, espacios y materiales) como un Tipo de Módulo reutilizable por vos y por el resto del equipo con licencia.</p>
+          <p class="hint-text">Guarda la configuración actual (medidas, casco, espacios y materiales) como un Tipo de Módulo reutilizable. Vos quedás como dueño: por defecto solo vos lo ves, y después lo podés compartir con usuarios puntuales o hacerlo global para todo el equipo con licencia desde "Compartir" en la lista de arriba.</p>
           <div id="catalogo_guardar_message" class="message warn"></div>
           <div class="row"><label for="catalogo_guardar_categoria">Categoría</label><input type="text" list="catalogo_categorias_datalist" id="catalogo_guardar_categoria" placeholder="Closet, Cocina, Cajonera..."><datalist id="catalogo_categorias_datalist"></datalist></div>
           <div class="row"><label for="catalogo_guardar_nombre">Nombre</label><input type="text" id="catalogo_guardar_nombre" placeholder="Ej. Puerta abatible 600x720"></div>
           <div class="row"><label for="catalogo_guardar_descripcion">Descripción</label><input type="text" id="catalogo_guardar_descripcion" placeholder="Opcional"></div>
+          <div class="row"><label for="catalogo_guardar_visibilidad">Visibilidad</label><select id="catalogo_guardar_visibilidad"><option value="private" selected>Privado (solo yo, por ahora)</option><option value="global">Global (todos los usuarios con licencia)</option></select></div>
           <button type="button" id="catalogo_guardar_boton">Guardar módulo actual en el catálogo</button>
         </div>
       </div>
@@ -457,11 +467,11 @@
 
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/OrbitControls.js"></script>
-  <script src="modular3d_view.js?v=6.4.48"></script>
-  <script src="reglas_visibilidad.js?v=6.4.48"></script>
-  <script src="interfaz.js?v=6.4.48"></script>
-<script src="hierarchical_config.js?v=6.4.48"></script>
-<script src="material_config.js?v=6.4.48"></script>
-<script src="catalogo.js?v=6.4.48"></script>
+  <script src="modular3d_view.js?v=6.4.49"></script>
+  <script src="reglas_visibilidad.js?v=6.4.49"></script>
+  <script src="interfaz.js?v=6.4.49"></script>
+<script src="hierarchical_config.js?v=6.4.49"></script>
+<script src="material_config.js?v=6.4.49"></script>
+<script src="catalogo.js?v=6.4.49"></script>
 </body>
 </html>

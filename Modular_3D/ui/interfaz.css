@@ -320,4 +320,10 @@
     .catalogo-item-cat{display:inline-block;padding:1px 7px;border-radius:99px;background:rgba(127,200,244,.15);color:#a8c5d6;font-size:10px;font-weight:700;width:fit-content}
     .catalogo-item-autor{color:var(--muted);font-size:10px}
     .catalogo-item button{margin-top:2px}
+    .catalogo-item-visibilidad{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;width:fit-content}
+    .catalogo-item-visibilidad.global{background:rgba(127,200,244,.15);color:#a8c5d6}
+    .catalogo-item-visibilidad.private{background:rgba(255,255,255,.08);color:var(--muted)}
+    .catalogo-compartidos-lista{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .catalogo-compartido-fila{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border:1px solid var(--line);border-radius:6px;background:#1a2128;font-size:12px}
+    .catalogo-compartido-fila button{margin:0;padding:3px 8px;font-size:11px}
     @media(max-width:1150px){.hierarchy-layout{grid-template-columns:1fr}}

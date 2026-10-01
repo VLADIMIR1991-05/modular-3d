@@ -133,9 +133,35 @@ module LPenafiel_GeneradorMueblesExacto
       resultado = Modular3D::Catalogo.detalle(catalogo_id)
       dialogo.execute_script("if (window.Modular3DCatalogoDetalleResult) { window.Modular3DCatalogoDetalleResult(#{JSON.generate(resultado)}); }")
     end
-    dialogo.add_action_callback("catalogoGuardar") do |_action_context, categoria, nombre, descripcion, datos|
-      resultado = Modular3D::Catalogo.guardar(categoria, nombre, descripcion, datos)
+    dialogo.add_action_callback("catalogoGuardar") do |_action_context, categoria, nombre, descripcion, datos, visibilidad|
+      resultado = Modular3D::Catalogo.guardar(categoria, nombre, descripcion, datos, visibilidad)
       dialogo.execute_script("if (window.Modular3DCatalogoGuardarResult) { window.Modular3DCatalogoGuardarResult(#{JSON.generate(resultado)}); }")
+    end
+    # --- Permisos del Catálogo (dueño/compartir/global) -- pedido explícito
+    # del usuario: cada quien es dueño de lo que guarda, puede compartirlo
+    # con usuarios puntuales o con todos los que tengan licencia, y un
+    # administrador tiene acceso total. Todo el control de acceso real vive
+    # en el servidor (ver visibilityWhere()/isAdminUser() en el Worker); acá
+    # solo se reenvían los llamados, igual que el resto del Catálogo.
+    dialogo.add_action_callback("catalogoCambiarVisibilidad") do |_action_context, catalogo_id, visibilidad|
+      resultado = Modular3D::Catalogo.cambiar_visibilidad(catalogo_id, visibilidad)
+      dialogo.execute_script("if (window.Modular3DCatalogoVisibilidadResult) { window.Modular3DCatalogoVisibilidadResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoUsuariosCompartibles") do |_action_context|
+      resultado = Modular3D::Catalogo.usuarios_compartibles
+      dialogo.execute_script("if (window.Modular3DCatalogoUsuariosCompartiblesResult) { window.Modular3DCatalogoUsuariosCompartiblesResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoCompartidosListar") do |_action_context, catalogo_id|
+      resultado = Modular3D::Catalogo.compartidos_listar(catalogo_id)
+      dialogo.execute_script("if (window.Modular3DCatalogoCompartidosListaResult) { window.Modular3DCatalogoCompartidosListaResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoCompartidosActualizar") do |_action_context, catalogo_id, agregar, quitar|
+      resultado = Modular3D::Catalogo.compartidos_actualizar(catalogo_id, agregar: agregar, quitar: quitar)
+      dialogo.execute_script("if (window.Modular3DCatalogoCompartidosActualizarResult) { window.Modular3DCatalogoCompartidosActualizarResult(#{JSON.generate(resultado)}); }")
+    end
+    dialogo.add_action_callback("catalogoEliminar") do |_action_context, catalogo_id|
+      resultado = Modular3D::Catalogo.eliminar(catalogo_id)
+      dialogo.execute_script("if (window.Modular3DCatalogoEliminarResult) { window.Modular3DCatalogoEliminarResult(#{JSON.generate(resultado)}); }")
     end
 
     dialogo.add_action_callback("ejecutarConstruccionMueble") do |_action_context, datos|

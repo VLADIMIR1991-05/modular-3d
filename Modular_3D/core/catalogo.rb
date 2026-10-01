@@ -40,7 +40,14 @@ module Modular3D
     # casco, jerarquia de espacios y materiales) -- el mismo manifiesto
     # paramétrico que ya usa "ejecutarConstruccionMueble" para fabricar el
     # módulo real, no una copia aparte.
-    def guardar(categoria, nombre, descripcion, datos)
+    #
+    # visibilidad: 'private' (default -- solo el dueño, más quien agregue a
+    # "compartidos_actualizar" después) o 'global' (todos los usuarios con
+    # licencia activa del producto). El servidor ya resuelve todo el resto
+    # del control de acceso (dueño/compartido/admin) a partir de esto, el
+    # mismo criterio que ya aplica "listar"/"detalle" sin que el plugin
+    # tenga que filtrar nada -- ver visibilityWhere() en el Worker.
+    def guardar(categoria, nombre, descripcion, datos, visibilidad = 'private')
       payload = {
         category: categoria.to_s.strip,
         name: nombre.to_s.strip,
@@ -48,6 +55,7 @@ module Modular3D
         ancho_mm: numero(datos, 'ancho_total'),
         alto_mm: numero(datos, 'alto_total'),
         profundidad_mm: numero(datos, 'prof_total'),
+        visibility: visibilidad.to_s == 'global' ? 'global' : 'private',
         data: datos
       }
       request(:post, '/api/catalog/module-types', payload)
@@ -55,6 +63,33 @@ module Modular3D
 
     def eliminar(id)
       request(:delete, "/api/catalog/module-types/#{id.to_i}")
+    end
+
+    # Cambia la visibilidad de un Tipo de Módulo ya guardado. El servidor
+    # rechaza esto (FORBIDDEN) si quien llama no es el dueño ni un
+    # administrador -- el plugin no necesita duplicar esa verificación acá.
+    def cambiar_visibilidad(id, visibilidad)
+      request(:put, "/api/catalog/module-types/#{id.to_i}/meta", { visibility: visibilidad.to_s == 'global' ? 'global' : 'private' })
+    end
+
+    # Usuarios con licencia activa del mismo producto a quienes se podría
+    # compartir un módulo privado (excluye al propio usuario que pregunta).
+    def usuarios_compartibles
+      request(:get, '/api/catalog/shareable-users')
+    end
+
+    # Usuarios con quienes YA está compartido ese módulo puntual (solo
+    # tiene sentido para uno privado; el servidor lo resuelve igual aunque
+    # sea global, simplemente no afecta nada verlo).
+    def compartidos_listar(id)
+      request(:get, "/api/catalog/module-types/#{id.to_i}/shares")
+    end
+
+    # agregar/quitar: arrays de ids numéricos de usuario (license_users.id,
+    # los mismos que devuelve usuarios_compartibles/compartidos_listar).
+    def compartidos_actualizar(id, agregar: [], quitar: [])
+      payload = { add: Array(agregar).map(&:to_i), remove: Array(quitar).map(&:to_i) }
+      request(:put, "/api/catalog/module-types/#{id.to_i}/shares", payload)
     end
 
     def numero(datos, campo)
@@ -82,6 +117,7 @@ module Modular3D
       http_request = case method
                      when :get then Net::HTTP::Get.new(uri.request_uri)
                      when :post then Net::HTTP::Post.new(uri.request_uri)
+                     when :put then Net::HTTP::Put.new(uri.request_uri)
                      when :delete then Net::HTTP::Delete.new(uri.request_uri)
                      else raise "Método no soportado: #{method}"
                      end

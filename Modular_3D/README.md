@@ -1,7 +1,23 @@
-# Modular_3D 6.4.48 · Secciones de puertas abiertas por defecto
+# Modular_3D 6.4.49 · Catálogo: dueño, compartir y visibilidad global
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.48  
+**Versión:** 6.4.49  
+
+## Cambios 6.4.49
+
+Implementé el pedido pendiente de permisos en el Catálogo Global ("cada usuario dueño de su creación, compartir con usuarios puntuales o con todos los que tengan licencia, y un administrador con acceso total"). Revisando el servidor (Cloudflare Worker `modular3d-platform-api`) encontré que **todo ese sistema ya estaba construido ahí** -- dueño (`created_by_user_id`), visibilidad privado/global, tabla de compartidos por usuario (`catalog_module_shares`), y administradores con acceso total (`platform_admins`). Solo faltaba conectarlo desde el plugin, así que no hizo falta ningún cambio de servidor.
+
+**Al guardar un módulo en el Catálogo** ("5 Catálogo"): ahora elegís Visibilidad -- **Privado** (por defecto; solo vos lo ves) o **Global** (todos los usuarios con licencia activa).
+
+**En cada módulo de la lista**: un rótulo muestra si es Privado o Global, y dos botones nuevos:
+- **Compartir**: abre un panel para cambiar la visibilidad después de guardado, y (si es Privado) agregar o quitar usuarios puntuales con quienes compartirlo -- con una lista de usuarios con licencia para elegir.
+- **Borrar**: lo archiva del Catálogo (con confirmación).
+
+El servidor ya rechaza (y el plugin te avisa) cualquiera de estas dos acciones si no sos el dueño del módulo ni un administrador -- esa verificación vive enteramente ahí, el plugin no duplica nada.
+
+Probé el flujo completo con un navegador real: guardar con cada visibilidad, abrir "Compartir", listar/agregar/quitar usuarios compartidos, y los rótulos Privado/Global en la lista -- sin errores de JavaScript.
+
+**Nota:** un administrador de verdad (gestión de usuarios, licencias, categorías del catálogo) ya tiene su propio panel web separado en el servidor (fuera del plugin de SketchUp) -- no hizo falta construir nada de eso acá.
 
 ## Cambios 6.4.48
 
