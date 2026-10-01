@@ -92,6 +92,14 @@ module Modular3D
       request(:put, "/api/catalog/module-types/#{id.to_i}/shares", payload)
     end
 
+    # png_bytes: bytes crudos (binarios, no base64) del PNG a subir como
+    # miniatura real del módulo -- el servidor (catalogThumbUpload) ya
+    # permite esto al dueño del Tipo de Módulo (o a un admin), no hace
+    # falta ningún permiso especial nuevo. Máx. 3MB (límite del servidor).
+    def subir_miniatura(id, png_bytes)
+      request(:put, "/api/catalog/module-types/#{id.to_i}/thumbnail", nil, nil, cuerpo_crudo: png_bytes, content_type: 'image/png')
+    end
+
     def numero(datos, campo)
       return 0.0 unless datos.is_a?(Hash)
 
@@ -99,7 +107,11 @@ module Modular3D
       valor.to_f
     end
 
-    def request(method, path, payload = nil, query = nil)
+    # cuerpo_crudo + content_type: para subir_miniatura (bytes de imagen tal
+    # cual, no JSON) -- el servidor (catalogThumbUpload) lee el body con
+    # request.arrayBuffer(), no con JSON.parse, así que acá no se puede
+    # envolver en JSON.generate como el resto de las llamadas.
+    def request(method, path, payload = nil, query = nil, cuerpo_crudo: nil, content_type: nil)
       token = Modular3D::License.saved_token
       if token.empty?
         return { ok: false, code: 'LOGIN_REQUIRED', message: 'Inicia sesión en Modular_3D para usar el Catálogo Global.' }
@@ -123,7 +135,10 @@ module Modular3D
                      end
       http_request['Accept'] = 'application/json'
       http_request['Authorization'] = "Bearer #{token}"
-      if payload
+      if cuerpo_crudo
+        http_request['Content-Type'] = content_type || 'application/octet-stream'
+        http_request.body = cuerpo_crudo
+      elsif payload
         http_request['Content-Type'] = 'application/json'
         http_request.body = JSON.generate(payload)
       end

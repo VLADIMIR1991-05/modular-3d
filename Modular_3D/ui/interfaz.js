@@ -616,7 +616,8 @@
     // usuario antes de construir, no una repeticion exacta del calculo real.
     function actualizarAvisoProtrusionPuerta(d) {
       var host = el('puerta_protrusion_aviso');
-      if (!host) return;
+      var campoOverride = el('puerta_protrusion_override_mm');
+      if (!host && !campoOverride) return;
       var grosorPuerta = Math.max(3, Number(d.puerta_grosor) || 15);
       var grosorCasco = Number(d.espesor) || 15;
       // El piso de la salida automática es el mayor entre el grosor de la
@@ -637,6 +638,14 @@
       var pisoAutomatico = Math.max(grosorPuerta, grosorCasco);
       var efectivo = override != null ? override : Math.max.apply(Math, candidatos);
       var modo = d.puerta_protrusion_modo || 'AUTOMATICO';
+      // El placeholder del campo refleja en tiempo real el valor que se usará
+      // si se lo deja vacío (grosor de puerta/casco, el que sea mayor) --
+      // pedido explícito del usuario para ver sincronizado ahí mismo el
+      // "15" que ya se ve en "Grosor de puerta (mm)", sin tener que adivinar.
+      if (campoOverride) {
+        campoOverride.placeholder = 'Automático (' + Math.round(pisoAutomatico) + ' mm si se deja vacío)';
+      }
+      if (!host) return;
       if (override != null) {
         host.textContent = 'Salida forzada: todas las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm.';
         host.className = 'hint-text';

@@ -34,6 +34,20 @@
   var cargado = false;
   var compartirActualId = null;
   var usuariosCompartiblesCache = [];
+  var snapshotPendiente = null;
+
+  // Reutiliza tal cual el mecanismo de captura de pantalla que ya usa el
+  // despiece (modular3d_view.js#snapshot/cleanSnapshot) -- pedido explícito
+  // del usuario: "debe mostrarse la foto en miniatura real" del módulo
+  // completo, no un ícono genérico.
+  function capturarSnapshot() {
+    if (!window.Modular3DView) return '';
+    try {
+      if (window.Modular3DView.cleanSnapshot) return window.Modular3DView.cleanSnapshot() || '';
+      if (window.Modular3DView.snapshot) return window.Modular3DView.snapshot() || '';
+    } catch (e) { /* sin visor 3D disponible todavía: se guarda sin miniatura */ }
+    return '';
+  }
 
   function renderCategorias(categorias) {
     var lista = Array.isArray(categorias) ? categorias : [];
@@ -83,6 +97,7 @@
         '<span class="catalogo-item-autor">' + escapeHtml(item.created_by_name || '') + ' · usado ' + (item.usage_count || 0) + ' veces</span>' +
         '<button type="button" data-insertar="' + index + '">Insertar</button>' +
         '<button type="button" class="secondary" data-compartir="' + index + '">Compartir</button>' +
+        '<button type="button" class="secondary" data-miniatura="' + index + '">' + (item.thumbnail_url ? 'Actualizar miniatura' : 'Agregar miniatura') + '</button>' +
         '<button type="button" class="secondary" data-borrar="' + index + '">Borrar</button>';
       contenedor.appendChild(card);
     });
@@ -98,12 +113,32 @@
         if (item) abrirCompartir(item);
       });
     });
+    contenedor.querySelectorAll('[data-miniatura]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = ultimaLista[parseInt(btn.dataset.miniatura, 10)];
+        if (item) subirMiniaturaPara(item);
+      });
+    });
     contenedor.querySelectorAll('[data-borrar]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var item = ultimaLista[parseInt(btn.dataset.borrar, 10)];
         if (item) borrar(item);
       });
     });
+  }
+
+  // "Actualizar miniatura" sobre un módulo YA guardado: usa la vista 3D
+  // actual (la que se está viendo en ese momento en el configurador), no
+  // hace falta volver a guardar todo el módulo para refrescar solo la foto.
+  function subirMiniaturaPara(item) {
+    if (!window.sketchup || !sketchup.catalogoSubirMiniatura) return;
+    var snapshot = capturarSnapshot();
+    if (!snapshot) {
+      mensaje('catalogo_message', 'No hay una vista 3D disponible ahora mismo para usar como miniatura.', true);
+      return;
+    }
+    mensaje('catalogo_message', 'Subiendo miniatura...', false);
+    sketchup.catalogoSubirMiniatura(item.id, snapshot);
   }
 
   // --- Compartir / visibilidad -- pedido explícito del usuario: cada quien
@@ -208,6 +243,7 @@
     if (!window.sketchup || !sketchup.catalogoGuardar) { mensaje('catalogo_guardar_message', 'Esta acción debe abrirse dentro de SketchUp.', true); return; }
     var datos = typeof window.datosFormulario === 'function' ? window.datosFormulario() : {};
     var visibilidad = (id('catalogo_guardar_visibilidad') && id('catalogo_guardar_visibilidad').value) || 'private';
+    snapshotPendiente = capturarSnapshot();
     mensaje('catalogo_guardar_message', 'Guardando en el Catálogo Global...', false);
     sketchup.catalogoGuardar(categoria, nombre, (id('catalogo_guardar_descripcion').value || '').trim(), datos, visibilidad);
   }
@@ -251,10 +287,23 @@
   window.Modular3DCatalogoGuardarResult = function (resultado) {
     if (!resultado || !resultado.ok) {
       mensaje('catalogo_guardar_message', (resultado && resultado.message) || 'No se pudo guardar en el Catálogo Global.', true);
+      snapshotPendiente = null;
       return;
     }
     var esGlobal = id('catalogo_guardar_visibilidad') && id('catalogo_guardar_visibilidad').value === 'global';
     mensaje('catalogo_guardar_message', esGlobal ? 'Guardado como Global. Ya está disponible para todo el equipo con licencia activa.' : 'Guardado como Privado. Usá "Compartir" en la lista para darle acceso a usuarios puntuales o hacerlo Global después.', false);
+    if (snapshotPendiente && resultado.id && window.sketchup && sketchup.catalogoSubirMiniatura) {
+      sketchup.catalogoSubirMiniatura(resultado.id, snapshotPendiente);
+    }
+    snapshotPendiente = null;
+    if (cargado) actualizar();
+  };
+
+  window.Modular3DCatalogoMiniaturaResult = function (resultado) {
+    if (!resultado || !resultado.ok) {
+      mensaje('catalogo_message', (resultado && resultado.message) || 'No se pudo subir la miniatura.', true);
+      return;
+    }
     if (cargado) actualizar();
   };
 

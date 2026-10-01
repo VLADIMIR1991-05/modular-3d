@@ -1,7 +1,19 @@
-# Modular_3D 6.4.50 · Salida de puerta nunca menor al grosor del casco
+# Modular_3D 6.4.51 · Miniatura real en el Catálogo + "Forzar salida de puerta" sincronizado en vivo
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.50  
+**Versión:** 6.4.51  
+
+## Cambios 6.4.51
+
+Dos pedidos de esta ronda:
+
+**1. "Forzar salida de puerta (mm)" ahora muestra en tiempo real, en el propio campo (como texto de fondo / placeholder, no como valor forzado), el número que "Automático" va a usar si lo dejás vacío** -- el mismo que ya se calculaba (mayor entre grosor de puerta y espesor de casco, o la sobremedida de un panel si sobresale más). Antes ese campo solo tenía un texto fijo genérico ("Automático (vacío = calculado solo)") y había que leer el aviso de más abajo para saber el número real; ahora se actualiza solo, al toque, si cambiás el grosor de puerta o el espesor del casco. Escribir un valor ahí adentro sigue forzando ESE valor exacto, igual que antes -- esto es puramente que el "automático" ya no es una sorpresa.
+
+**2. Miniatura real en el Catálogo Global** (pedido explícito: "debe mostrarse la foto en miniatura real"). Al guardar un módulo en "5 Catálogo", ahora se sube automáticamente, como foto real, la misma vista 3D que se está viendo en ese momento en el configurador (reusando la captura que ya usa el despiece, no una renderización nueva) -- el servidor ya aceptaba esto del propio dueño del módulo, no hizo falta ningún permiso nuevo. Cada módulo de la lista que todavía no tiene foto muestra un botón "Agregar miniatura" (o "Actualizar miniatura" si ya tiene una) para sacarla de la vista actual sin tener que volver a guardar todo el módulo.
+
+Probé el flujo completo con un navegador real (guardar → subir miniatura automática con el id real devuelto por el servidor; botón "Agregar miniatura" sobre un módulo ya guardado) -- sin errores de JavaScript.
+
+**Pendiente, para la próxima ronda:** el árbol de categorías desplegable (elegiste esta opción junto con la miniatura) -- el servidor ya tiene toda la estructura lista (`catalog_taxonomy`, con crear/renombrar/borrar y permisos por dueño-o-admin), solo falta construir la interfaz en el plugin. Lo sigo en cuanto confirmes que esta parte (miniatura + sincronización del campo) quedó bien.
 
 ## Cambios 6.4.50
 

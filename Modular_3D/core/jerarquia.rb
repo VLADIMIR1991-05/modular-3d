@@ -163,6 +163,24 @@ module LPenafiel_GeneradorMueblesExacto
       resultado = Modular3D::Catalogo.eliminar(catalogo_id)
       dialogo.execute_script("if (window.Modular3DCatalogoEliminarResult) { window.Modular3DCatalogoEliminarResult(#{JSON.generate(resultado)}); }")
     end
+    # data_url: "data:image/png;base64,...." tal cual lo entrega
+    # renderer.domElement.toDataURL('image/png') en modular3d_view.js -- se
+    # le saca el encabezado y se decodifica el base64 a bytes crudos antes
+    # de subirlo (ver nota en Catalogo.subir_miniatura).
+    dialogo.add_action_callback("catalogoSubirMiniatura") do |_action_context, catalogo_id, data_url|
+      resultado = begin
+        base64_puro = data_url.to_s.sub(/\Adata:image\/\w+;base64,/, '')
+        png_bytes = Base64.decode64(base64_puro)
+        if png_bytes.empty?
+          { ok: false, code: 'MINIATURA_VACIA', message: 'No se pudo capturar la miniatura del módulo.' }
+        else
+          Modular3D::Catalogo.subir_miniatura(catalogo_id, png_bytes)
+        end
+      rescue StandardError => error
+        { ok: false, code: 'MINIATURA_ERROR', message: error.message }
+      end
+      dialogo.execute_script("if (window.Modular3DCatalogoMiniaturaResult) { window.Modular3DCatalogoMiniaturaResult(#{JSON.generate(resultado)}); }")
+    end
 
     dialogo.add_action_callback("ejecutarConstruccionMueble") do |_action_context, datos|
       estado_licencia = Modular3D::License.ensure_authorized
