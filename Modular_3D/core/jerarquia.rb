@@ -556,7 +556,9 @@ module LPenafiel_GeneradorMueblesExacto
 
       # v6 §Fase A -- ver comentario junto a "puerta_protrusion_override" mas
       # arriba. Por puerta: la protrusion efectiva es la mayor entre el
-      # grosor de puerta (piso de siempre) y la sobremedida frontal de cada
+      # grosor de puerta, el grosor del casco (piso de siempre -- pedido
+      # explícito del usuario: una puerta nunca debería sobresalir menos
+      # que el propio espesor del casco) y la sobremedida frontal de cada
       # panel -- global de casco o propio del espacio -- que esa puerta
       # realmente toca (se detecta por coincidencia de coordenadas, mismo
       # criterio de "eps" que ya usa facadeBox en JS). Si hay un override
@@ -564,7 +566,7 @@ module LPenafiel_GeneradorMueblesExacto
       calcular_protrusion_puerta = lambda do |cav_x_min, cav_x_max, cav_z_min, cav_z_max, enc_nodo, sob_nodo, grosor_puerta_local|
         next puerta_protrusion_override if puerta_protrusion_override
         eps = 0.5.mm
-        candidatos = [grosor_puerta_local]
+        candidatos = [grosor_puerta_local, espesor]
         candidatos << sobremedida_frontal_izq if existe_lat_izq && (cav_x_min - grosor_lat_izq).abs <= eps
         candidatos << sobremedida_frontal_der if existe_lat_der && (cav_x_max - (ancho_total - grosor_lat_der)).abs <= eps
         candidatos << sobremedida_frontal_inferior if existe_base && base_modo_general != 'TRAVESANOS' && (cav_z_min - grosor_inferior).abs <= eps

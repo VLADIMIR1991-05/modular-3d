@@ -435,7 +435,7 @@
     function calcularProtrusionPuerta(cavXMin, cavXMax, cavZMin, cavZMax, enclosureNode, sobNodo, grosorPuertaLocal) {
       if (puertaProtrusionOverride !== null) return puertaProtrusionOverride;
       var eps = 0.5;
-      var candidatos = [grosorPuertaLocal];
+      var candidatos = [grosorPuertaLocal, general];
       if (hasLeft && Math.abs(cavXMin - leftT) <= eps) candidatos.push(sobFrontIzqGeneral);
       if (hasRight && Math.abs(cavXMax - (width - rightT)) <= eps) candidatos.push(sobFrontDerGeneral);
       // La base del casco general nunca es travesaños en este visor (esa

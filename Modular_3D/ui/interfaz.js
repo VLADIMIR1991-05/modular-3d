@@ -618,7 +618,13 @@
       var host = el('puerta_protrusion_aviso');
       if (!host) return;
       var grosorPuerta = Math.max(3, Number(d.puerta_grosor) || 15);
-      var candidatos = [grosorPuerta];
+      var grosorCasco = Number(d.espesor) || 15;
+      // El piso de la salida automática es el mayor entre el grosor de la
+      // puerta y el del propio casco (pedido explícito del usuario: una
+      // puerta nunca debería sobresalir menos que el espesor del casco) --
+      // mismos candidatos base que calcular_protrusion_puerta en
+      // jerarquia.rb/modular3d_view.js.
+      var candidatos = [grosorPuerta, grosorCasco];
       if (d.lleva_lateral_izq !== 'NO') candidatos.push(Number(d.sobremedida_frontal_izq) || 0);
       if (d.lleva_lateral_der !== 'NO') candidatos.push(Number(d.sobremedida_frontal_der) || 0);
       if (d.lleva_base !== 'NO') candidatos.push(Number(d.sobremedida_frontal_inferior) || 0);
@@ -628,16 +634,20 @@
       if (d.h_bottom === 'SI') candidatos.push(Number(d.h_sob_frontal_inferior) || 0);
       if (d.h_top === 'SI' && d.h_top_mode !== 'TRAVESANOS') candidatos.push(Number(d.h_sob_frontal_superior) || 0);
       var override = isFinite(d.puerta_protrusion_override_mm) ? Math.max(0, d.puerta_protrusion_override_mm) : null;
+      var pisoAutomatico = Math.max(grosorPuerta, grosorCasco);
       var efectivo = override != null ? override : Math.max.apply(Math, candidatos);
       var modo = d.puerta_protrusion_modo || 'AUTOMATICO';
       if (override != null) {
         host.textContent = 'Salida forzada: todas las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm.';
         host.className = 'hint-text';
-      } else if (modo === 'AVISAR' && efectivo > grosorPuerta + 0.5) {
-        host.textContent = 'Aviso: hay un panel con sobremedida mayor que el grosor de puerta (' + Math.round(grosorPuerta) + ' mm). Las puertas solapadas que lo toquen saldrán ' + Math.round(efectivo) + ' mm para quedar al ras. Podés forzar otro valor arriba si no es lo que querés.';
+      } else if (modo === 'AVISAR' && efectivo > pisoAutomatico + 0.5) {
+        host.textContent = 'Aviso: hay un panel con sobremedida mayor que el grosor de puerta/casco (' + Math.round(pisoAutomatico) + ' mm). Las puertas solapadas que lo toquen saldrán ' + Math.round(efectivo) + ' mm para quedar al ras. Podés forzar otro valor arriba si no es lo que querés.';
         host.className = 'hint-text warn';
       } else {
-        host.textContent = '';
+        // Siempre visible (no solo en modo AVISAR con diferencia notable):
+        // para que se vea sin adivinar qué va a salir "Automático" antes de
+        // construir, sin necesidad de forzar nada en el campo de arriba.
+        host.textContent = 'Automático: las puertas solapadas de este módulo saldrán ' + Math.round(efectivo) + ' mm (el mayor entre el grosor de la puerta y el del casco, o la sobremedida de algún panel si sobresale más).';
         host.className = 'hint-text';
       }
     }

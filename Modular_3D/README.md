@@ -1,7 +1,15 @@
-# Modular_3D 6.4.49 · Catálogo: dueño, compartir y visibilidad global
+# Modular_3D 6.4.50 · Salida de puerta nunca menor al grosor del casco
 
 **Autor:** Lenin Vladimir Peñafiel Buestán  
-**Versión:** 6.4.49  
+**Versión:** 6.4.50  
+
+## Cambios 6.4.50
+
+Pedido explícito del usuario: la salida automática de una puerta solapada ahora nunca es menor que el grosor del propio casco -- gana el mayor entre grosor de puerta y espesor de casco (y sigue ganando cualquier sobremedida de panel que sobresalga más, como ya era). Antes el piso era solo el grosor de la puerta; si la puerta era más angosta que el casco (ej. puerta 12mm con casco 15mm), salía más corta que el propio panel. Corregido en los 3 lugares que calculan esto (`jerarquia.rb` real, `modular3d_view.js` visor en vivo, `interfaz.js` aviso previo) para que sigan coincidiendo entre sí.
+
+De paso, el aviso debajo de "Forzar salida de puerta" ahora **siempre** muestra el valor que va a usar "Automático" (antes solo avisaba si había una diferencia notable) -- para que se vea sin adivinar, sin necesidad de forzar nada a mano.
+
+Verificado por ejecución: puerta 15mm + casco 15mm → 15mm; puerta 18mm + casco 15mm → 18mm (gana la puerta); puerta 12mm + casco 15mm → 15mm (nunca menos que el casco).
 
 ## Cambios 6.4.49
 
